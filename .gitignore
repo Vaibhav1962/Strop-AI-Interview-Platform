@@ -1,8 +1,13 @@
 node_modules/
 dist/
+package-lock.json
+yarn.lock
 build/
 .cache/
-.env*
+.env
+.env.*
+!.env.example
+infra/judge0/judge0.conf
 .vite/
 .vercel/
 .venv/
@@ -14,6 +19,11 @@ logs/
 *.log
 .claude-replay.*
 .tmp-*
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
 
 # Platform-managed agentplat state, not project source. In the
 # client-initiated single-repo workspace layout (make's `Path: "."` spec) the
@@ -21,3 +31,7 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+# Local AI-assistant tooling, not project source
+/.agents/
+*.zip
