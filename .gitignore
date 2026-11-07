@@ -35,3 +35,5 @@ __pycache__/
 # Local AI-assistant tooling, not project source
 /.agents/
 *.zip
+/AGENTS.md
+/CLAUDE.md
