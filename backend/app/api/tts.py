@@ -125,23 +125,39 @@ def _split_for_groq(text: str) -> list[str]:
     return [p for p in pieces if p]
 
 
-def _join_wavs(chunks: list[bytes]) -> bytes:
-    import io
-    import wave
+def _wav_pcm(data: bytes) -> tuple[bytes, int, int]:
+    """Raw PCM, sample rate and channel count from a WAV file.
 
-    if len(chunks) == 1:
-        return chunks[0]
-    frames = b""
-    params = None
-    for data in chunks:
-        with wave.open(io.BytesIO(data)) as w:
-            params = params or w.getparams()
-            frames += w.readframes(w.getnframes())
-    out = io.BytesIO()
-    with wave.open(out, "wb") as w:
-        w.setparams(params)
-        w.writeframes(frames)
-    return out.getvalue()
+    Groq streams its WAV: the header declares an unknown length (0xFFFFFFFF), which the `wave` module and some
+    players choke on. The chunks are read by hand and the audio is taken to the end of the file instead.
+    """
+    if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+        raise ValueError("not a WAV file")
+    rate, channels = 24000, 1
+    pos = 12
+    while pos + 8 <= len(data):
+        chunk_id = data[pos : pos + 4]
+        size = struct.unpack_from("<I", data, pos + 4)[0]
+        body = pos + 8
+        if chunk_id == b"fmt ":
+            _, channels, rate = struct.unpack_from("<HHI", data, body)
+        elif chunk_id == b"data":
+            end = body + size if body + size <= len(data) else len(data)
+            return data[body:end], rate, channels
+        pos = body + size + (size & 1)
+    raise ValueError("WAV has no audio data")
+
+
+def _join_wavs(chunks: list[bytes]) -> bytes:
+    """One well-formed WAV from the pieces (also repairs a single piece's unknown-length header)."""
+    pcm = b""
+    rate, channels = 24000, 1
+    for index, data in enumerate(chunks):
+        part, part_rate, part_channels = _wav_pcm(data)
+        if index == 0:
+            rate, channels = part_rate, part_channels
+        pcm += part
+    return pcm_to_wav(pcm, sample_rate=rate, num_channels=channels)
 
 
 def _retry_after(res, default: float = 60.0) -> float:

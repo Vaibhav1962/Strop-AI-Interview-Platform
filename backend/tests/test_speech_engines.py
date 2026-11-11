@@ -340,3 +340,24 @@ async def test_terms_not_accepted_says_so_and_does_not_fall_back_to_another_voic
         assert len(hosts) == before
     finally:
         app.dependency_overrides.pop(dep, None)
+
+
+def streaming_wav(frames: int = 2400, rate: int = 24000) -> bytes:
+    """A WAV like Groq's: the header declares an unknown length (0xFFFFFFFF) for both the file and the audio."""
+    import struct
+
+    pcm = b"\x01\x00" * frames
+    header = struct.pack("<4sI4s4sIHHIIHH4sI", b"RIFF", 0xFFFFFFFF, b"WAVE", b"fmt ", 16, 1, 1, rate, rate * 2, 2, 16, b"data", 0xFFFFFFFF)
+    return header + pcm
+
+
+def test_joining_streamed_wavs_with_an_unknown_length_header_works():
+    joined = tts_mod._join_wavs([streaming_wav(2400), streaming_wav(4800)])
+    with wave.open(io.BytesIO(joined)) as w:
+        assert w.getnframes() == 7200 and w.getframerate() == 24000 and w.getnchannels() == 1
+
+
+def test_a_single_streamed_wav_gets_a_proper_header():
+    fixed = tts_mod._join_wavs([streaming_wav(2400)])
+    with wave.open(io.BytesIO(fixed)) as w:
+        assert w.getnframes() == 2400
