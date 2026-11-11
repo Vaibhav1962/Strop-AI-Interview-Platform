@@ -224,3 +224,95 @@ async def test_two_accounts_share_stt_load_instead_of_draining_the_first(monkeyp
     finally:
         app.dependency_overrides.pop(dep, None)
         gk._usage.clear()
+
+
+# ── TTS: one consistent interviewer voice ───────────────────────────────────────────────────────────────────────────
+
+
+def authed_tts(monkeypatch, eleven="el_key", gemini="gem_key"):
+    from app.api.deps import get_current_user
+
+    user = User(id=uuid.uuid4(), email="tts@example.com", full_name="Tts", hashed_password="pw")
+    app.dependency_overrides[get_current_user] = lambda: user
+    monkeypatch.setattr(tts_mod, "get_settings", lambda: type("S", (), {"elevenlabs_api_key": eleven, "gemini_api_key": gemini, "groq_api_key": ""})())
+    tts_mod.SESSION_VOICE_REGISTRY.clear()
+    return get_current_user
+
+
+async def post_tts(session_id="s1"):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        return await client.post("/api/v1/tts", json={"text": "Tell me about a query you optimised.", "session_id": session_id})
+
+
+async def test_a_rate_limited_groq_never_hands_the_interview_to_a_different_voice(monkeypatch):
+    """ElevenLabs and Gemini are configured and healthy, but the interviewer must stay the Groq voice."""
+    dep = authed_tts(monkeypatch)
+    try:
+        hosts = []
+
+        async def handler(url, kwargs):
+            hosts.append(url.split("/")[2])
+            if "groq.com" in url:
+                return FakeResponse(429, text="rate limit", headers={"retry-after": "60"})
+            return FakeResponse(200, content=b"x" * 500)
+
+        monkeypatch.setattr(tts_mod, "shared_client", lambda: FakeClient(handler))
+        resp = await post_tts()
+        assert resp.status_code == 503
+        assert int(resp.headers["retry-after"]) >= 1
+        assert set(hosts) == {"api.groq.com"}, f"another engine was tried: {hosts}"
+    finally:
+        app.dependency_overrides.pop(dep, None)
+
+
+async def test_the_second_groq_account_covers_a_rate_limited_first_one_with_the_same_voice(monkeypatch):
+    from app import groq_keys as gk
+
+    monkeypatch.setenv("GROQ2_API_KEY", "gsk_test_two")
+    gk._usage.clear()
+    dep = authed_tts(monkeypatch)
+    try:
+        voices = []
+
+        async def handler(url, kwargs):
+            if kwargs["headers"]["Authorization"].endswith("one"):
+                return FakeResponse(429, text="rate limit", headers={"retry-after": "60"})
+            voices.append(kwargs["json"]["voice"])
+            return FakeResponse(200, content=make_wav())
+
+        monkeypatch.setattr(tts_mod, "shared_client", lambda: FakeClient(handler))
+        for _ in range(3):
+            resp = await post_tts()
+            assert resp.status_code == 200
+            assert resp.headers["x-tts-engine"] == "groq"
+            assert resp.headers["x-tts-voice"] == tts_mod.GROQ_TTS_VOICE
+        assert set(voices) == {tts_mod.GROQ_TTS_VOICE}
+    finally:
+        app.dependency_overrides.pop(dep, None)
+        gk._usage.clear()
+
+
+async def test_a_short_rate_limit_is_waited_out_instead_of_failing_the_sentence(monkeypatch):
+    dep = authed_tts(monkeypatch)
+    try:
+        calls = {"n": 0}
+
+        async def handler(url, kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return FakeResponse(429, text="rate limit", headers={"retry-after": "5"})
+            return FakeResponse(200, content=make_wav())
+
+        async def fast_sleep(_):
+            tts_mod._engine_cooldown.clear()  # the wait is over
+
+        monkeypatch.setattr(tts_mod, "shared_client", lambda: FakeClient(handler))
+        monkeypatch.setattr(tts_mod.asyncio, "sleep", fast_sleep)
+        resp = await post_tts()
+        assert resp.status_code == 200 and resp.headers["x-tts-engine"] == "groq"
+    finally:
+        app.dependency_overrides.pop(dep, None)
+
+
+async def test_markdown_and_emoji_are_not_sent_to_the_voice():
+    assert tts_mod._prepare_speech_text("**Great** answer \U0001F600 — use `HashMap`.") == "Great answer , use HashMap ."

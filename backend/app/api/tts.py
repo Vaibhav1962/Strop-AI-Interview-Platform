@@ -8,11 +8,13 @@ Keeps all provider credentials strictly server-side and enforces user authentica
 
 import asyncio
 import base64
+import math
+import re
 import time
 import os
 import struct
 from typing import Optional
-from app.groq_keys import groq_keys
+from app.groq_keys import estimate_tokens, groq_keys, ordered_keys, record_usage
 from app.http_client import shared_client
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field
@@ -33,8 +35,12 @@ def _cooling_down(name: str) -> bool:
     return _engine_cooldown.get(name, 0.0) > time.monotonic()
 
 
-def _start_cooldown(name: str, seconds: float, why: str) -> None:
+_cooldown_kind: dict[str, str] = {}
+
+
+def _start_cooldown(name: str, seconds: float, why: str, kind: str = "") -> None:
     _engine_cooldown[name] = time.monotonic() + seconds
+    _cooldown_kind[name] = kind
     print(f"[Backend TTS] {name}: {why}; skipping it for {int(seconds)}s")
 
 BRIAN_VOICE_ID = "nPczCjzI2devNBz1zQrb"
@@ -173,7 +179,7 @@ async def _synthesize_groq(clean_text: str, api_key: str, voice: str = GROQ_TTS_
                     print(f"[Backend TTS] Groq Orpheus status {res.status_code}: {res.text[:160]}")
                     if res.status_code == 400 and "terms" in res.text.lower():
                         # Short on purpose: once the terms are accepted the voice should come back within a couple of minutes.
-                        _start_cooldown(tag, 120.0, "model terms not accepted (accept them at console.groq.com/playground?model=canopylabs%2Forpheus-v1-english)")
+                        _start_cooldown(tag, 120.0, "model terms not accepted (accept them at console.groq.com/playground?model=canopylabs%2Forpheus-v1-english)", kind="terms")
                     elif res.status_code == 429:
                         _start_cooldown(tag, _retry_after(res), "rate limited")
                     return None
@@ -184,12 +190,59 @@ async def _synthesize_groq(clean_text: str, api_key: str, voice: str = GROQ_TTS_
         return None
 
 
+# Longest we will wait for a rate-limited account to come back before giving up on this sentence. Waiting a few
+# seconds keeps the interviewer's voice the same; falling back to a different voice is what we are avoiding.
+GROQ_MAX_WAIT_SECONDS = 8.0
+
+
+def _prepare_speech_text(text: str) -> str:
+    """Plain, speakable text: no markdown marks, emoji or stray whitespace the voice model could read oddly."""
+    text = re.sub(r"[*_`#>~|]+", " ", text)
+    text = re.sub(r"[\U0001F300-\U0001FAFF\u2600-\u27BF]", "", text)
+    text = text.replace("\u2014", ", ").replace("\u2013", "-")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _groq_all_cooling_wait() -> float:
+    """Seconds until the first Groq account is usable again, or 0 when at least one is usable right now."""
+    keys = groq_keys()
+    if not keys:
+        return 0.0
+    now = time.monotonic()
+    waits = [_engine_cooldown.get(key_id, 0.0) - now for key_id, _ in keys]
+    if any(w <= 0 for w in waits):
+        return 0.0
+    return min(waits)
+
+
+def _groq_blocked_by_terms() -> bool:
+    """True when every configured account is refused only because Orpheus terms were not accepted (a setup problem)."""
+    keys = groq_keys()
+    return bool(keys) and all(_cooling_down(k) and _cooldown_kind.get(k) == "terms" for k, _ in keys)
+
+
+def _retry_after_seconds() -> int:
+    wait = _groq_all_cooling_wait()
+    return max(1, min(60, math.ceil(wait))) if wait > 0 else 3
+
+
 async def _synthesize_groq_any(clean_text: str, voice: str = GROQ_TTS_VOICE) -> Optional[bytes]:
-    """Groq Orpheus on the first configured account that can serve it (terms accepted, not rate limited)."""
-    for key_id, key in groq_keys():
-        audio = await _synthesize_groq(clean_text, key, voice, tag=key_id)
-        if audio:
-            return audio
+    """Groq Orpheus on whichever account can serve it. The least-used account goes first so both free tiers are
+    spent evenly; when one is rate limited the other takes over, and when both are, a short wait is tried once."""
+    clean_text = _prepare_speech_text(clean_text)
+    if not clean_text:
+        return None
+    for attempt in range(2):
+        for key_id, key in ordered_keys(GROQ_TTS_MODEL):
+            audio = await _synthesize_groq(clean_text, key, voice, tag=key_id)
+            if audio:
+                record_usage(key_id, GROQ_TTS_MODEL, estimate_tokens(clean_text))
+                return audio
+        wait = _groq_all_cooling_wait()
+        if attempt == 0 and 0 < wait <= GROQ_MAX_WAIT_SECONDS:
+            await asyncio.sleep(wait + 0.25)
+            continue
+        break
     return None
 
 
@@ -327,6 +380,7 @@ async def text_to_speech(
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Configured interviewer voice (Groq Orpheus) is temporarily unavailable.",
+                headers={"Retry-After": str(_retry_after_seconds())},
             )
 
         if engine == "elevenlabs":
@@ -395,8 +449,10 @@ async def text_to_speech(
             detail="Gemini speech synthesis is unavailable.",
         )
 
-    # Default: Groq Orpheus first (free tier), then ElevenLabs, then Gemini
-    if groq_keys() and target_engine in (None, "groq"):
+    # Groq Orpheus is the interviewer's voice whenever an account is configured. A momentary failure (rate limit,
+    # network) is reported as "try again" rather than answered by a different engine, which would change the voice.
+    # Only a setup problem on every account (terms not accepted) falls through to the other engines below.
+    if groq_keys() and target_engine in (None, "groq") and not _groq_blocked_by_terms():
         audio = await _synthesize_groq_any(clean_text, GROQ_TTS_VOICE)
         if audio:
             if session_id:
@@ -406,6 +462,11 @@ async def text_to_speech(
                 media_type="audio/wav",
                 headers={"X-TTS-Engine": "groq", "X-TTS-Voice": GROQ_TTS_VOICE, "X-TTS-Session-Locked": "true" if session_id else "false"},
             )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Interviewer voice is temporarily unavailable (rate limited). Try again shortly.",
+            headers={"Retry-After": str(_retry_after_seconds())},
+        )
 
     # ElevenLabs preference: Try ElevenLabs next
     if eleven_key and target_engine != "gemini":

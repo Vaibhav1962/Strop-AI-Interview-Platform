@@ -1129,6 +1129,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               : "Interview complete";
           const lastCommitted = conversationHistory[conversationHistory.length - 1];
           const lastAlexQuestion = [...conversationHistory].reverse().find((t) => t.speaker === "Alex")?.text ?? "";
+          const voiceNote = ttsQuotaError && uiPhase !== "completed" ? " · voice unavailable, text only" : "";
           const wordsCaptured = candidateCurrentText.trim() ? candidateCurrentText.trim().split(/\s+/).length : 0;
 
           const composer = (
@@ -1243,7 +1244,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               <div className="min-w-0 flex-1">
                 <div className="text-[13.5px] leading-tight">Alex</div>
                 <div key={uiPhase} className="anim-fade-in ob-mo text-[11.5px] ob-tx3 truncate mt-0.5" role="status">
-                  {stateLabel}
+                  {stateLabel}{voiceNote}
                 </div>
               </div>
               {uiPhase === "thinking" && (

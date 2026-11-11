@@ -52,7 +52,7 @@ function speakWithBrowserNaturalVoice(text: string): Promise<boolean> {
 async function fetchAudioBufferFromBackend(
   text: string,
   sessionId?: string,
-): Promise<{ buffer: ArrayBuffer; engine: "elevenlabs" | "gemini"; voice: string } | null> {
+): Promise<{ buffer: ArrayBuffer; engine: "groq" | "elevenlabs" | "gemini"; voice: string } | null> {
   const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -61,15 +61,17 @@ async function fetchAudioBufferFromBackend(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // The playback queue waits on each sentence in order, so one slow request holds up everything behind it.
-  // Give each attempt a short deadline (the server stops trying its providers at about the same moment), and retry
-  // once only when the failure was quick and could plausibly clear (a rate limit or a network blip).
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const startedAt = Date.now();
+  // The interviewer must keep one voice, so a failed sentence is retried (the server rotates between the two Groq
+  // accounts and tells us how long a rate limit lasts) instead of being handed to a different voice. The queue plays
+  // sentences in order, so this wait is the cost of consistency; it is capped so a dead service cannot hang the page.
+  const BUDGET_MS = 30000;
+  const overallStart = Date.now();
+  for (let attempt = 0; attempt < 4; attempt++) {
+    let waitMs = 700;
     let retryable = true;
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 7000);
+      const timeout = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch(`${API_BASE_URL}/tts`, {
         method: "POST",
@@ -85,27 +87,30 @@ async function fetchAudioBufferFromBackend(
       if (res.ok) {
         const engineHeader = res.headers.get("X-TTS-Engine");
         const voiceHeader = res.headers.get("X-TTS-Voice") || "Brian";
-        const engine: "elevenlabs" | "gemini" = engineHeader === "gemini" ? "gemini" : "elevenlabs";
+        const engine: "groq" | "elevenlabs" | "gemini" =
+          engineHeader === "gemini" ? "gemini" : engineHeader === "groq" ? "groq" : "elevenlabs";
         const buffer = await res.arrayBuffer();
         if (buffer.byteLength > 100) {
           return { buffer, engine, voice: voiceHeader };
         }
       } else {
         console.warn(`[NeuralTTS] Backend TTS returned status ${res.status}`);
-        // 503 means every voice provider is unavailable right now; asking again a moment later cannot help.
-        retryable = res.status === 429 || (res.status >= 500 && res.status !== 503);
+        // 429 / 503 carry Retry-After: the voice is rate limited for that many seconds. Wait it out (briefly).
+        const retryAfter = Number(res.headers.get("Retry-After"));
+        if (Number.isFinite(retryAfter) && retryAfter > 0) waitMs = Math.min(8000, Math.max(800, retryAfter * 1000));
+        retryable = res.status === 429 || res.status >= 500;
       }
     } catch (err) {
       console.warn("[NeuralTTS] Backend TTS fetch error:", err);
     }
-    if (!retryable || Date.now() - startedAt > 4000) break;
-    await new Promise((r) => setTimeout(r, 600));
+    if (!retryable || Date.now() - overallStart + waitMs > BUDGET_MS) break;
+    await new Promise((r) => setTimeout(r, waitMs));
   }
   return null;
 }
 
 /** Splits a reply into speakable chunks (whole sentences, short ones merged) so each audio request stays small. */
-export function splitIntoSpeechChunks(text: string, minChars = 70): string[] {
+export function splitIntoSpeechChunks(text: string, minChars = 100): string[] {
   const sentences = text.replace(/\s+/g, " ").trim().match(/[^.!?]+[.!?]+(?:["')\]]+)?(?:\s+|$)|[^.!?]+$/g) || [text];
   const chunks: string[] = [];
   let current = "";
@@ -140,8 +145,8 @@ export interface QueuedSentenceItem {
 export function useElevenLabsTTS() {
   const [speaking, setSpeaking] = useState(false);
   const [pulse, setPulse] = useState(0);
-  const [activeEngine, setActiveEngine] = useState<"elevenlabs" | "gemini" | "none">("none");
-  const [activeVoice, setActiveVoice] = useState<string>("Brian");
+  const [activeEngine, setActiveEngine] = useState<"groq" | "elevenlabs" | "gemini" | "none">("none");
+  const [activeVoice, setActiveVoice] = useState<string>("daniel");
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const [ttsQuotaError, setTtsQuotaError] = useState<string | null>(null);
 
@@ -152,6 +157,13 @@ export function useElevenLabsTTS() {
   const pulseIntervalRef = useRef<number | null>(null);
   const audioCacheRef = useRef<Map<string, Promise<ArrayBuffer | null>>>(new Map());
   const cancelTokenRef = useRef(0);
+  // One id for this interview: the server pins the interviewer's voice to it, so every sentence (including ones the
+  // caller sent without an id) is spoken by the same voice.
+  const ttsSessionRef = useRef<string>(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `tts-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
   const activeTurnIdRef = useRef<string | number | null>(null);
 
   const queueRef = useRef<QueuedSentenceItem[]>([]);
@@ -247,12 +259,13 @@ export function useElevenLabsTTS() {
     const clean = text.trim();
     if (!clean) return Promise.resolve(null);
 
-    const cacheKey = `${sessionId || "session"}::${clean}`;
+    const voiceSession = sessionId || ttsSessionRef.current;
+    const cacheKey = `${voiceSession}::${clean}`;
     const existing = audioCacheRef.current.get(cacheKey);
     if (existing) return existing;
 
     const p = (async (): Promise<ArrayBuffer | null> => {
-      const result = await fetchAudioBufferFromBackend(clean, sessionId);
+      const result = await fetchAudioBufferFromBackend(clean, voiceSession);
       if (result) {
         setActiveEngine(result.engine);
         setActiveVoice(result.voice);
@@ -374,7 +387,8 @@ export function useElevenLabsTTS() {
       }
 
       try {
-        const allowBrowser = typeof window !== "undefined" && localStorage.getItem("iq_allow_browser_voice") !== "false";
+        // The browser voice is a different, robotic voice, so it only speaks when someone has switched it on.
+        const allowBrowser = typeof window !== "undefined" && localStorage.getItem("iq_allow_browser_voice") === "true";
         const useBrowserNow = allowBrowser && Date.now() < browserVoiceUntilRef.current;
         const rawBuffer = useBrowserNow ? null : await item.bufferPromise;
         if (cancelTokenRef.current !== currentToken) break;
@@ -431,7 +445,7 @@ export function useElevenLabsTTS() {
       // going to fail (each one used to also keep the server busy trying every provider).
       const browserCovering =
         typeof window !== "undefined" &&
-        localStorage.getItem("iq_allow_browser_voice") !== "false" &&
+        localStorage.getItem("iq_allow_browser_voice") === "true" &&
         Date.now() < browserVoiceUntilRef.current;
       const p = browserCovering ? Promise.resolve<ArrayBuffer | null>(null) : getAudioBuffer(clean, sessionId);
       queueRef.current.push({
@@ -491,7 +505,17 @@ export function useElevenLabsTTS() {
 
   // Ensure audio nodes and queue are cancelled when component unmounts
   useEffect(() => {
+    const session = ttsSessionRef.current;
     return () => {
+      // Release the server-side voice lock for this interview (best effort).
+      const token = getToken();
+      if (token) {
+        fetch(`${API_BASE_URL}/tts/session/${encodeURIComponent(session)}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+          keepalive: true,
+        }).catch(() => {});
+      }
       cancel();
       if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
         audioCtxRef.current.close().catch(() => {});
