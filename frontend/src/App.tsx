@@ -1,5 +1,5 @@
 import { Suspense, lazy, useState, useEffect, useRef } from "react";
-import Navigation, { type Page, ProfileMenu, pageTitle } from "./components/Navigation";
+import Navigation, { type Page, ProfileMenu } from "./components/Navigation";
 import AppBackground from "./components/AppBackground";
 import { ToastContainer, useToast } from "./components/ui";
 import { type AuthUser, clearSession, getStoredUser, getToken } from "./lib/api";
@@ -219,12 +219,9 @@ export default function App() {
         } pt-14 lg:pt-0`}
       >
         {/* Top bar: just the profile menu, no breadcrumb or divider */}
-        <div className="hidden sm:flex items-center justify-between gap-2.5 h-[44px] px-6 relative z-40">
-          <span className="text-[13px] ob-tx3" aria-hidden="true">{pageTitle(page)}</span>
-          <span className="flex items-center gap-2.5">
+        <div className="hidden sm:flex items-center justify-end gap-2.5 h-[44px] px-6 relative z-40">
           <ThemeToggle />
           <ProfileMenu user={user} onLogout={handleLogout} />
-          </span>
         </div>
 
         <main className="flex-1 min-w-0">
