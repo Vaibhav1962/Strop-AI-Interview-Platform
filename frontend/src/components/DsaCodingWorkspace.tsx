@@ -1123,7 +1123,7 @@ export default function DsaCodingWorkspace({
             </span>
           </div>
           <span
-            className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+            className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${
               problem.difficulty === "Easy"
                 ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                 : problem.difficulty === "Medium"
@@ -1496,7 +1496,7 @@ export default function DsaCodingWorkspace({
                           </div>
 
                           {activeResult.error && (
-                            <div className="mt-2 p-2 bg-rose-950/30 text-rose-300 rounded border border-rose-500/20 whitespace-pre-wrap font-mono text-[10px]">
+                            <div className="mt-2 p-2 bg-rose-950/30 text-rose-300 rounded border border-rose-500/20 whitespace-pre-wrap font-mono text-[11px]">
                               {activeResult.error}
                             </div>
                           )}
@@ -1533,7 +1533,7 @@ export default function DsaCodingWorkspace({
                     <path d="M8 5v14l11-7z" />
                   </svg>
                   <span>Run</span>
-                  <span className="hidden sm:inline-block text-[10px] font-mono text-ob-tx2 px-1 py-0.2 rounded bg-ob-ov/5 border border-ob-ov/10">Ctrl+'</span>
+                  <span className="hidden sm:inline-block text-[11px] font-mono text-ob-tx2 px-1 py-0.2 rounded bg-ob-ov/5 border border-ob-ov/10">Ctrl+'</span>
                 </button>
 
                 <button
@@ -1546,7 +1546,7 @@ export default function DsaCodingWorkspace({
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   <span>Submit</span>
-                  <span className="hidden sm:inline-block text-[10px] font-mono text-white/90 px-1 py-0.2 rounded bg-black/20 border border-ob-ov/20">Ctrl+Enter</span>
+                  <span className="hidden sm:inline-block text-[11px] font-mono text-white/90 px-1 py-0.2 rounded bg-black/20 border border-ob-ov/20">Ctrl+Enter</span>
                 </button>
               </div>
             </div>

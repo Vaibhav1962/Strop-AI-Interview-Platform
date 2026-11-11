@@ -1,4 +1,4 @@
-import { Button, usePresence } from "../components/ui";
+import { Button, usePresence, useDialogA11y } from "../components/ui";
 import CandidateReportView from "../components/CandidateReportView";
 import { useState, useEffect } from "react";
 import {
@@ -79,6 +79,7 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [loading, setLoading] = useState(true);
   const resetDlg = usePresence(confirmReset);
+  const resetRef = useDialogA11y<HTMLDivElement>(confirmReset, () => setConfirmReset(false));
   const detail = usePresence(detailModal);
 
   const handleDownloadPdf = async (sessionId: string, title?: string) => {
@@ -695,7 +696,7 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
       {/* Reset History Confirmation Modal */}
       {resetDlg.shown && (
         <div className={`fixed inset-0 bg-ob-bg/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 ${resetDlg.closing ? "ob-exit-fade" : "anim-fade-in"}`}>
-          <div className={`bg-ob-bg2 border border-ob-ln rounded-2xl max-w-md w-full p-6 flex flex-col gap-4 text-center ${resetDlg.closing ? "ob-exit" : "ob-enter"}`}>
+          <div ref={resetRef} role="dialog" aria-modal="true" aria-label="Reset history" className={`bg-ob-bg2 border border-ob-ln rounded-2xl max-w-md w-full p-6 flex flex-col gap-4 text-center ${resetDlg.closing ? "ob-exit" : "ob-enter"}`}>
             <div className="w-12 h-12 rounded-full border border-[rgba(255,106,61,0.4)] text-ob-hot flex items-center justify-center mx-auto">
               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="3 6 5 6 21 6" />
@@ -817,7 +818,7 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
                                 : "bg-ob-bg3 border-ob-ln"
                             }`}
                           >
-                            <div className="flex items-center justify-between mb-1 text-[10px] font-mono font-semibold text-ob-tx2">
+                            <div className="flex items-center justify-between mb-1 text-[11px] font-mono font-semibold text-ob-tx2">
                               <span>{isAi ? "Alex (Interviewer)" : "Candidate"}</span>
                               <span>{line.time || ""}</span>
                             </div>

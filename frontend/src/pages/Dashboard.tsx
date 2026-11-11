@@ -443,7 +443,7 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
                 <div key={group.label} className="mt-5">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="w-[7px] h-[7px] rounded-full" style={{ background: group.tone }} aria-hidden="true" />
-                    <span className="ob-mo text-[10.5px] uppercase tracking-[0.1em]" style={{ color: group.tone }}>{group.label}</span>
+                    <span className="ob-mo text-[11px] uppercase tracking-[0.1em]" style={{ color: group.tone }}>{group.label}</span>
                   </div>
                   <ul className="list-none m-0 p-0">
                     {group.items.slice(0, 4).map((raw, i) => {

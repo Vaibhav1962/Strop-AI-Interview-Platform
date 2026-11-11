@@ -878,7 +878,7 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0;
 }
 .ob-lb {
-  font: 500 10.5px 'JetBrains Mono', monospace;
+  font: 500 11px 'JetBrains Mono', monospace;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ob-tx3);
@@ -893,7 +893,7 @@ input[type="range"]::-moz-range-thumb {
 }
 .ob-btn:hover { background: var(--ob-bg3); border-color: var(--ob-ln3); }
 .ob-btn:active:not(:disabled) { transform: scale(0.98); }
-.ob-btn:focus-visible { outline: 2px solid var(--ob-ac3); outline-offset: 2px; }
+.ob-btn:focus-visible { outline: 2px solid var(--ob-ac); outline-offset: 2px; }
 .ob-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .ob-btn.ob-sm { height: 32px; padding: 0 12px; font-size: 12px; }
 .ob-btn.ob-pr { background: var(--ob-ac); border-color: var(--ob-ac); color: var(--ob-onac); }
@@ -1033,6 +1033,14 @@ button.ob-card:hover, a.ob-card:hover { transform: translateY(-2px); }
 @keyframes ob-mq { to { transform: translateX(-50%); } }
 html { scroll-behavior: smooth; }
 
+/* Visible keyboard focus everywhere (mouse clicks do not trigger it). Text fields show focus on their own border. */
+:where(a[href], button, summary, [role="tab"], [role="radio"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--ob-ac);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+:where(input, textarea, select):focus-visible { outline: none; }
+
 /* ── Shared motion layer ─────────────────────────────────────────────────────────────────────
    Three tempos: ~150ms press/hover, ~300ms state changes, ~700ms arrivals. Everything is one-shot
    except "live" signals. The global reduced-motion rule above collapses all of it. */
@@ -1087,7 +1095,7 @@ html { scroll-behavior: smooth; }
 .ob-seg.ob-seg-full button { flex: 1 1 0; min-width: 0; }
 .ob-seg button:hover { color: var(--ob-tx); }
 .ob-seg button[aria-selected="true"] { color: var(--ob-onac); }
-.ob-seg button:focus-visible { outline: 2px solid var(--ob-ac3); outline-offset: 1px; }
+.ob-seg button:focus-visible { outline: 2px solid var(--ob-ac); outline-offset: 1px; }
 .ob-seg.ob-seg-quiet .ob-seg-pill { background: var(--ob-bg3); box-shadow: inset 0 0 0 1px var(--ob-ln2); }
 .ob-seg.ob-seg-quiet button[aria-selected="true"] { color: var(--ob-tx); }
 

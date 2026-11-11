@@ -20,6 +20,49 @@ export function usePresence<T>(value: T | null | undefined | false, ms = 200): {
   return { shown: open || mounted ? last.current : null, closing: !open && mounted };
 }
 
+/**
+ * Dialog accessibility: moves focus into the dialog, keeps Tab inside it, closes on Escape,
+ * and returns focus to whatever opened it. Attach the returned ref to the dialog panel.
+ */
+export function useDialogA11y<T extends HTMLElement>(active: boolean, onClose?: () => void) {
+  const ref = useRef<T>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    if (!active) return;
+    const prev = document.activeElement as HTMLElement | null;
+    const SEL = 'a[href],button:not([disabled]),textarea,input:not([disabled]),select,[tabindex]:not([tabindex="-1"])';
+    const focusables = () => Array.from(ref.current?.querySelectorAll<HTMLElement>(SEL) ?? []).filter((n) => n.offsetParent !== null);
+    const el = ref.current;
+    if (el && !el.hasAttribute("tabindex")) el.tabIndex = -1;
+    const first = el?.querySelector<HTMLElement>("[data-autofocus]") ?? focusables()[0] ?? el;
+    first?.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && closeRef.current) {
+        e.stopPropagation();
+        closeRef.current();
+      } else if (e.key === "Tab") {
+        const f = focusables();
+        if (!f.length) return;
+        const a = f[0], z = f[f.length - 1];
+        if (e.shiftKey && (document.activeElement === a || document.activeElement === el)) {
+          e.preventDefault();
+          z.focus();
+        } else if (!e.shiftKey && document.activeElement === z) {
+          e.preventDefault();
+          a.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      prev?.focus?.({ preventScroll: true });
+    };
+  }, [active]);
+  return ref;
+}
+
 /** Segmented control: one pill glides to the selected option. */
 export function Segmented<T extends string>({
   options,
@@ -255,7 +298,7 @@ export function ScoreRing({
         </text>
       </svg>
       {label && (
-        <span className="text-[10px] text-ob-tx2 font-mono uppercase tracking-wider font-semibold">
+        <span className="text-[11px] text-ob-tx2 font-mono uppercase tracking-wider font-semibold">
           {label}
         </span>
       )}
@@ -292,7 +335,7 @@ export function BigMetric({
         <span className="text-xs font-sans opacity-60 ml-1">{unit}</span>
       </div>
       <div className="flex items-center gap-2 mt-1">
-        {label && <span className="text-[10.5px] font-mono uppercase tracking-[0.1em] text-ob-tx3">{label}</span>}
+        {label && <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-ob-tx3">{label}</span>}
         {trend && (
           <span className={`text-[11px] font-mono font-semibold ${up ? "text-ob-ok" : "text-ob-er"}`}>
             {trend}
@@ -376,7 +419,7 @@ export function Tabs({
           >
             {t.label}
             {t.badge !== undefined && (
-              <span className="ml-1.5 px-1.5 py-0.2 rounded text-[10px] font-mono bg-ob-ln text-ob-tx">
+              <span className="ml-1.5 px-1.5 py-0.2 rounded text-[11px] font-mono bg-ob-ln text-ob-tx">
                 {t.badge}
               </span>
             )}
@@ -426,7 +469,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export function Input({ label, error, icon, className = "", ...props }: InputProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <label className="text-[10.5px] font-mono uppercase tracking-[0.1em] text-ob-tx3">{label}</label>}
+      {label && <label className="text-[11px] font-mono uppercase tracking-[0.1em] text-ob-tx3">{label}</label>}
       <div className="relative">
         {icon && (
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ob-tx3">{icon}</span>
@@ -451,7 +494,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 export function Textarea({ label, error, className = "", ...props }: TextareaProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <label className="text-[10.5px] font-mono uppercase tracking-[0.1em] text-ob-tx3">{label}</label>}
+      {label && <label className="text-[11px] font-mono uppercase tracking-[0.1em] text-ob-tx3">{label}</label>}
       <textarea
         {...props}
         className={`w-full rounded-[9px] px-3.5 py-2.5 text-sm text-ob-tx bg-ob-bg border border-ob-ln2 placeholder:text-ob-tx3 focus:outline-none focus:border-ob-ac/40 focus:ring-4 focus:ring-ob-ac/[0.07] transition duration-300 resize-none ${
@@ -471,7 +514,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({ label, options, className = "", ...props }: SelectProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <label className="text-[10.5px] font-mono uppercase tracking-[0.1em] text-ob-tx3">{label}</label>}
+      {label && <label className="text-[11px] font-mono uppercase tracking-[0.1em] text-ob-tx3">{label}</label>}
       <select
         {...props}
         className={`w-full h-10 rounded-[9px] px-3.5 text-sm text-ob-tx bg-ob-bg border border-ob-ln2 focus:outline-none focus:border-ob-ac/40 focus:ring-4 focus:ring-ob-ac/[0.07] transition appearance-none cursor-pointer ${className}`}
@@ -507,12 +550,17 @@ export function Modal({
   }, [open]);
 
   const { shown, closing } = usePresence(open);
+  const panelRef = useDialogA11y<HTMLDivElement>(open, onClose);
   if (!shown) return null;
 
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${closing ? "ob-exit-fade" : "anim-fade-in"}`}>
       <div className="absolute inset-0 bg-ob-bg/80 backdrop-blur-sm" onClick={onClose} />
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className={`relative bg-ob-bg2 border border-ob-ln shadow-[0_24px_64px_-16px_rgb(var(--ob-sh)/0.8)] rounded-[14px] w-full ${width} max-h-[90vh] overflow-y-auto ${closing ? "ob-exit" : "ob-enter"} text-ob-tx`}
       >
         {title && (
@@ -733,7 +781,7 @@ export function SectionHeader({
     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
       <div>
         {tag && (
-          <div className="text-[10.5px] font-mono text-ob-tx3 uppercase tracking-[0.1em] mb-2 font-medium">
+          <div className="text-[11px] font-mono text-ob-tx3 uppercase tracking-[0.1em] mb-2 font-medium">
             {tag}
           </div>
         )}

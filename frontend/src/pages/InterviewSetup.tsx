@@ -112,7 +112,7 @@ export default function InterviewSetup({ onNavigate }: { onNavigate: (p: string)
           style={{ ["--i" as string]: 6 }}
         >
           <div>
-            <div className="ob-mo text-[10.5px] uppercase tracking-[0.1em] opacity-60">Selected</div>
+            <div className="ob-mo text-[11px] uppercase tracking-[0.1em] opacity-60">Selected</div>
             <div key={active.id} className="st-line-in text-[26px] font-medium tracking-[-0.025em] leading-[1.15] mt-3">{active.title}</div>
           </div>
           {needsResume ? (

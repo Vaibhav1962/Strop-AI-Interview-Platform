@@ -75,7 +75,7 @@ function ScrollSection({ dot, title, children }: { dot: string; title: string; c
 function Example({ quote }: { quote: string }) {
   return (
     <div className="mt-3 border-l-2 border-ob-ln3 pl-3 text-[12.5px] italic leading-relaxed text-ob-tx2">
-      <span className="not-italic font-mono text-[10px] uppercase tracking-[0.12em] text-ob-tx3 mr-2">Example</span>
+      <span className="not-italic font-mono text-[11px] uppercase tracking-[0.12em] text-ob-tx3 mr-2">Example</span>
       "{quote}"
     </div>
   );
@@ -550,7 +550,7 @@ export default function CandidateReportView({
 
                       {dim.quotes.length > 0 && (
                         <div className="space-y-1.5 pt-1">
-                          <span className="text-[10px] font-mono uppercase text-ob-tx2">
+                          <span className="text-[11px] font-mono uppercase text-ob-tx2">
                             Transcript evidence
                           </span>
                           {dim.quotes.map((q, qi) => (
@@ -562,7 +562,7 @@ export default function CandidateReportView({
                               <div className="italic text-ob-soft">
                                 "{q.quote}"
                               </div>
-                              <div className="text-[10px] text-ob-ac mt-1 flex items-center justify-between">
+                              <div className="text-[11px] text-ob-ac mt-1 flex items-center justify-between">
                                 <span>Turn {q.turnIndex} · {q.speaker}</span>
                                 <span>{q.timestamp ? `Seek ${q.timestamp}` : q.relevance} →</span>
                               </div>
@@ -576,7 +576,7 @@ export default function CandidateReportView({
 
                 {data.rawReport && (data.rawReport as any).evaluation_limitations?.length > 0 && (
                   <div className="p-3.5 rounded-xl bg-ob-ov/[0.02] border border-ob-ln text-xs text-ob-tx2 space-y-1">
-                    <span className="font-mono text-[10px] uppercase font-bold text-ob-tx2 block">
+                    <span className="font-mono text-[11px] uppercase font-bold text-ob-tx2 block">
                       Evaluation scope and limitations
                     </span>
                     {(data.rawReport as any).evaluation_limitations.map((lim: string, idx: number) => (
@@ -759,7 +759,7 @@ export default function CandidateReportView({
                     isHighlighted ? "bg-[rgb(var(--ob-ac-rgb)/0.07)] shadow-[inset_0_0_0_1px_rgb(var(--ob-ac-rgb)/0.26)]" : "hover:bg-[rgb(var(--ob-ac-rgb)/0.04)]"
                   }`}
                 >
-                  <div className="ob-mo text-[10.5px] uppercase tracking-[0.08em] font-medium" style={{ color: isCandidate ? "var(--ob-ac)" : "var(--ob-tx3)" }}>
+                  <div className="ob-mo text-[11px] uppercase tracking-[0.08em] font-medium" style={{ color: isCandidate ? "var(--ob-ac)" : "var(--ob-tx3)" }}>
                     {isCandidate ? "You" : "Alex"}
                     {t.time && <span className="block mt-1 normal-case tracking-normal font-normal text-ob-tx3">{t.time}</span>}
                   </div>

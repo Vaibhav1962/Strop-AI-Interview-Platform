@@ -203,7 +203,7 @@ export default function LiquidMicWave({
             {micOn ? "Your Voice" : "Microphone Muted"}
           </span>
           {micOn && micVolume > 0.04 && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
               Active
             </span>
           )}

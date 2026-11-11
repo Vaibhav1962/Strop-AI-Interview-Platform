@@ -244,7 +244,7 @@ function NavList({ current, isCollapsed, onGo }: { current: Page; isCollapsed: b
       {NAV_GROUPS.map((g) => (
         <div key={g.label}>
           {!isCollapsed && (
-            <div className="mt-4 mx-2.5 mb-1.5 font-mono text-[10.5px] font-medium tracking-[0.1em] uppercase text-ob-tx3">
+            <div className="mt-4 mx-2.5 mb-1.5 font-mono text-[11px] font-medium tracking-[0.1em] uppercase text-ob-tx3">
               {g.label}
             </div>
           )}

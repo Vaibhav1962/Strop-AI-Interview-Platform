@@ -1,3 +1,4 @@
+import { useDialogA11y } from "../components/ui";
 import Logo from "../components/Logo";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMediaCapture } from "../hooks/useMediaCapture";
@@ -172,6 +173,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
   const [elapsed, setElapsed] = useState(0);
   const elapsedRef = useRef(0);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const endDlgRef = useDialogA11y<HTMLDivElement>(confirmEnd, () => setConfirmEnd(false));
   const transcriptBottomRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
 
@@ -1007,7 +1009,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                     </button>
                     <div className="flex items-center justify-between gap-3 mt-3 px-1 ob-mo text-[11px] ob-tx3">
                       <span>The clock starts when you join</span>
-                      <span className="flex items-center gap-1.5">press <kbd className="px-1.5 py-0.5 rounded border border-ob-ln2 text-[10.5px] ob-tx2">Enter</kbd></span>
+                      <span className="flex items-center gap-1.5">press <kbd className="px-1.5 py-0.5 rounded border border-ob-ln2 text-[11px] ob-tx2">Enter</kbd></span>
                     </div>
                   </>
                 )}
@@ -1189,10 +1191,10 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               )}
               <div className="ob-scan" aria-hidden="true" />
               <i className="ob-cb a" /><i className="ob-cb b" /><i className="ob-cb c" /><i className="ob-cb d" />
-              <span className="ob-mo absolute left-3 bottom-8 text-[10.5px] ob-tx2 truncate max-w-[70%]" style={{ textShadow: "0 1px 6px #000" }}>
+              <span className="ob-mo absolute left-3 bottom-8 text-[11px] ob-tx2 truncate max-w-[70%]" style={{ textShadow: "0 1px 6px #000" }}>
                 {userResume?.name || "You"}
               </span>
-              <span className="ob-mo absolute right-3 top-7 text-[10.5px] flex items-center gap-1.5" style={{ color: "var(--ob-hot)" }}>
+              <span className="ob-mo absolute right-3 top-7 text-[11px] flex items-center gap-1.5" style={{ color: "var(--ob-hot)" }}>
                 <span className="ob-rec" aria-hidden="true" />
                 LIVE
               </span>
@@ -1465,7 +1467,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           <div className="mt-4 pt-4 border-t ob-bd">
             <div className="flex items-center justify-between mb-2.5">
               <span className="ob-lb">Verified tech profile</span>
-              <span className="ob-mo text-[10.5px]" style={{ color: "var(--ob-ok)" }}>grounded</span>
+              <span className="ob-mo text-[11px]" style={{ color: "var(--ob-ok)" }}>grounded</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {((userResume?.skills && userResume.skills.length > 0) ? userResume.skills : fallback)
@@ -1487,7 +1489,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   <div className="ob-pane p-[18px]">
                     <div className="flex items-center justify-between gap-3">
                       <span className="ob-lb">Interview protocol</span>
-                      <span className="ob-mo text-[10.5px] ob-txa text-right">{trackInfo.badge}</span>
+                      <span className="ob-mo text-[11px] ob-txa text-right">{trackInfo.badge}</span>
                     </div>
                     <ol className="list-none m-0 mt-3 p-0 flex flex-col gap-1.5 text-[13px] ob-tx2">
                       <li className="ob-step ob-now"><span className="ob-dot">1</span>Walk Alex through your background and approach</li>
@@ -1542,7 +1544,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               <div className="ob-pane p-[18px]">
                 <div className="flex items-center justify-between gap-3">
                   <span className="ob-lb">Track milestones</span>
-                  <span className="ob-mo text-[10.5px] ob-txa text-right">{trackInfo.badge}</span>
+                  <span className="ob-mo text-[11px] ob-txa text-right">{trackInfo.badge}</span>
                 </div>
                 <ol className="list-none m-0 mt-3 p-0 flex flex-col gap-1">
                   {getTrackAgenda(selectedTrack).map((topic, tidx) => {
@@ -1632,7 +1634,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
       {/* Confirmation Modal */}
       {confirmEnd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "color-mix(in srgb, var(--ob-bg) 78%, transparent)", backdropFilter: "blur(6px)" }} role="dialog" aria-modal="true" aria-labelledby="end-dialog-title">
-          <div className="ob-app ob-pane max-w-md w-full p-7 flex flex-col gap-5" style={{ background: "var(--ob-bg2)" }}>
+          <div ref={endDlgRef} className="ob-app ob-pane max-w-md w-full p-7 flex flex-col gap-5" style={{ background: "var(--ob-bg2)" }}>
             <div>
               <h3 id="end-dialog-title" className="m-0 text-[17px] font-medium" style={{ letterSpacing: "-0.01em" }}>
                 End this interview?
@@ -1643,7 +1645,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setConfirmEnd(false)} className="ob-btn flex-1">
+              <button type="button" data-autofocus onClick={() => setConfirmEnd(false)} className="ob-btn flex-1">
                 Keep going
               </button>
               <button type="button" onClick={handleEndAndExitSession} className="ob-btn ob-pr flex-1">

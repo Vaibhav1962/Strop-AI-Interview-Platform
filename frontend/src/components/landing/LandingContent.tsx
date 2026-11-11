@@ -356,12 +356,12 @@ function HeroSession() {
 
         <div className={`relative px-5 sm:px-6 pt-5 pb-6 transition-opacity duration-700 ${stage === 3 ? "opacity-0" : "opacity-100"}`}>
           <p className="m-0 text-[13.5px] leading-[1.55] ob-tx3">
-            <span className="ob-mo text-[10.5px] uppercase tracking-[0.12em] mr-2.5">Alex</span>
+            <span className="ob-mo text-[11px] uppercase tracking-[0.12em] mr-2.5">Alex</span>
             Two workers poll your outbox table. What happens to ordering?
           </p>
 
           <div className="flex items-center gap-2.5 mt-5 mb-2">
-            <span className="ob-mo text-[10.5px] uppercase tracking-[0.12em]" style={{ color: "var(--ob-ok)" }}>You</span>
+            <span className="ob-mo text-[11px] uppercase tracking-[0.12em]" style={{ color: "var(--ob-ok)" }}>You</span>
             <span className={`ob-lv ${speaking ? "" : "ob-mute"}`} style={{ height: 10 }}><i /><i /><i /><i /><i /></span>
           </div>
           <p className="m-0 text-[clamp(22px,2.35vw,29px)] leading-[1.3] tracking-[-0.025em] min-h-[5.2em] sm:min-h-[3.9em]">
@@ -398,7 +398,7 @@ function HeroSession() {
                 <li key={e.axis} className={`st-ev ${e.on ? "st-on" : ""} grid grid-cols-[7px_minmax(0,1fr)_auto] gap-x-3 items-baseline py-2.5 border-t border-ob-ln first:border-t-0`}>
                   <span className="w-[7px] h-[7px] rounded-full self-center" style={{ background: e.tone }} />
                   <span className="min-w-0">
-                    <span className="block ob-mo text-[10.5px] uppercase tracking-[0.1em]" style={{ color: e.tone }}>{e.axis}</span>
+                    <span className="block ob-mo text-[11px] uppercase tracking-[0.1em]" style={{ color: e.tone }}>{e.axis}</span>
                     <span className="block text-[13px] ob-tx2 truncate">{e.note}</span>
                   </span>
                   <span className="ob-mo text-[12px] tabular-nums ob-tx2">{e.val}</span>
@@ -410,7 +410,7 @@ function HeroSession() {
           <div className="min-h-[70px] mt-1">
             {stage >= 2 && (
               <p className="st-line-in m-0 border-l-2 pl-3.5 text-[14px] leading-[1.6] ob-tx2" style={{ borderColor: "var(--ob-hot)" }}>
-                <span className="ob-mo text-[10.5px] uppercase tracking-[0.12em] mr-2.5" style={{ color: "var(--ob-hot)" }}>Alex</span>
+                <span className="ob-mo text-[11px] uppercase tracking-[0.12em] mr-2.5" style={{ color: "var(--ob-hot)" }}>Alex</span>
                 You said <span className="italic" style={{ color: "var(--ob-tx)" }}>"a different batch"</span>. Batches finish out of order. What keeps one customer's events in sequence?
               </p>
             )}
@@ -590,7 +590,7 @@ function Receipt({ tone, title, body, quote, note, onHover }: { tone: "good" | "
       <div className="text-[14.5px] font-medium" style={{ color: c }}>{title}</div>
       <p className="m-0 mt-1.5 text-[13.5px] ob-tx2 leading-relaxed">{body}</p>
       <div className="mt-3 border-l-2 pl-3 text-[12.5px] italic leading-relaxed ob-tx2" style={{ borderColor: "var(--ob-ln3)" }}>
-        <span className="not-italic ob-mo text-[10px] uppercase tracking-[0.12em] ob-tx3 mr-2">Example</span>
+        <span className="not-italic ob-mo text-[11px] uppercase tracking-[0.12em] ob-tx3 mr-2">Example</span>
         "{quote}"
       </div>
       <p className="m-0 mt-2 text-[12px] ob-tx3">What this shows: {note}</p>
@@ -694,7 +694,7 @@ function HowItWorks() {
       <Step n="02" title="Get pushed" body="Follow-ups use your own words: the claim you skipped over, the input that breaks it, the cost you did not mention. It moves on when you are solid, and wraps up when time is up.">
         {(seen) => (
           <p className="m-0 border-l-2 pl-3.5 text-[14px] leading-[1.6] ob-tx2 min-h-[2.9em]" style={{ borderColor: "var(--ob-hot)" }}>
-            <span className="ob-mo text-[10.5px] uppercase tracking-[0.12em] mr-2.5" style={{ color: "var(--ob-hot)" }}>Alex</span>
+            <span className="ob-mo text-[11px] uppercase tracking-[0.12em] mr-2.5" style={{ color: "var(--ob-hot)" }}>Alex</span>
             <Typed start={seen} text={"You said \"we cache it\". For how long, and who invalidates it?"} />
           </p>
         )}

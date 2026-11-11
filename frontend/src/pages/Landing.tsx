@@ -1,7 +1,7 @@
 import LandingContent from "../components/landing/LandingContent";
 import { useEffect, useState } from "react";
 import { ApiError, type AuthUser, login, saveSession, signup } from "../lib/api";
-import { usePresence } from "../components/ui";
+import { usePresence, useDialogA11y } from "../components/ui";
 
 type AuthMode = "login" | "signup";
 
@@ -20,6 +20,7 @@ export default function Landing({ onEnter }: { onEnter: (user: AuthUser) => void
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const auth = usePresence(authOpen);
+  const authRef = useDialogA11y<HTMLFormElement>(authOpen);
 
   const resetAuthForm = () => {
     setPassword("");
@@ -112,6 +113,8 @@ export default function Landing({ onEnter }: { onEnter: (user: AuthUser) => void
           aria-modal="true"
         >
           <form
+            ref={authRef}
+            aria-label={mode === "signup" ? "Create account" : "Sign in"}
             className={`relative ob-card !p-7 grid gap-4 w-full max-w-[440px] max-h-[92vh] overflow-y-auto shadow-[0_24px_64px_-16px_rgb(var(--ob-sh)/0.8)] ${auth.closing ? "ob-exit" : "ob-enter"}`} aria-labelledby="auth-title"
             onSubmit={(e) => {
               e.preventDefault();
