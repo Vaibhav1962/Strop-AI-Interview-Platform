@@ -960,7 +960,6 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                         Join interview
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                       </button>
-                      <span className="ob-mo text-[11.5px] ob-tx3">press Enter. The clock starts when you join.</span>
                     </div>
                     {serviceState === "down" && (
                       <p className="m-0 mt-4 text-[12.5px] leading-snug" style={{ color: "var(--ob-wn)" }} role="status">
