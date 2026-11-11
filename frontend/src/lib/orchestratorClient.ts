@@ -110,6 +110,8 @@ export interface CompetencyEvaluation {
   evidence_quotes: EvidenceQuote[];
   strengths: string[];
   gaps_or_limitations: string[];
+  /** The rubric's description of the next level up (what would raise this score). */
+  next_level_anchor?: string | null;
 }
 
 export interface InterviewCoverageSummary {

@@ -731,13 +731,23 @@ EVALUATION RULES & INVARIANTS:
    - 'Weak evidence': Probed, but candidate gave shallow, unworkable, or flawed answers.
    - 'Insufficient coverage': The topic was not sufficiently explored during the interview. DO NOT PENALISE THE CANDIDATE for areas the interviewer did not ask. Set bars_level to null.
    - 'Contradictory evidence': Candidate made conflicting technical statements without reconciling them.
-3. BEHAVIORALLY ANCHORED LEVELS (1 to 4):
+3. BEHAVIORALLY ANCHORED LEVELS (1 to 4), RATED STRICTLY:
    - Level 1: Novice / Flawed / High-risk logic.
-   - Level 2: Working knowledge with gaps or unaddressed edge cases.
-   - Level 3: Solid senior engineer with robust reasoning.
-   - Level 4: Exemplary bar-raiser / mastery.
+   - Level 2: Working knowledge with gaps or unaddressed edge cases. THIS IS THE DEFAULT for an answer that is generally right but not precise.
+   - Level 3: Solid senior engineer. Requires a concrete mechanism, correct reasoning AND the relevant edge cases or trade-offs, all raised by the candidate without being led there.
+   - Level 4: Exemplary bar-raiser. RARE. Requires unprompted trade-off analysis, quantified reasoning or a proof, and zero material errors. Most strong candidates are Level 3, not 4.
    - For 'Insufficient coverage', bars_level MUST be null.
-4. ACTIONABLE GROWTH PLAN: Provide 3 concrete, high-leverage technical recommendations to help the candidate strengthen observed gaps.
+4. STRICT CALIBRATION (these override any urge to be generous):
+   - Rate the WEAKEST evidence for the competency, not the best moment. One confident wrong claim, an unaddressed edge case or a bug caps the level at 2.
+   - Anything the interviewer had to hint, prompt or correct does NOT count toward Level 3 or above.
+   - Buzzwords, name-dropping and statements without a mechanism ("it scales", "we would use caching") earn no credit. Classify such answers as 'Weak evidence'.
+   - Short, one-line or hand-wavy answers cannot be above Level 2. Hedging ("I think", "maybe", "basically") and visible uncertainty on core points lowers the level.
+   - Level 3 needs at least one direct candidate quote that shows it; Level 4 needs at least two. If you cannot quote it, do not rate it that high.
+   - A candidate who talks a lot is not a candidate who answers well. Judge substance only.
+   - 'Demonstrated competence' means Level 3 or 4. Level 1 or 2 is 'Weak evidence' (or 'Contradictory evidence').
+5. For every competency, "gaps_or_limitations" MUST state precisely what was missing, wrong or imprecise (not vague praise), because the candidate sees it as the reason for their score.
+6. ACTIONABLE GROWTH PLAN: Provide 3 concrete, high-leverage technical recommendations to help the candidate strengthen observed gaps.
+7. COMMUNICATION RATINGS ARE STRICT TOO: "Adequate" is the default. "Strong" needs clear evidence in several answers. "Exemplary" is rare. Rambling, restating the question, vagueness and verbal tics lower the rating; put the specific problem in "observation".
 
 OUTPUT FORMAT:
 Respond with a SINGLE VALID JSON OBJECT matching this exact structure:
@@ -845,6 +855,106 @@ Respond with a SINGLE VALID JSON OBJECT matching this exact structure:
 }}
 Do NOT output markdown backticks (```json). Output raw valid JSON only."""
 
+    # --- strict calibration -------------------------------------------------------------------------------------
+    @staticmethod
+    def _norm(text: str) -> str:
+        return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]+", " ", (text or "").lower())).strip()
+
+    @staticmethod
+    def _candidate_corpus(session: Any) -> dict[str, Any]:
+        """The candidate's own turns (normalized), used to check that a quoted line was really said."""
+        turns = [
+            BarsEvaluator._norm(str(t.get("text", "")))
+            for t in (session.transcript or [])
+            if t.get("speaker") in ("Candidate", "You")
+        ]
+        turns = [t for t in turns if t]
+        return {"turns": turns, "words": sum(len(t.split()) for t in turns), "has_transcript": bool(session.transcript)}
+
+    @staticmethod
+    def _quote_is_real(quote: str, corpus: dict[str, Any]) -> bool:
+        q = BarsEvaluator._norm(quote)
+        words = q.split()
+        if len(words) < 4:
+            return False
+        if not corpus["has_transcript"]:
+            return True
+        needed = max(3, int(len(words) * 0.8))
+        wanted = set(words)
+        for turn in corpus["turns"]:
+            if q in turn:
+                return True
+            if len(wanted & set(turn.split())) >= min(needed, len(wanted)):
+                return True
+        return False
+
+    @staticmethod
+    def _apply_strict_level(comp: dict[str, Any], classification: str, corpus: dict[str, Any]) -> str:
+        """Caps a competency's level by what the candidate actually said, and keeps the label honest.
+
+        - quotes the candidate never said are dropped (an invented quote proves nothing)
+        - level 3 needs one real quote, level 4 needs two
+        - a very short interview cannot earn a high level
+        - contradictory evidence cannot be above level 2
+        - 'Demonstrated competence' means level 3 or 4
+        """
+        quotes = [q for q in comp.get("evidence_quotes", []) if isinstance(q, dict)]
+        real = [q for q in quotes if BarsEvaluator._quote_is_real(str(q.get("quote", "")), corpus)]
+        comp["evidence_quotes"] = real
+
+        level = comp.get("bars_level")
+        if not isinstance(level, int):
+            return classification
+        cap = 4
+        if len(real) < 2:
+            cap = min(cap, 3)
+        if len(real) < 1:
+            cap = min(cap, 2)
+        if corpus["has_transcript"]:
+            if corpus["words"] < 120:
+                cap = min(cap, 2)
+            elif corpus["words"] < 300:
+                cap = min(cap, 3)
+        if classification in (EvidenceClassification.CONTRADICTORY_EVIDENCE.value, "Contradictory evidence"):
+            cap = min(cap, 2)
+        if level > cap:
+            comp["bars_level"] = level = cap
+            note = "Rated lower than first assessed: not enough direct evidence from the candidate for a higher level."
+            gaps = list(comp.get("gaps_or_limitations", []))
+            if note not in gaps:
+                gaps.append(note)
+            comp["gaps_or_limitations"] = gaps
+
+        if classification in (EvidenceClassification.DEMONSTRATED_COMPETENCE.value, "Demonstrated competence") and level <= 2:
+            classification = EvidenceClassification.WEAK_EVIDENCE.value
+            comp["evidence_classification"] = classification
+        return classification
+
+    @staticmethod
+    def _cap_communication_rating(rating: str, dim_id: str, telemetry: dict[str, Any]) -> str:
+        """Communication ratings follow the real speech, not the model's first impression."""
+        order = ["Developing", "Adequate", "Strong", "Exemplary"]
+        idx = order.index(rating) if rating in order else 1
+        words = int(telemetry.get("total_words", 0) or 0)
+        fillers = int(telemetry.get("filler_word_count", 0) or 0)
+        wpm = int(telemetry.get("estimated_wpm", 0) or 0)
+        filler_rate = (fillers / words * 100) if words else 0.0
+
+        cap = 3
+        if words < 200:
+            cap = 1
+        # Exemplary is for clean, well paced, substantial speech only.
+        if cap == 3 and not (words >= 300 and filler_rate < 1.0 and (wpm == 0 or 125 <= wpm <= 165)):
+            cap = 2
+        if dim_id in ("verbal_fluency", "confidence", "conciseness"):
+            if filler_rate >= 5:
+                cap = min(cap, 0)
+            elif filler_rate >= 2:
+                cap = min(cap, 1)
+            if wpm and (wpm < 110 or wpm > 175) and dim_id == "verbal_fluency":
+                cap = min(cap, 1)
+        return order[min(idx, cap)]
+
     @staticmethod
     def sanitize_and_validate_report(
         report_dict: dict[str, Any], session: OrchestratorSession
@@ -871,6 +981,8 @@ Do NOT output markdown backticks (```json). Output raw valid JSON only."""
         weak_count = 0
         insufficient_count = 0
         contradictory_count = 0
+        candidate_corpus = BarsEvaluator._candidate_corpus(session)
+        track_defs = {d["id"]: d for d in get_competencies_for_track(canonical_track)}
 
         sanitized_comps = []
         for comp in comps:
@@ -911,6 +1023,10 @@ Do NOT output markdown backticks (```json). Output raw valid JSON only."""
                 comp["bars_anchor"] = "Unassessed due to insufficient interview coverage (no live code implementation occurred)"
                 comp["gaps_or_limitations"] = ["Live code implementation was not conducted during this verbal session."]
 
+            # Strict calibration: the model's level is a ceiling, and the evidence has to earn it.
+            if classification not in (EvidenceClassification.INSUFFICIENT_COVERAGE.value, "Insufficient coverage"):
+                classification = BarsEvaluator._apply_strict_level(comp, classification, candidate_corpus)
+
             # Invariant 2: Insufficient coverage MUST NOT have a numerical BARS level or false quotes
             if classification in (EvidenceClassification.INSUFFICIENT_COVERAGE.value, "Insufficient coverage"):
                 comp["bars_level"] = None
@@ -929,7 +1045,7 @@ Do NOT output markdown backticks (```json). Output raw valid JSON only."""
             # Invariant 3: Sanitize evidence quotes and bound text length
             if classification not in (EvidenceClassification.INSUFFICIENT_COVERAGE.value, "Insufficient coverage"):
                 clean_quotes = []
-                for q in quotes:
+                for q in comp.get("evidence_quotes", []):  # already checked against the transcript above
                     if isinstance(q, dict):
                         clean_quotes.append({
                             "turn_index": q.get("turn_index", 0),
@@ -938,12 +1054,26 @@ Do NOT output markdown backticks (```json). Output raw valid JSON only."""
                         })
                 comp["evidence_quotes"] = clean_quotes
 
+            # The anchor shown to the candidate is the rubric's own text for the FINAL level (the model's wording may
+            # describe a higher level than the one this strict pass allowed), plus what the next level asks for.
+            definition = track_defs.get(comp_id)
+            level_now = comp.get("bars_level")
+            if definition and isinstance(level_now, int):
+                anchors = definition.get("anchors", {})
+                comp["bars_anchor"] = anchors.get(level_now) or comp.get("bars_anchor", "")
+                comp["next_level_anchor"] = anchors.get(level_now + 1) if level_now < 4 else None
+            else:
+                comp["next_level_anchor"] = None
+
             sanitized_comps.append(comp)
 
         report_dict["competency_evaluations"] = sanitized_comps
 
         total_comps = len(sanitized_comps) or len(get_competencies_for_track(canonical_track))
         coverage_pct = round(((total_comps - insufficient_count) / total_comps) * 100, 1) if total_comps > 0 else 0.0
+
+        assessed_levels = [c["bars_level"] for c in sanitized_comps if isinstance(c.get("bars_level"), int)]
+        avg_level = sum(assessed_levels) / len(assessed_levels) if assessed_levels else 0.0
 
         # Grounded Calibration Signal
         if coverage_pct < 50.0:
@@ -952,10 +1082,10 @@ Do NOT output markdown backticks (```json). Output raw valid JSON only."""
         elif contradictory_count > 0:
             cal_signal = "Mixed Evidence with Critical Concerns"
             rec = "Mixed Evidence with Contradictions"
-        elif weak_count >= 2:
+        elif weak_count >= 2 or avg_level < 2.2:
             cal_signal = "Developing / Requires Fundamental Strengthening"
             rec = "Developing / Requires Strengthening"
-        elif weak_count == 1:
+        elif weak_count == 1 or avg_level < 3.0:
             cal_signal = "Solid Evidence with Specific Gaps"
             rec = "Solid Evidence with Specific Gaps"
         else:
@@ -1006,6 +1136,8 @@ Do NOT output markdown backticks (```json). Output raw valid JSON only."""
             quote = existing.get("evidence_quote")
             if not quote and cand_quotes:
                 quote = cand_quotes[len(sanitized_dims) % len(cand_quotes)]
+
+            rating = BarsEvaluator._cap_communication_rating(rating, dim_id, telemetry_dict)
 
             sanitized_dims.append({
                 "dimension_id": dim_id,

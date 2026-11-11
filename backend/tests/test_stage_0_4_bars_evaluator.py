@@ -483,7 +483,9 @@ def test_early_ended_session_calibrates_as_inconclusive():
     report = BarsEvaluator.sanitize_and_validate_report(raw_early_json, dummy_session)
     assert report.calibration_signal == "Inconclusive Due to Limited Coverage"
     assert report.coverage_summary.insufficient_coverage_count == 5
-    assert report.coverage_summary.demonstrated_count == 1
+    # One two-word quote from a one-turn session is not enough evidence to call anything demonstrated.
+    assert report.coverage_summary.demonstrated_count == 0
+    assert report.coverage_summary.weak_count == 1
     assert report.coverage_summary.coverage_percentage < 50.0
 
 

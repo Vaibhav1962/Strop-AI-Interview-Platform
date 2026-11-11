@@ -68,10 +68,24 @@ export interface CandidateReportCommunication {
   }[];
   coachingTips: string[];
   /** Concrete radar axes for the delivery tab (0-4 scale). */
-  radar?: { dimension: string; level: number; fullMark: number }[];
+  radar?: RadarPointWithDetail[];
   wentWell?: { title: string; detail: string; quote?: string }[];
   needsWork?: { title: string; detail: string; quote?: string }[];
 }
+
+/** Why an axis got its score and what would raise it; shown when an axis is picked on the radar. */
+export interface RadarDetail {
+  why: string;
+  quote?: string;
+  /** What was missing, wrong or imprecise. */
+  gaps: string[];
+  /** Concrete next steps. */
+  improve: string[];
+  /** What the next level up asks for, from the rubric. */
+  nextLevel?: string;
+}
+
+export type RadarPointWithDetail = { dimension: string; level: number; fullMark: number; detail?: RadarDetail };
 
 export interface NormalizedCandidateReport {
   track: string;
@@ -89,7 +103,7 @@ export interface NormalizedCandidateReport {
     badgeVariant: "emerald" | "indigo" | "amber" | "rose" | "slate";
   };
   dimensions: CandidateReportDimension[];
-  radarData: { dimension: string; level: number; fullMark: number }[];
+  radarData: RadarPointWithDetail[];
   strengths: CandidateReportStrength[];
   improvements: CandidateReportImprovement[];
   recommendations: CandidateReportRecommendation[];
@@ -155,6 +169,16 @@ const RADAR_LABELS: Record<string, string> = {
 
 /** Axes that describe how the candidate reacted to hints, not a skill of the track, so they stay off the radar. */
 const NOT_RADAR_AXES = new Set(["hint_responsiveness"]);
+
+const COMM_IMPROVE: Record<string, string> = {
+  clarity: "Name the exact thing before describing it (the data structure, the API, the number). Say the noun instead of \"it\" or \"this\", and finish each sentence before starting the next.",
+  structure: "Open every answer with the conclusion in one sentence, then give two or three supporting points. Say \"first, second, third\" so the listener can follow.",
+  conciseness: "Answer the question asked in about 45 seconds, then stop and let the interviewer pull for more. Cut restating the question and repeated caveats.",
+  verbal_fluency: "Pause silently instead of filling the gap. Practise answers out loud and record yourself, aiming for 125 to 165 words per minute.",
+  confidence: "State your decision, then your reason, without hedges like \"I think\" or \"maybe\". When unsure, say exactly what you are unsure about.",
+  technical_communication: "Explain the mechanism step by step with a tiny concrete example (a specific input and output) before generalising.",
+  responsiveness: "Answer the question you were asked first. When the interviewer gives a hint or correction, say how it changes your approach.",
+};
 
 const COMM_AXIS_LABELS: Record<string, string> = {
   clarity: "Clarity",
@@ -322,7 +346,7 @@ export function normalizeReportForCandidate(
 
     // 2. Track Dimensions
     const dimensions: CandidateReportDimension[] = [];
-    const radarData: { dimension: string; level: number; fullMark: number }[] = [];
+    const radarData: RadarPointWithDetail[] = [];
 
     (bars.competency_evaluations || []).forEach((c: CompetencyEvaluation) => {
       const isUnassessed = c.evidence_classification === "Insufficient coverage" || c.bars_level === null;
@@ -377,10 +401,27 @@ export function normalizeReportForCandidate(
 
       // Include in radar data only if assessed (avoid plotting unassessed as zero!)
       if (c.bars_level !== null && !isUnassessed && !NOT_RADAR_AXES.has(c.competency_id)) {
+        const nextLevel = c.next_level_anchor ? String(c.next_level_anchor).replace(/^Level\s*\d:\s*/i, "") : undefined;
+        const candidateQuote = (c.evidence_quotes || []).find((x) => /candidate|you/i.test(x.speaker || "")) || (c.evidence_quotes || [])[0];
+        const gaps = (c.gaps_or_limitations || []).filter(Boolean);
         radarData.push({
           dimension: RADAR_LABELS[c.competency_id] || c.competency_name.split(/[&,]/)[0].trim().slice(0, 16),
           level: c.bars_level,
           fullMark: 4,
+          detail: {
+            why: [
+              c.behavioral_observation || c.bars_anchor,
+              ...(c.strengths || []).slice(0, 2).map((x) => `Worked: ${x}`),
+              ...gaps.filter((g) => /^Rated lower/i.test(g)),
+            ].filter(Boolean).join(" "),
+            quote: candidateQuote?.quote,
+            gaps,
+            improve: [
+              ...gaps.filter((g) => !/^Rated lower/i.test(g)).slice(0, 2).map((g) => `Cover what was missing: ${g}`),
+              ...(nextLevel ? [`To reach Level ${c.bars_level + 1}: ${nextLevel}`] : ["Already at the top of the scale. Keep backing every claim with a number or a proof."]),
+            ],
+            nextLevel,
+          },
         });
       }
     });
@@ -506,14 +547,51 @@ export function normalizeReportForCandidate(
     const tics = ticStats(candidateTurns);
     const levelOf = (d: { id: string; rating: string }) => capLevel(ratingToLevel(d.rating), d.id, tics.rate);
 
-    const commRadar: { dimension: string; level: number; fullMark: number }[] = commDims.map((d) => ({
-      dimension: COMM_AXIS_LABELS[d.id] || d.name.split(/[&,]/)[0].trim().slice(0, 14),
-      level: levelOf(d),
-      fullMark: 4,
-    }));
+    const topTics = Object.entries(tics.breakdown || {})
+      .sort((x, y) => y[1] - x[1])
+      .slice(0, 3)
+      .map(([w, n]) => `"${w}" ${n}x`)
+      .join(", ");
+    const commRadar: RadarPointWithDetail[] = commDims.map((d) => {
+      const level = levelOf(d);
+      const held = level < ratingToLevel(d.rating);
+      return {
+        dimension: COMM_AXIS_LABELS[d.id] || d.name.split(/[&,]/)[0].trim().slice(0, 14),
+        level,
+        fullMark: 4,
+        detail: {
+          why: `${d.observation}${held ? ` Held below the first read because of verbal tics in your answers${topTics ? ` (${topTics})` : ""}.` : ""}`,
+          quote: d.quote,
+          gaps: [],
+          improve: [COMM_IMPROVE[d.id] || "Practise this out loud and listen back for where it slips.", ...(level < 4 ? [`To reach Level ${level + 1}: do this in every answer, not just the strong ones.`] : [])],
+        },
+      };
+    });
     const pace = telemetry.estimated_wpm > 0 ? paceLevel(telemetry.estimated_wpm) : null;
-    if (pace !== null) commRadar.push({ dimension: "Pace", level: pace, fullMark: 4 });
-    if (tics.rate !== null) commRadar.push({ dimension: "Filler Control", level: fillerLevel(tics.rate), fullMark: 4 });
+    if (pace !== null) {
+      commRadar.push({
+        dimension: "Pace",
+        level: pace,
+        fullMark: 4,
+        detail: {
+          why: `You spoke at about ${telemetry.estimated_wpm} words per minute. ${wpmAssessment}`,
+          gaps: pace < 4 ? [wpmAssessment] : [],
+          improve: ["Aim for 125 to 165 words per minute: record one answer, count the words, and adjust.", "Slow down on the key decision and speed up on familiar background."],
+        },
+      });
+    }
+    if (tics.rate !== null) {
+      commRadar.push({
+        dimension: "Filler Control",
+        level: fillerLevel(tics.rate),
+        fullMark: 4,
+        detail: {
+          why: `${Math.round(tics.weighted)} filler or hedge words in ${tics.words} words (${tics.rate.toFixed(1)} per 100)${topTics ? `: ${topTics}` : ""}.`,
+          gaps: tics.rate >= 1 ? [`${tics.rate.toFixed(1)} fillers per 100 words`] : [],
+          improve: ["Replace each filler with a silent one-beat pause.", topTics ? `Watch for your top habits: ${topTics}.` : "Keep it up; re-check after your next session."],
+        },
+      });
+    }
 
     const wentWell: { title: string; detail: string; quote?: string }[] = commDims
       .filter((d) => levelOf(d) >= 3)

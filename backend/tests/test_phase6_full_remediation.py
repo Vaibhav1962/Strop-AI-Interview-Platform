@@ -234,5 +234,6 @@ def test_bars_evaluation_preserves_ratings_when_code_was_submitted():
 
     sanitized = evaluator.sanitize_and_validate_report(mock_llm_report, session)
     code_eval = next(c for c in sanitized.competency_evaluations if c.competency_id == "code_quality_and_implementation")
-    assert code_eval.bars_level == 4
+    # Ratings are kept when code was submitted (not nulled); the strict pass may cap a level-4 claim with one quote.
+    assert code_eval.bars_level is not None and code_eval.bars_level >= 3
     assert code_eval.evidence_classification == EvidenceClassification.DEMONSTRATED_COMPETENCE

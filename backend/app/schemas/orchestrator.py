@@ -263,6 +263,8 @@ class CompetencyEvaluation(BaseModel):
     evidence_quotes: list[EvidenceQuote] = Field(default_factory=list)
     strengths: list[str] = Field(default_factory=list)
     gaps_or_limitations: list[str] = Field(default_factory=list)
+    # The rubric's description of the next level up, so a report can say exactly what would raise this score.
+    next_level_anchor: str | None = None
 
 
 class CommunicationDimension(BaseModel):

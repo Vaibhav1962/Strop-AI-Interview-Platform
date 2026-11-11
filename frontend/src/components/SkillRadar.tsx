@@ -7,9 +7,19 @@ const LEVEL_WORDS = ["", "Developing", "Working", "Fluent", "Expert"];
 /**
  * Skill profile in the same language as the landing hero: hairline guides, a cream shape that
  * draws in once, small mono labels. An axis at the lowest level is marked in orange. Hovering a
- * vertex names its level.
+ * vertex names its level; clicking (or pressing Enter on) an axis selects it.
  */
-export default function SkillRadar({ data, max = 4 }: { data: SkillRadarPoint[]; max?: number }) {
+export default function SkillRadar({
+  data,
+  max = 4,
+  selected = null,
+  onSelect,
+}: {
+  data: SkillRadarPoint[];
+  max?: number;
+  selected?: number | null;
+  onSelect?: (index: number) => void;
+}) {
   const gradId = useId();
   const [t, setT] = useState(0);
   const [hover, setHover] = useState<number | null>(null);
@@ -74,7 +84,7 @@ export default function SkillRadar({ data, max = 4 }: { data: SkillRadarPoint[];
         const low = d.level <= 1;
         return (
           <g key={d.dimension}>
-            <circle cx={x} cy={y} r="9" fill="none" stroke={low ? "var(--ob-hot)" : "var(--ob-ac)"} strokeWidth="1" style={{ opacity: hover === i ? 0.55 : 0, transition: "opacity 0.3s var(--ob-ease)" }} />
+            <circle cx={x} cy={y} r="9" fill="none" stroke={low ? "var(--ob-hot)" : "var(--ob-ac)"} strokeWidth="1" style={{ opacity: selected === i ? 0.9 : hover === i ? 0.55 : 0, transition: "opacity 0.3s var(--ob-ease)" }} />
             {low ? (
               <circle cx={x} cy={y} r="3.4" fill="var(--ob-bg2)" stroke="var(--ob-hot)" strokeWidth="1.5" />
             ) : (
@@ -90,7 +100,21 @@ export default function SkillRadar({ data, max = 4 }: { data: SkillRadarPoint[];
         const low = d.level <= 1;
         const on = hover === i;
         return (
-          <g key={d.dimension} onMouseEnter={() => setHover(i)} style={{ cursor: "default" }}>
+          <g
+            key={d.dimension}
+            onMouseEnter={() => setHover(i)}
+            onClick={() => onSelect?.(i)}
+            onKeyDown={(e) => {
+              if (onSelect && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                onSelect(i);
+              }
+            }}
+            role={onSelect ? "button" : undefined}
+            tabIndex={onSelect ? 0 : undefined}
+            aria-label={onSelect ? `${d.dimension}, level ${d.level} of ${max}. Show why and how to improve` : undefined}
+            style={{ cursor: onSelect ? "pointer" : "default", outline: "none" }}
+          >
             <title>{`${d.dimension}: ${d.level} of ${max}${LEVEL_WORDS[Math.round(d.level)] ? `, ${LEVEL_WORDS[Math.round(d.level)]}` : ""}`}</title>
             {/* A generous invisible target so the label and its vertex both respond */}
             <line x1={cx + c * 20} y1={cy + s * 20} x2={cx + c * (R + 40)} y2={cy + s * (R + 40)} stroke="transparent" strokeWidth="26" />
@@ -102,7 +126,7 @@ export default function SkillRadar({ data, max = 4 }: { data: SkillRadarPoint[];
               fontSize="9.5"
               fontWeight="500"
               letterSpacing="0.08em"
-              fill={low ? "var(--ob-hot)" : on ? "var(--ob-tx)" : "var(--ob-tx3)"}
+              fill={low ? "var(--ob-hot)" : on || selected === i ? "var(--ob-tx)" : "var(--ob-tx3)"}
               style={{ opacity: (hover === null || on ? 1 : 0.45) * t, transition: "opacity 0.3s var(--ob-ease), fill 0.3s var(--ob-ease)" }}
             >
               {short(d.dimension)}

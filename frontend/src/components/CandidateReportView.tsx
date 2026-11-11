@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Segmented } from "./ui";
+import { Segmented, useDialogA11y } from "./ui";
 import SkillRadar from "./SkillRadar";
 import {
   normalizeReportForCandidate,
   type NormalizedCandidateReport,
   type CandidateReportDimension,
+  type RadarDetail,
 } from "../lib/reportNormalizer";
 
 interface CandidateReportViewProps {
@@ -25,30 +26,93 @@ interface CandidateReportViewProps {
   onDownloadPdf?: (sessionId: string, title?: string) => Promise<void>;
 }
 
-type RadarPoint = { dimension: string; level: number; fullMark: number };
+type RadarPoint = { dimension: string; level: number; fullMark: number; detail?: RadarDetail };
 
 const LEVEL_WORDS = ["", "Developing", "Working", "Fluent", "Expert"];
 
-function RadarPanel({ title, subtitle, data, emptyNote }: { title: string; subtitle: string; data: RadarPoint[]; emptyNote: string }) {
+/** Small window for one axis: why it scored that way, and what would raise it. */
+function AxisDetail({ point, onClose }: { point: RadarPoint; onClose: () => void }) {
+  const ref = useDialogA11y<HTMLDivElement>(true, onClose);
+  const d = point.detail;
+  const low = point.level <= 1;
   return (
-    <div className="rounded-[14px] p-6 bg-ob-bg2 border border-ob-ln lg:sticky lg:top-4">
+    <div
+      ref={ref}
+      role="dialog"
+      aria-label={`${point.dimension}: why this score and how to improve`}
+      className="ob-enter mt-3 rounded-[12px] border border-ob-ln2 bg-ob-card p-4"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[14.5px] font-medium">{point.dimension}</div>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="flex gap-[3px]" aria-hidden="true">
+              {[1, 2, 3, 4].map((n) => (
+                <i key={n} className={`block w-3.5 h-[3px] rounded-sm ${n <= point.level ? (low ? "bg-ob-hot" : "bg-ob-ac") : "bg-ob-ln"}`} />
+              ))}
+            </span>
+            <span className="font-mono text-[11px] text-ob-tx3">Level {Math.round(point.level)} of {point.fullMark || 4} · {LEVEL_WORDS[Math.round(point.level)]}</span>
+          </div>
+        </div>
+        <button type="button" data-autofocus onClick={onClose} aria-label="Close" className="w-7 h-7 -mr-1 -mt-1 rounded-[7px] grid place-items-center text-ob-tx3 hover:bg-ob-bg3 hover:text-ob-tx transition-colors cursor-pointer shrink-0">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      {d ? (
+        <div className="mt-3.5 space-y-3.5">
+          <div>
+            <div className="ob-lb mb-1.5">Why this score</div>
+            <p className="m-0 text-[13px] leading-relaxed text-ob-soft">{d.why || "No explanation was recorded for this area."}</p>
+            {d.quote && (
+              <p className="m-0 mt-2 border-l-2 border-ob-ln3 pl-2.5 text-[12.5px] italic leading-relaxed text-ob-tx2">"{d.quote.slice(0, 200)}"</p>
+            )}
+          </div>
+          <div>
+            <div className="ob-lb ob-txa mb-1.5">How to improve</div>
+            <ul className="m-0 pl-4 text-[13px] leading-relaxed text-ob-soft list-disc space-y-1">
+              {d.improve.map((x, i) => <li key={i}>{x}</li>)}
+            </ul>
+          </div>
+        </div>
+      ) : (
+        <p className="m-0 mt-3 text-[12.5px] text-ob-tx3">No detail was recorded for this area.</p>
+      )}
+    </div>
+  );
+}
+
+function RadarPanel({ title, subtitle, data, emptyNote }: { title: string; subtitle: string; data: RadarPoint[]; emptyNote: string }) {
+  const [selected, setSelected] = useState<number | null>(null);
+  const shown = selected !== null && selected < data.length ? data[selected] : null;
+  return (
+    <div className="relative rounded-[14px] p-6 bg-ob-bg2 border border-ob-ln lg:sticky lg:top-4">
       <div className="ob-lb">{title}</div>
       <p className="text-[12.5px] text-ob-tx3 mt-1.5 mb-2">{subtitle}</p>
       {data.length >= 3 ? (
         <>
-          <SkillRadar data={data} />
+          <SkillRadar data={data} selected={selected} onSelect={(i) => setSelected((cur) => (cur === i ? null : i))} />
+          <p className="m-0 mt-1 text-[11.5px] text-ob-tx3">Select a skill to see why it scored that way and how to raise it.</p>
+          {shown && <AxisDetail key={shown.dimension} point={shown} onClose={() => setSelected(null)} />}
           <ul className="list-none m-0 mt-3 p-0">
             {data.map((d, i) => (
-              <li key={d.dimension} className="ob-pop flex items-center justify-between gap-3 py-2 border-t border-ob-ln text-[12.5px]" style={{ ["--i" as string]: i + 8 }}>
-                <span className="text-ob-soft min-w-0 truncate">{d.dimension}</span>
-                <span className="flex items-center gap-2 shrink-0">
-                  <span className="flex gap-[3px]" aria-hidden="true">
-                    {[1, 2, 3, 4].map((n) => (
-                      <i key={n} className={`block w-3.5 h-[3px] rounded-sm ${n <= d.level ? (d.level <= 1 ? "bg-ob-hot" : "bg-ob-ac") : "bg-ob-ln"}`} />
-                    ))}
+              <li key={d.dimension} className="ob-pop border-t border-ob-ln" style={{ ["--i" as string]: i + 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setSelected((cur) => (cur === i ? null : i))}
+                  aria-expanded={selected === i}
+                  className={`w-full flex items-center justify-between gap-3 py-2 text-[12.5px] text-left cursor-pointer transition-colors ${selected === i ? "text-ob-tx" : "text-ob-soft hover:text-ob-tx"}`}
+                >
+                  <span className="min-w-0 truncate">{d.dimension}</span>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <span className="flex gap-[3px]" aria-hidden="true">
+                      {[1, 2, 3, 4].map((n) => (
+                        <i key={n} className={`block w-3.5 h-[3px] rounded-sm ${n <= d.level ? (d.level <= 1 ? "bg-ob-hot" : "bg-ob-ac") : "bg-ob-ln"}`} />
+                      ))}
+                    </span>
+                    <span className="font-mono text-[11px] text-ob-tx3 w-[72px] text-right">{LEVEL_WORDS[Math.round(d.level)]}</span>
                   </span>
-                  <span className="font-mono text-[11px] text-ob-tx3 w-[72px] text-right">{LEVEL_WORDS[Math.round(d.level)]}</span>
-                </span>
+                </button>
               </li>
             ))}
           </ul>
@@ -137,67 +201,6 @@ const BADGE_TONE: Record<string, string> = {
   indigo: "var(--ob-ac)",
   slate: "var(--ob-tx3)",
 };
-
-/** The evaluator's verdict for the whole session, with how much of the rubric the interview reached. */
-function VerdictCard({ a }: { a: NormalizedCandidateReport["overallAssessment"] }) {
-  const tone = BADGE_TONE[a.badgeVariant] || BADGE_TONE.slate;
-  const pct = Math.max(0, Math.min(100, Math.round(a.coveragePct)));
-  return (
-    <div className="ob-card ob-enter !p-6 grid gap-x-10 gap-y-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] items-center hover:!translate-y-0">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="ob-lb">Overall</span>
-          <span className="ob-chip ob-sq" style={{ color: tone, borderColor: `color-mix(in srgb, ${tone} 40%, transparent)` }}>{a.calibrationSignal}</span>
-        </div>
-        {a.summary && <p className="m-0 mt-3 text-[15px] leading-[1.65] tracking-[-0.005em] text-ob-soft max-w-[62ch]">{a.summary}</p>}
-      </div>
-      <div>
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="ob-lb">Rubric reached</span>
-          <span className="ob-mo text-[11.5px] text-ob-tx3">{a.demonstratedCount} of {a.totalCompetencies} demonstrated</span>
-        </div>
-        <div className="text-[34px] font-medium tracking-[-0.03em] leading-none mt-3">
-          <span key={pct} className="ob-cnt" style={{ ["--t" as string]: pct }} aria-hidden="true" />
-          <span className="sr-only">{pct}</span>
-          <span className="text-[18px] text-ob-tx3">%</span>
-        </div>
-        <div className="ob-bar mt-3"><i style={{ width: `${pct}%` }} /></div>
-      </div>
-    </div>
-  );
-}
-
-/** Words, speaking time, pace and verbal tics, straight from the transcript and the backend telemetry. */
-function DeliveryStrip({ c }: { c: NormalizedCandidateReport["communication"] }) {
-  const t = c.telemetry;
-  const hasPace = t.wpm > 0;
-  const tics = Object.entries(t.fillerBreakdown || {}).sort((a, b) => b[1] - a[1]).slice(0, 4);
-  const cells: { label: string; value: React.ReactNode; sub?: React.ReactNode }[] = [
-    { label: "Speaking time", value: <>{t.speakingMinutes}<span className="text-[15px] text-ob-tx3"> min</span></>, sub: "your side of the call" },
-    { label: "Words", value: t.totalWords.toLocaleString(), sub: "spoken by you" },
-    {
-      label: "Pace",
-      value: hasPace ? <>{Math.round(t.wpm)}<span className="text-[15px] text-ob-tx3"> wpm</span></> : "—",
-      sub: hasPace ? t.wpmAssessment : "not enough speech to measure",
-    },
-    {
-      label: "Fillers and tics",
-      value: t.totalWords >= 40 ? t.fillerCount : "—",
-      sub: tics.length ? tics.map(([w, n]) => `"${w}" ${n}x`).join(", ") : t.totalWords >= 40 ? "none stood out" : "too little speech to judge",
-    },
-  ];
-  return (
-    <div className="ob-enter grid grid-cols-2 lg:grid-cols-4 gap-px rounded-[12px] border border-ob-ln bg-ob-ln overflow-hidden">
-      {cells.map((x) => (
-        <div key={x.label} className="bg-ob-card px-5 py-[18px] min-w-0">
-          <div className="ob-lb">{x.label}</div>
-          <div className="text-[28px] font-medium tracking-[-0.03em] mt-2 leading-[1.15]">{x.value}</div>
-          {x.sub && <div className="text-[12px] text-ob-tx3 mt-1.5 leading-snug">{x.sub}</div>}
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function CandidateReportView({
   report,
@@ -413,16 +416,6 @@ export default function CandidateReportView({
 
       {activeTab === "technical" && !tooShort && (
         <div className="ob-enter space-y-6">
-          {/* Legacy reports carry placeholder summary numbers, so the verdict is only shown for real evaluations. */}
-          {data.isBars && (
-            <VerdictCard
-              a={{
-                ...data.overallAssessment,
-                // The normalizer substitutes a canned sentence when the evaluator wrote no summary; do not show that as a verdict.
-                summary: (data.rawReport as any)?.executive_summary?.trim() ? data.overallAssessment.summary : "",
-              }}
-            />
-          )}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             {/* Left: scrolling feedback */}
             <div className="lg:col-span-7 rounded-[14px] bg-ob-bg2 border border-ob-ln overflow-hidden">
@@ -598,19 +591,6 @@ export default function CandidateReportView({
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {activeTab === "communication" && !tooShort && (
         <div className="ob-enter space-y-6">
-          <DeliveryStrip c={data.communication} />
-          {/* The evaluator's own read of delivery, only when it wrote one (the normalizer otherwise fills a default). */}
-          {(data.rawReport as any)?.communication_and_deliberation && (
-            <div className="ob-card !p-5 hover:!translate-y-0 flex flex-wrap items-start gap-x-6 gap-y-2">
-              <div className="flex items-center gap-2.5 shrink-0">
-                <span className="ob-lb">Delivery</span>
-                {(data.rawReport as any)?.communication_scorecard?.overall_rating && (
-                  <span className="ob-chip ob-sq">{(data.rawReport as any).communication_scorecard.overall_rating}</span>
-                )}
-              </div>
-              <p className="m-0 flex-[1_1_360px] min-w-0 text-[14px] leading-[1.65] text-ob-soft">{(data.rawReport as any).communication_and_deliberation}</p>
-            </div>
-          )}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             <div className="lg:col-span-7 rounded-[14px] bg-ob-bg2 border border-ob-ln overflow-hidden">
               <div className="max-h-[720px] overflow-y-auto overflow-x-hidden p-6 space-y-8">
