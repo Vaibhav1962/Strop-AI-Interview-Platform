@@ -1,4 +1,4 @@
-import { useDialogA11y } from "../components/ui";
+import { useDialogA11y, Segmented } from "../components/ui";
 import Logo from "../components/Logo";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMediaCapture } from "../hooks/useMediaCapture";
@@ -871,152 +871,103 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           </button>
         </header>
 
-        <main
-          className="flex-1 grid place-items-center px-4 sm:px-8 py-8 sm:py-10"
-          style={{
-            backgroundImage:
-              "radial-gradient(900px 480px at 80% -10%, rgb(var(--ob-ac-rgb)/0.075), transparent 62%), radial-gradient(720px 420px at 4% 108%, rgba(255,106,61,0.05), transparent 62%)",
-          }}
-        >
-          <div className="w-full max-w-[1120px] grid gap-5 items-start grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-            {/* ── Left: camera and pre-flight ── */}
-            <section className="ob-pane p-3 ob-rise" style={{ ["--i" as string]: 0 }}>
-              <div className="ob-cam w-full h-[280px] sm:h-auto sm:aspect-[16/10]">
+        <main className="flex-1 grid place-items-center px-5 sm:px-8 py-8 sm:py-12">
+          <div className="w-full max-w-[1020px] grid gap-10 lg:gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.92fr)] items-center">
+            {/* Left: you, and whether everything works. No boxes, just the camera and a short checklist. */}
+            <section className="ob-rise min-w-0" style={{ ["--i" as string]: 0 }}>
+              <div className={`${camOk ? "ob-cam" : "relative overflow-hidden grid place-items-center border border-ob-ln bg-ob-bg2"} w-full h-[250px] sm:h-auto sm:aspect-[4/3]`} style={{ borderRadius: 16 }}>
                 {camOk ? (
                   <video ref={attachVideoNode} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover scale-x-[-1]" />
                 ) : (
                   <div className="text-center ob-tx3 px-6">
-                    <span className="w-16 h-16 rounded-full border grid place-items-center mx-auto mb-3 text-xl font-semibold ob-tx" style={{ borderColor: "var(--ob-ln2)", background: "var(--ob-bg3)" }}>
+                    <span className="w-14 h-14 rounded-full border grid place-items-center mx-auto mb-3 text-lg font-medium ob-tx" style={{ borderColor: "var(--ob-ln2)", background: "var(--ob-bg3)" }}>
                       {initial}
                     </span>
-                    <div className="ob-mo text-[11.5px]">{camMessage ? "Camera unavailable" : "Camera off"}</div>
-                    {camMessage && <div className="text-[12px] mt-1.5" style={{ color: "var(--ob-wn)" }}>{camMessage}</div>}
-                    {camMessage && (
-                      <button type="button" onClick={retryMedia} className="ob-btn ob-sm mt-3">
-                        Retry camera
-                      </button>
-                    )}
+                    <div className="text-[13px] ob-tx2">{camMessage ? "Camera unavailable" : "Camera off"}</div>
+                    {camMessage && <div className="text-[12.5px] mt-1 max-w-[34ch] mx-auto leading-snug" style={{ color: "var(--ob-wn)" }}>{camMessage}</div>}
                   </div>
                 )}
-
-                {/* Overlays */}
-                <span className="ob-chip absolute left-3.5 top-3.5" style={{ background: "color-mix(in srgb, var(--ob-bg) 60%, transparent)", backdropFilter: "blur(6px)" }}>
-                  Preview
-                </span>
-                <div
-                  className="absolute left-3.5 right-3.5 bottom-3.5 flex items-end justify-between gap-3"
-                  style={{ textShadow: "0 1px 8px rgb(var(--ob-sh)/0.8)" }}
-                >
-                  <span className="ob-mo text-[11.5px] ob-tx truncate">{userResume?.name || "You"}</span>
-                  <div className="flex items-end gap-[3px] h-6 shrink-0" aria-hidden="true">
-                    {Array.from({ length: 18 }).map((_, i) => {
-                      const on = micOn && level * 18 > i;
-                      return (
-                        <i
-                          key={i}
-                          style={{
-                            width: 3,
-                            height: 7 + (i % 6) * 3,
-                            borderRadius: 2,
-                            background: on ? "var(--ob-ok)" : "rgb(var(--ob-ov)/0.22)",
-                            transition: "background 90ms linear",
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
+                <span className="ob-mo absolute left-4 bottom-4 text-[11.5px] ob-tx2 truncate max-w-[70%]">{userResume?.name || "You"}</span>
+                {/* Mic level: one hairline that fills with your voice, instead of a bar chart */}
+                <div className="absolute left-0 right-0 bottom-0 h-[3px]" style={{ background: "rgb(var(--ob-ov)/0.1)" }} aria-hidden="true">
+                  <div
+                    className="h-full origin-left"
+                    style={{
+                      background: "var(--ob-ok)",
+                      transform: `scaleX(${micOn ? level : 0})`,
+                      transition: "transform 140ms linear",
+                    }}
+                  />
                 </div>
               </div>
 
-              {/* Pre-flight checks */}
-              <div className="px-2 pt-4 pb-1">
-                <div className="flex items-baseline justify-between">
-                  <span className="ob-lb">Pre-flight check</span>
-                  <span className="ob-mo text-[11.5px] ob-tx3">{readyCount} of {checks.length} ready</span>
-                </div>
-                <ul className="list-none m-0 mt-2 p-0" aria-live="polite">
-                  {checks.map((c, i) => (
-                    <li key={c.key} className={`flex items-center gap-3 py-2.5 text-[13px] ${i > 0 ? "border-t ob-bd" : ""}`}>
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: dotColor[c.state], boxShadow: c.state === "ok" ? "0 0 0 3px rgba(111,214,164,0.14)" : "none", transition: `background-color .5s var(--ob-ease) ${i * 140}ms, box-shadow .5s var(--ob-ease) ${i * 140}ms` }}
-                        aria-hidden="true"
-                      />
-                      <span className="w-[92px] shrink-0">{c.label}</span>
-                      <span className="flex-1 min-w-0 ob-tx3 leading-snug" style={c.state === "warn" ? { color: "var(--ob-wn)" } : undefined}>{c.detail}</span>
-                      {c.action && (
-                        <button type="button" onClick={c.action.onClick} className="ob-btn ob-sm" style={{ height: 28, padding: "0 11px" }}>
-                          {c.action.label}
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <ul className="list-none m-0 mt-6 p-0" aria-label="Pre-flight check" aria-live="polite">
+                {checks.map((c, i) => (
+                  <li key={c.key} className={`flex items-baseline gap-3 py-3 text-[13.5px] ${i > 0 ? "border-t ob-bd" : ""}`}>
+                    <span
+                      className="w-[7px] h-[7px] rounded-full shrink-0 translate-y-[-1px]"
+                      style={{ background: dotColor[c.state], transition: `background-color .5s var(--ob-ease) ${i * 120}ms` }}
+                      aria-hidden="true"
+                    />
+                    <span className="w-[92px] shrink-0 ob-tx">{c.label}</span>
+                    <span className="flex-1 min-w-0 ob-tx3 leading-snug" style={c.state === "warn" ? { color: "var(--ob-wn)" } : undefined}>{c.detail}</span>
+                    {c.action && (
+                      <button
+                        type="button"
+                        onClick={c.action.onClick}
+                        className="ob-mo text-[11.5px] ob-tx2 hover:text-ob-tx underline underline-offset-[5px] decoration-ob-ln3 hover:decoration-ob-ac transition-colors cursor-pointer shrink-0"
+                      >
+                        {c.action.label}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </section>
 
-            {/* ── Right: the brief and the join button ── */}
-            <section className="grid gap-4">
-              <div className="ob-pane p-6 ob-rise" style={{ ["--i" as string]: 1 }}>
-                <div className="flex items-center gap-3.5">
-                  <span
-                    className="w-12 h-12 rounded-full border grid place-items-center text-[15px] font-semibold shrink-0"
-                    style={{ borderColor: "var(--ob-ac3)", background: "var(--ob-bg3)", boxShadow: "0 0 0 5px var(--ob-ac2)" }}
-                    aria-hidden="true"
-                  >
-                    A
-                  </span>
-                  <div className="min-w-0">
-                    <div className="ob-lb">Interview with Alex</div>
-                    <div className="text-[12.5px] ob-tx3 mt-0.5">Staff engineer · {trackInfo.badge}</div>
-                  </div>
-                </div>
-                <h1 className="m-0 mt-5 text-[30px] sm:text-[34px] font-medium tracking-[-0.03em] leading-[1.1]">{trackInfo.title}</h1>
+            {/* Right: what you are about to do */}
+            <section className="min-w-0 ob-rise" style={{ ["--i" as string]: 1 }}>
+              <div className="ob-lb">Interview with Alex</div>
+              <h1 className="m-0 mt-4 text-[clamp(34px,4.6vw,54px)] font-medium tracking-[-0.035em] leading-[1.04]">{trackInfo.title}</h1>
+              <p className="mt-4 mb-0 max-w-[38ch] text-[15px] ob-tx2 leading-relaxed">
+                {trackInfo.badge}. Answer out loud, the way you would in the room.
+              </p>
+
+              <div className="mt-9">
+                <div className="ob-lb mb-3">Length</div>
+                <Segmented
+                  label="Interview length"
+                  value={String(targetDurationMinutes)}
+                  onChange={(v) => setTargetDurationMinutes(Number(v))}
+                  options={[15, 30, 45, 60].map((m) => ({ id: String(m), label: `${m} min` }))}
+                />
               </div>
 
-              <div className="ob-pane p-6 ob-rise" style={{ ["--i" as string]: 2 }}>
-                <span className="ob-lb">Length</span>
-                <div className="grid grid-cols-4 gap-2 mt-3.5" role="radiogroup" aria-label="Interview length">
-                  {[15, 30, 45, 60].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      role="radio"
-                      aria-checked={targetDurationMinutes === m}
-                      onClick={() => setTargetDurationMinutes(m)}
-                      className={`h-12 rounded-[10px] border text-[14px] cursor-pointer transition duration-300 ${
-                        targetDurationMinutes === m
-                          ? "bg-[rgb(var(--ob-ac-rgb)/0.08)] border-[rgb(var(--ob-ac-rgb)/0.5)] text-ob-tx"
-                          : "border-ob-ln2 text-ob-tx2 hover:text-ob-tx hover:border-ob-ln3"
-                      }`}
-                    >
-                      {m} min
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="ob-rise" style={{ ["--i" as string]: 3 }}>
+              <div className="mt-9">
                 {needsResumeFirst ? (
-                  <div className="rounded-xl border p-5 text-[13px]" style={{ borderColor: "rgba(232,189,111,.35)", background: "rgba(232,189,111,.06)", color: "var(--ob-wn)" }}>
+                  <div className="rounded-xl border p-5 text-[13px]" style={{ borderColor: "color-mix(in srgb, var(--ob-wn) 35%, transparent)", background: "color-mix(in srgb, var(--ob-wn) 7%, transparent)", color: "var(--ob-wn)" }}>
                     This track questions you on your own projects, so it needs a resume first.
                     <button type="button" className="ob-btn ob-sm mt-3 block" onClick={() => leave("resume")}>Upload resume</button>
                   </div>
                 ) : (
                   <>
-                    <button type="button" onClick={handleJoinInterview} disabled={serviceState === "down"} className={`ob-btn ob-pr ob-btn-lg w-full group ${readyCount === checks.length ? "ob-ready" : ""}`} style={{ height: 56, fontSize: 15 }}>
-                      Join interview
-                      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                    </button>
+                    <div className="flex items-center gap-5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={handleJoinInterview}
+                        disabled={serviceState === "down"}
+                        className={`ob-btn ob-pr ob-btn-lg group ${readyCount === checks.length ? "ob-ready" : ""}`}
+                      >
+                        Join interview
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                      </button>
+                      <span className="ob-mo text-[11.5px] ob-tx3">press Enter. The clock starts when you join.</span>
+                    </div>
                     {serviceState === "down" && (
-                      <p className="m-0 mt-3 px-1 text-[12.5px]" style={{ color: "var(--ob-wn)" }} role="status">
+                      <p className="m-0 mt-4 text-[12.5px] leading-snug" style={{ color: "var(--ob-wn)" }} role="status">
                         The interviewer is unreachable, so you cannot join yet. Use Retry in the checklist once the server is back.
                       </p>
                     )}
-                    <div className="flex items-center justify-between gap-3 mt-3 px-1 ob-mo text-[11px] ob-tx3">
-                      <span>The clock starts when you join</span>
-                      <span className="flex items-center gap-1.5">press <kbd className="px-1.5 py-0.5 rounded border border-ob-ln2 text-[11px] ob-tx2">Enter</kbd></span>
-                    </div>
                   </>
                 )}
               </div>
