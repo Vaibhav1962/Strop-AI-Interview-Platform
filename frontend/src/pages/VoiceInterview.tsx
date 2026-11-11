@@ -1,4 +1,5 @@
 import { useDialogA11y, Segmented } from "../components/ui";
+import AudioVisualizer from "../components/AudioVisualizer";
 import Logo from "../components/Logo";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMediaCapture } from "../hooks/useMediaCapture";
@@ -1094,6 +1095,58 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
 
       {/* Workspace Sub-renders for Modular, Persistent Layout */}
       {(() => {
+        // Your camera at a comfortable size, with the mic and camera switches on it and the live level meter under it.
+        // While Alex talks the meter follows his voice, while you talk it follows yours.
+        const renderMediaCard = ({ compact = false }: { compact?: boolean } = {}) => {
+          const camLive = cameraOn && hasVideoTrack;
+          const alexTalking = uiPhase === "alex_speaking";
+          return (
+            <div className="w-full shrink-0 flex flex-col gap-3">
+              <div
+                className={`${camLive ? "ob-cam" : "relative overflow-hidden grid place-items-center border border-ob-ln bg-ob-bg2"} w-full`}
+                style={{ borderRadius: 16, ...(compact ? { height: 168 } : { aspectRatio: "4 / 3" }) }}
+              >
+                {camLive ? (
+                  <video ref={attachVideoNode} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover scale-x-[-1]" />
+                ) : (
+                  <span
+                    className="w-16 h-16 -mt-7 rounded-full border grid place-items-center text-xl font-medium ob-tx"
+                    style={{ borderColor: "var(--ob-ln2)", background: "var(--ob-bg3)" }}
+                    aria-hidden="true"
+                  >
+                    {(userResume?.name || "Candidate").charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span className="ob-mo absolute left-4 top-3.5 text-[11.5px] ob-tx2 truncate max-w-[60%]">{userResume?.name || "You"}</span>
+
+                <div className="absolute left-0 right-0 bottom-4 flex items-center justify-center gap-3">
+                  <button type="button" onClick={toggleMic} className={`ob-cbtn ${micOn ? "" : "ob-off"}`} aria-label={micOn ? "Mute microphone" : "Unmute microphone"} aria-pressed={!micOn}>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+                      <path d={micOn ? "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3" : "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"} />
+                    </svg>
+                  </button>
+                  <button type="button" onClick={toggleCamera} className={`ob-cbtn ${cameraOn ? "" : "ob-off"}`} aria-label={cameraOn ? "Turn camera off" : "Turn camera on"} aria-pressed={!cameraOn}>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d={cameraOn ? "M3 7h12v10H3zM15 11l6-3v8l-6-3" : "M3 7h12v10H3zM15 11l6-3v8l-6-3M4 4l16 16"} />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <AudioVisualizer
+                className="w-full justify-between"
+                level={micVolume}
+                getLevel={alexTalking ? getAudioLevel : undefined}
+                active={alexTalking ? speaking : micOn && micVolume > 0.03}
+                source={alexTalking ? "ai" : "candidate"}
+                bars={24}
+                height={30}
+                label={alexTalking ? "Alex" : micOn ? "You" : "Muted"}
+              />
+            </div>
+          );
+        };
+
         // One conversation pane: who is talking, the transcript, and where you answer.
         // Every turn is drawn the same way (same size, same colour per speaker). Only opacity changes as a line ages,
         // and the in-progress line keeps the same React key it will have once committed, so nothing flashes or recolours
@@ -1233,11 +1286,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               </div>
           );
 
-          const camLive = cameraOn && hasVideoTrack;
-          const micLevel = micOn ? Math.min(1, micVolume * 3.2) : 0;
-          const iconBtn = { width: 34, height: 34 } as const;
-
-          // Alex's state on the left; your mic and camera on the right. One strip, no avatars or badges.
+          // Who is talking and what is happening. Your camera, controls and the level meter live in the media card.
           const strip = (
             <div className="flex items-center gap-4 px-5 py-3 border-b ob-bd shrink-0">
               <div className="min-w-0 flex-1">
@@ -1248,26 +1297,6 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               </div>
               {uiPhase === "thinking" && (
                 <span className="w-3.5 h-3.5 border-[1.5px] border-ob-ln2 border-t-ob-ac rounded-full animate-spin shrink-0" aria-hidden="true" />
-              )}
-              {uiPhase === "candidate_turn" && (
-                <div className="w-[84px] h-[3px] rounded-full overflow-hidden shrink-0 hidden sm:block" style={{ background: "rgb(var(--ob-ov)/0.1)" }} aria-hidden="true">
-                  <div className="h-full origin-left" style={{ background: "var(--ob-ok)", transform: `scaleX(${micLevel})`, transition: "transform 140ms linear" }} />
-                </div>
-              )}
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button type="button" onClick={toggleMic} className={`ob-cbtn ${micOn ? "" : "ob-off"}`} style={iconBtn} aria-label={micOn ? "Mute microphone" : "Unmute microphone"} aria-pressed={!micOn}>
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
-                    <path d={micOn ? "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3" : "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"} />
-                  </svg>
-                </button>
-                <button type="button" onClick={toggleCamera} className={`ob-cbtn ${cameraOn ? "" : "ob-off"}`} style={iconBtn} aria-label={cameraOn ? "Turn camera off" : "Turn camera on"} aria-pressed={!cameraOn}>
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d={cameraOn ? "M3 7h12v10H3zM15 11l6-3v8l-6-3" : "M3 7h12v10H3zM15 11l6-3v8l-6-3M4 4l16 16"} />
-                  </svg>
-                </button>
-              </div>
-              {camLive && (
-                <video ref={attachVideoNode} autoPlay playsInline muted className="w-[88px] h-[66px] rounded-[9px] object-cover scale-x-[-1] shrink-0 border border-ob-ln" />
               )}
             </div>
           );
@@ -1366,37 +1395,40 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
 
         if (selectedTrack === "dsa") {
           if (!dsaProblemUnlocked) {
-            // Before the problem is revealed: just the conversation
+            // Before the problem is revealed: camera beside the conversation
             return (
-              <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-4 sm:px-6 py-4 sm:py-5">
-                <section className="mx-auto w-full max-w-[880px] flex-1 min-h-0 flex flex-col">
+              <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden px-4 sm:px-6 py-4 sm:py-5 gap-5 w-full max-w-[1280px] mx-auto">
+                <aside className="order-2 lg:order-1 w-full lg:w-[340px] shrink-0">{renderMediaCard()}</aside>
+                <section className="order-1 lg:order-2 flex-1 min-w-0 min-h-[calc(100dvh-9rem)] lg:min-h-0 flex flex-col">
                   {renderConversationPane({ isPrimary: true })}
                 </section>
               </div>
             );
           }
 
-          // Problem revealed: code workspace beside the conversation
+          // Problem revealed: code workspace beside the conversation, camera above it
           return (
             <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 sm:p-6 gap-4">
-              <div className="w-full lg:w-[64%] flex flex-col min-h-[520px] lg:h-full overflow-hidden ob-pane">
+              <div className="w-full lg:w-[62%] flex flex-col min-h-[520px] lg:h-full overflow-hidden ob-pane">
                 <DsaCodingWorkspace
                   problem={dsaProblem}
                   onSolutionSubmitted={handleDsaCodeSubmitted}
                   className="w-full h-full"
                 />
               </div>
-              <div className="w-full lg:w-[36%] flex flex-col lg:h-full overflow-hidden min-h-[480px]">
+              <div className="w-full lg:w-[38%] flex flex-col lg:h-full overflow-hidden gap-3.5 min-h-[480px]">
+                {renderMediaCard({ compact: true })}
                 {renderConversationPane({ isPrimary: false })}
               </div>
             </div>
           );
         }
 
-        // Other tracks: the conversation, with a notes tab
+        // Other tracks: camera beside the conversation, with a notes tab
         return (
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-4 sm:px-6 py-4 sm:py-5">
-            <section className="mx-auto w-full max-w-[880px] flex-1 min-h-0 flex flex-col gap-3.5">
+          <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden px-4 sm:px-6 py-4 sm:py-5 gap-5 w-full max-w-[1280px] mx-auto">
+            <aside className="order-2 lg:order-1 w-full lg:w-[340px] shrink-0">{renderMediaCard()}</aside>
+            <section className="order-1 lg:order-2 flex-1 min-w-0 min-h-[calc(100dvh-9rem)] lg:min-h-0 flex flex-col gap-3.5">
               <Segmented
                 label="Workspace"
                 quiet
