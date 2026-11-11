@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { getUserResume, cleanCandidateName } from "../lib/userDocuments";
-import { type AuthUser, listInterviewSessions, type InterviewSession } from "../lib/api";
+import { type AuthUser, listInterviewSessions, getInterviewAnalytics, type InterviewSession, type AnalyticsSummaryResponse } from "../lib/api";
+import ScoreTrend from "../components/ScoreTrend";
 import { listOrchestratorSessions } from "../lib/orchestratorClient";
 import { realSessionSeconds, interviewerQuestionCount } from "../lib/sessionMetrics";
 import { getActiveJdMatchKey, isReadableJdText, type SavedJdMatchReport } from "../lib/jdMatcher";
@@ -81,6 +82,9 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
   const [sessions, setSessions] = useState<InterviewSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [hoverDay, setHoverDay] = useState<number | null>(null);
+  // Server-side rollup across every evaluated session: coverage trend plus the strengths and gaps that recur.
+  const [analytics, setAnalytics] = useState<AnalyticsSummaryResponse | null>(null);
 
   const targetRoleKey = uid ? `interviewiq_${uid}_target_role` : "interviewiq_target_role";
   const targetCompanyKey = uid ? `interviewiq_${uid}_target_company` : "interviewiq_target_company";
@@ -103,9 +107,11 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
     Promise.all([
       listInterviewSessions().catch(() => [] as InterviewSession[]),
       listOrchestratorSessions().catch(() => []),
+      getInterviewAnalytics().catch(() => null),
     ])
-      .then(([legacy, orch]) => {
+      .then(([legacy, orch, rollup]) => {
         if (!mounted) return;
+        setAnalytics(rollup);
         // The older table never stored real durations or question counts; take them from the live session records.
         const orchById = new Map<string, any>((orch || []).map((o: any) => [String(o.id), o]));
         const merged = (legacy || []).map((s) => {
@@ -188,7 +194,7 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
     }
     const covered = TRACKS.filter((t) => done.has(t.id)).length;
     const remaining = TRACKS.filter((t) => !done.has(t.id));
-    return { covered, remaining };
+    return { covered, remaining, done };
   }, [sessions]);
 
   // Minutes practiced per day over a fixed 14-day window, so the chart stays the same size however many sessions there are.
@@ -234,8 +240,6 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
   const matching = jdMatch?.matchingSkills || [];
   const missing = jdMatch?.missingSkills || [];
   const hasResume = Boolean(resumeData && (resumeData.filename || skills.length > 0));
-  const ringPct = (todayStats.covered / TRACKS.length) * 100;
-
 
   const nextTitle = missing.length
     ? `Close the gap on ${missing.slice(0, 2).join(" and ")}`
@@ -259,7 +263,7 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
           </h1>
           <p className="ob-rise ob-tx2 max-w-[62ch] m-0" style={{ ["--i" as string]: 2 }}>
             {loading
-              ? "Loading your sessions..."
+              ? <span className="ob-sk" style={{ width: 380, height: 14 }} role="status" aria-label="Loading your sessions" />
               : sessions.length === 0
               ? "No sessions yet. Run your first interview and your progress will build here."
               : `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"} recorded across ${stats.covered} of ${TRACKS.length} tracks, ${formatMinutes(stats.seconds)} of practice so far.`}
@@ -267,7 +271,7 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
         </div>
         <div className="ob-rise flex flex-wrap gap-2.5" style={{ ["--i" as string]: 3 }}>
           <button type="button" className="ob-btn ob-btn-lg" onClick={() => onNavigate("compiler")}>Code sandbox</button>
-          <button type="button" className="ob-btn ob-pr ob-btn-lg" onClick={() => onNavigate("interview-setup")}>Start interview</button>
+          <button type="button" className="ob-btn ob-btn-lg" onClick={() => onNavigate("interview-setup")}>Start interview</button>
         </div>
       </div>
 
@@ -278,13 +282,47 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
         <button type="button" className="ob-ql" onClick={() => onNavigate("history")}>Review past sessions</button>
       </div>
 
+      {/* The lead: what to do next */}
+      <div className="ob-card ob-rise !p-7 flex flex-wrap items-center justify-between gap-x-10 gap-y-5 mb-4" style={{ ["--i" as string]: 5 }}>
+        <div className="flex-[1_1_420px] min-w-0">
+          <div className="ob-lb ob-txa">Recommended next</div>
+          <h2 className="text-[clamp(22px,2.4vw,28px)] font-medium tracking-[-0.025em] mt-3 mb-2.5 leading-[1.2]">{nextTitle}</h2>
+          <p className="m-0 ob-tx2 max-w-[64ch]">{nextBody}</p>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {missing.length > 0 && <span className="ob-chip ob-sq ob-warn">JD gap</span>}
+            {stats.untried.length > 0 && <span className="ob-chip ob-sq">New track</span>}
+            <span className="ob-chip ob-sq">30 min</span>
+          </div>
+        </div>
+        <button type="button" className="ob-btn ob-pr ob-btn-lg shrink-0" onClick={() => onNavigate("interview-setup")}>
+          Begin session
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </button>
+      </div>
+
       {/* Metric cards */}
       <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))]">
-        <div className="ob-card ob-rise flex items-center gap-[22px]" style={{ ["--i" as string]: 5 }}>
+        <div className="ob-card ob-rise flex items-center gap-[22px]" style={{ ["--i" as string]: 6 }}>
           <div className="relative w-32 h-32 shrink-0">
+            {/* One segment per track; a segment lights up once that track has been practiced today. */}
             <svg viewBox="0 0 100 100" width="128" height="128" aria-hidden="true">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="#2b2b28" strokeWidth="4" />
-              <circle className="ob-rg" cx="50" cy="50" r="42" fill="none" stroke="#e6dfcc" strokeWidth="4" strokeLinecap="round" pathLength={100} strokeDasharray={`${ringPct} 100`} transform="rotate(-90 50 50)" />
+              {TRACKS.map((t, i) => {
+                const seg = 100 / TRACKS.length;
+                const on = todayStats.done.has(t.id);
+                return (
+                  <circle
+                    key={t.id}
+                    cx="50" cy="50" r="42" fill="none" strokeWidth="4" strokeLinecap="round" pathLength={100}
+                    stroke={on ? "var(--ob-ac)" : "var(--ob-ln)"}
+                    strokeDasharray={`${seg - 5} ${100 - seg + 5}`}
+                    strokeDashoffset={-(i * seg + 2.5)}
+                    transform="rotate(-90 50 50)"
+                    style={{ animation: `ob-in 0.6s var(--ob-ease) ${0.3 + i * 0.09}s both`, transition: "stroke 0.6s var(--ob-ease)" }}
+                  >
+                    <title>{t.label}</title>
+                  </circle>
+                );
+              })}
             </svg>
             <div className="absolute inset-0 grid place-items-center text-[34px] font-medium tracking-[-0.03em]">
               <span className="ob-cnt" style={{ ["--t" as string]: todayStats.covered }} />
@@ -298,7 +336,7 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
           </div>
         </div>
 
-        <button type="button" onClick={() => onNavigate("job-description")} className="ob-card ob-rise block text-left cursor-pointer" style={{ ["--i" as string]: 6 }}>
+        <button type="button" onClick={() => onNavigate("job-description")} className="ob-card ob-rise block text-left cursor-pointer" style={{ ["--i" as string]: 7 }}>
           <div className="ob-lb">Resume ↔ job alignment</div>
           {jdMatch ? (
             <>
@@ -318,7 +356,7 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
           )}
         </button>
 
-        <div className="ob-card ob-rise" style={{ ["--i" as string]: 7 }}>
+        <div className="ob-card ob-rise" style={{ ["--i" as string]: 8 }}>
           <div className="flex justify-between items-baseline">
             <span className="ob-lb">Sessions by track</span>
             <span className="ob-mo ob-tx3 text-xs">{stats.questions} questions</span>
@@ -338,51 +376,155 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
         </div>
       </div>
 
-      {/* Headline stats */}
-      <div className="grid gap-4 mt-4 grid-cols-2 lg:grid-cols-4">
+      {/* Headline stats: one strip, hairline dividers */}
+      <div className="ob-rise mt-4 grid grid-cols-2 lg:grid-cols-4 gap-px rounded-xl border border-ob-ln bg-ob-ln overflow-hidden" style={{ ["--i" as string]: 9 }}>
         {[
           { label: "Sessions", value: sessions.length, suffix: "" },
           { label: "Reports ready", value: evaluatedCount, suffix: "" },
           { label: "Total practice", value: totalMinutes, suffix: " min" },
           { label: "Avg session", value: avgMinutes, suffix: " min" },
-        ].map((m, i) => (
-          <div key={m.label} className="ob-card ob-rise" style={{ ["--i" as string]: 8 + i }}>
+        ].map((m) => (
+          <div key={m.label} className="bg-ob-card px-5 py-[18px]">
             <div className="ob-lb">{m.label}</div>
-            <div className="text-[30px] font-medium tracking-[-0.03em] mt-2.5">
-              {m.value}<span className="text-[16px] ob-tx3">{m.suffix}</span>
+            <div className="text-[30px] font-medium tracking-[-0.03em] mt-2 leading-[1.2]">
+              {loading ? (
+                <span className="ob-sk" style={{ width: 56, height: 26 }} />
+              ) : (
+                <>
+                  {/* Keyed by value so the count runs again when the real number arrives. */}
+                  <span key={m.value} className="ob-cnt" style={{ ["--t" as string]: m.value }} aria-hidden="true" />
+                  <span className="sr-only">{m.value}</span>
+                  <span className="text-[16px] ob-tx3">{m.suffix}</span>
+                </>
+              )}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Chart + next step */}
+      {/* Progress across evaluated sessions (from the analytics endpoint) */}
+      {analytics && analytics.evaluated_sessions > 0 && (
+        <div className="grid gap-4 mt-4 grid-cols-[repeat(auto-fit,minmax(min(380px,100%),1fr))]">
+          <div className="ob-card ob-rise" style={{ ["--i" as string]: 10 }}>
+            <div className="flex justify-between items-baseline flex-wrap gap-2">
+              <span className="ob-lb">Rubric coverage by session</span>
+              <span className="ob-mo text-[11.5px] ob-tx3">last {analytics.score_trend.length} evaluated</span>
+            </div>
+            <p className="m-0 mt-1.5 text-[12.5px] ob-tx3">How much of each interview's rubric was actually reached.</p>
+            <div className="flex gap-9 mt-4">
+              {[
+                { label: "Average", value: analytics.average_score },
+                { label: "Best", value: analytics.best_score },
+              ].map((m) => (
+                <div key={m.label}>
+                  <div className="text-[32px] font-medium tracking-[-0.03em] leading-none">
+                    {m.value === null ? "—" : (
+                      <>
+                        <span key={m.value} className="ob-cnt" style={{ ["--t" as string]: m.value }} aria-hidden="true" />
+                        <span className="sr-only">{m.value}</span>
+                        <span className="text-[16px] ob-tx3">%</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="ob-lb mt-1.5">{m.label}</div>
+                </div>
+              ))}
+            </div>
+            <ScoreTrend items={analytics.score_trend} />
+          </div>
+
+          <div className="ob-card ob-rise" style={{ ["--i" as string]: 11 }}>
+            <div className="ob-lb mb-1">Across your sessions</div>
+            {([
+              { label: "Keeps showing up as strengths", items: analytics.common_strengths, tone: "var(--ob-ok)" },
+              { label: "Keeps showing up as gaps", items: analytics.common_weaknesses, tone: "var(--ob-wn)" },
+            ] as const).map((group) =>
+              group.items.length === 0 ? null : (
+                <div key={group.label} className="mt-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-[7px] h-[7px] rounded-full" style={{ background: group.tone }} aria-hidden="true" />
+                    <span className="ob-mo text-[10.5px] uppercase tracking-[0.1em]" style={{ color: group.tone }}>{group.label}</span>
+                  </div>
+                  <ul className="list-none m-0 p-0">
+                    {group.items.slice(0, 4).map((raw, i) => {
+                      // Backend items read "1. Title: explanation"; show the title, then the explanation quieter.
+                      const text = raw.replace(/^[0-9.]+\s*/, "");
+                      const at = text.indexOf(":");
+                      const title = at > 0 && at < 70 ? text.slice(0, at) : text;
+                      const rest = at > 0 && at < 70 ? text.slice(at + 1).trim() : "";
+                      return (
+                        <li key={raw} className="ob-pop py-2.5 border-t border-ob-ln first:border-t-0" style={{ ["--i" as string]: i + 14 }}>
+                          <div className="text-[13.5px]">{title}</div>
+                          {rest && <div className="text-[12.5px] ob-tx3 mt-0.5 line-clamp-2">{rest}</div>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ),
+            )}
+            {analytics.common_strengths.length === 0 && analytics.common_weaknesses.length === 0 && (
+              <p className="ob-tx3 text-[13px] mt-4">Patterns appear here once a few sessions have been evaluated.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Chart + skills */}
       <div className="grid gap-4 mt-4 grid-cols-[repeat(auto-fit,minmax(min(380px,100%),1fr))]">
-        <div className="ob-card ob-rise" style={{ ["--i" as string]: 8 }}>
+        <div className="ob-card ob-rise" style={{ ["--i" as string]: 12 }}>
           <div className="flex justify-between items-baseline flex-wrap gap-2">
             <span className="ob-lb">Daily practice time</span>
             <span className="ob-mo text-[11.5px] ob-tx3">minutes per day, last 14 days</span>
           </div>
           {chartPoints ? (
-            <svg viewBox="0 0 600 220" width="100%" className="block mt-3.5" role="img" aria-label={`Minutes practiced per day over the last 14 days: ${chartPoints.pts.join(", ")}`}>
-              <g stroke="#2b2b28" strokeWidth="1">
+            <svg
+              viewBox="0 0 600 220" width="100%" className="block mt-3.5 touch-none" role="img"
+              aria-label={`Minutes practiced per day over the last 14 days: ${chartPoints.pts.join(", ")}`}
+              onPointerMove={(e) => {
+                const r = e.currentTarget.getBoundingClientRect();
+                const vx = ((e.clientX - r.left) / r.width) * 600;
+                const i = Math.round(((vx - chartPoints.left) / (chartPoints.right - chartPoints.left)) * (chartPoints.pts.length - 1));
+                setHoverDay(Math.min(chartPoints.pts.length - 1, Math.max(0, i)));
+              }}
+              onPointerLeave={() => setHoverDay(null)}
+            >
+              <g stroke="var(--ob-ln)" strokeWidth="1">
                 <path d={`M${chartPoints.left} 40H${chartPoints.right}M${chartPoints.left} 110H${chartPoints.right}`} strokeDasharray="2 4" />
                 <path d={`M${chartPoints.left} 180H${chartPoints.right}`} />
               </g>
-              <g fontFamily="JetBrains Mono,monospace" fontSize="10.5" fill="#8f8d85" textAnchor="end">
+              <g fontFamily="JetBrains Mono,monospace" fontSize="10.5" fill="var(--ob-tx3)" textAnchor="end">
                 <text x="32" y="44">{chartPoints.max}</text>
                 <text x="32" y="114">{Math.round(chartPoints.max / 2)}</text>
                 <text x="32" y="184">0</text>
               </g>
-              <path d={chartPoints.area} fill="#e6dfcc" fillOpacity=".07" className="ob-fade" />
-              <path className="ob-lk" pathLength={1} d={chartPoints.line} fill="none" stroke="#e6dfcc" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              <path d={chartPoints.area} fill="var(--ob-ac)" fillOpacity=".07" className="ob-fade" />
+              <path className="ob-lk" pathLength={1} d={chartPoints.line} fill="none" stroke="var(--ob-ac)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
               <g className="ob-fade">
                 {chartPoints.pts.map((v, i) => {
                   if (!v) return null;
                   const last = i === chartPoints.pts.length - 1;
-                  return <circle key={i} cx={chartPoints.x(i)} cy={chartPoints.y(v)} r={last ? 5 : 3.5} fill={last ? "#e6dfcc" : "#121211"} stroke="#e6dfcc" strokeWidth="2" />;
+                  return <circle key={i} cx={chartPoints.x(i)} cy={chartPoints.y(v)} r={last ? 5 : 3.5} fill={last ? "var(--ob-ac)" : "var(--ob-bg1)"} stroke="var(--ob-ac)" strokeWidth="2" />;
                 })}
               </g>
-              <g fontFamily="JetBrains Mono,monospace" fontSize="10" fill="#8f8d85" textAnchor="middle">
+              {/* Today's point rings out once after the line has drawn. */}
+              {chartPoints.pts[chartPoints.pts.length - 1] > 0 && (
+                <circle className="ob-ping1" cx={chartPoints.x(chartPoints.pts.length - 1)} cy={chartPoints.y(chartPoints.pts[chartPoints.pts.length - 1])} r="5" fill="none" stroke="var(--ob-ac)" strokeWidth="1" />
+              )}
+              {/* Hover crosshair with that day's minutes */}
+              {hoverDay !== null && (
+                <g pointerEvents="none">
+                  <path d={`M${chartPoints.x(hoverDay)} 36V180`} stroke="var(--ob-ln3)" strokeWidth="1" strokeDasharray="2 3" />
+                  <circle cx={chartPoints.x(hoverDay)} cy={chartPoints.y(chartPoints.pts[hoverDay])} r="4.5" fill="var(--ob-ac)" stroke="var(--ob-card)" strokeWidth="2" />
+                  <text
+                    x={chartPoints.x(hoverDay)} y="26" fontFamily="JetBrains Mono,monospace" fontSize="11" fill="var(--ob-tx)"
+                    textAnchor={hoverDay < 2 ? "start" : hoverDay > chartPoints.pts.length - 3 ? "end" : "middle"}
+                  >
+                    {chartPoints.pts[hoverDay]} min · {hoverDay === chartPoints.pts.length - 1 ? "Today" : chartPoints.dates[hoverDay].toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </text>
+                </g>
+              )}
+              <g fontFamily="JetBrains Mono,monospace" fontSize="10" fill="var(--ob-tx3)" textAnchor="middle">
                 {[0, 4, 8, 13].map((i) => (
                   <text key={i} x={chartPoints.x(i)} y="202" textAnchor={i === 0 ? "start" : i === 13 ? "end" : "middle"}>
                     {i === 13 ? "Today" : chartPoints.dates[i].toLocaleDateString("en-US", { month: "short", day: "numeric" })}
@@ -397,24 +539,38 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
           )}
         </div>
 
-        <div className="ob-card ob-rise flex flex-col justify-between gap-5" style={{ ["--i" as string]: 9 }}>
-          <div>
-            <div className="ob-lb ob-txa">Recommended next</div>
-            <h2 className="text-[22px] font-medium tracking-[-0.02em] mt-3 mb-2.5 leading-[1.25]">{nextTitle}</h2>
-            <p className="m-0 ob-tx2">{nextBody}</p>
-            <div className="flex flex-wrap gap-2 mt-4">
-              {missing.length > 0 && <span className="ob-chip ob-sq ob-warn">JD gap</span>}
-              {stats.untried.length > 0 && <span className="ob-chip ob-sq">New track</span>}
-              <span className="ob-chip ob-sq">30 min</span>
+        <div className="ob-card ob-rise" style={{ ["--i" as string]: 13 }}>
+          <div className="ob-lb mb-4">Skills</div>
+          {!hasResume ? (
+            <div className="ob-tx3 text-[13px]">Upload your resume and your skills appear here.
+              <button type="button" onClick={() => onNavigate("resume")} className="ob-mo text-[11.5px] ob-txa ml-2 cursor-pointer">Upload →</button>
             </div>
-          </div>
-          <button type="button" className="ob-btn ob-pr ob-btn-lg self-start" onClick={() => onNavigate("interview-setup")}>Begin session</button>
+          ) : (
+            <div className="grid gap-3.5 text-[13px]">
+              <div className="flex flex-wrap gap-1.5">
+                {(matching.length ? matching : skills).slice(0, 14).map((s, i) => (
+                  <span key={s} className="ob-chip ob-sq ob-ok ob-pop" style={{ ["--i" as string]: i + 20 }}>{s}</span>
+                ))}
+              </div>
+              {missing.length > 0 && (
+                <>
+                  <div className="h-px bg-ob-ln my-1" />
+                  <div className="ob-lb">Needs practice (gaps vs. target job)</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {missing.slice(0, 10).map((s) => (
+                      <span key={s} className="ob-chip ob-sq ob-warn">{s}</span>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Last session recap */}
       {lastSession && (
-        <div className="ob-card ob-rise mt-4" style={{ ["--i" as string]: 10 }}>
+        <div className="ob-card ob-rise mt-4" style={{ ["--i" as string]: 14 }}>
           <div className="flex justify-between items-baseline flex-wrap gap-2">
             <span className="ob-lb">Last session</span>
             <button type="button" onClick={() => onNavigate("history")} className="ob-mo text-[11.5px] ob-txa cursor-pointer">View history →</button>
@@ -433,36 +589,6 @@ export default function Dashboard({ onNavigate, user }: DashboardProps) {
         </div>
       )}
 
-      {/* Skills */}
-      <div className="grid gap-4 mt-4 grid-cols-[repeat(auto-fit,minmax(min(380px,100%),1fr))]">
-        <div className="ob-card ob-rise" style={{ ["--i" as string]: 10 }}>
-          <div className="ob-lb mb-4">Skills</div>
-          {!hasResume ? (
-            <div className="ob-tx3 text-[13px]">Upload your resume and your skills appear here.
-              <button type="button" onClick={() => onNavigate("resume")} className="ob-mo text-[11.5px] ob-txa ml-2 cursor-pointer">Upload →</button>
-            </div>
-          ) : (
-            <div className="grid gap-3.5 text-[13px]">
-              <div className="flex flex-wrap gap-1.5">
-                {(matching.length ? matching : skills).slice(0, 14).map((s) => (
-                  <span key={s} className="ob-chip ob-sq ob-ok">{s}</span>
-                ))}
-              </div>
-              {missing.length > 0 && (
-                <>
-                  <div className="h-px bg-[#2b2b28] my-1" />
-                  <div className="ob-lb">Needs practice (gaps vs. target job)</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {missing.slice(0, 10).map((s) => (
-                      <span key={s} className="ob-chip ob-sq ob-warn">{s}</span>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

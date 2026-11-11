@@ -51,13 +51,13 @@ export default function Onboarding({ onComplete, userName }: OnboardingProps) {
   ];
 
   return (
-    <div className="relative min-h-screen bg-[#121211] text-[#ebe9e2] overflow-hidden text-[14px] leading-[1.55]">
+    <div className="relative min-h-screen bg-ob-bg1 text-ob-tx overflow-hidden text-[14px] leading-[1.55]">
       <header className="relative z-[2] flex items-center justify-between px-[clamp(20px,5vw,72px)] py-[22px]">
         <span className="flex items-center gap-2.5 font-semibold tracking-[-0.01em]">
           <Logo size={26} />
           Strop
         </span>
-        <button type="button" onClick={() => { setOnboardingCompleted(true); onComplete(); }} className="ob-mo text-xs ob-tx3 hover:text-[#ebe9e2] cursor-pointer">
+        <button type="button" onClick={() => { setOnboardingCompleted(true); onComplete(); }} className="ob-mo text-xs ob-tx3 hover:text-ob-tx cursor-pointer">
           Skip for now →
         </button>
       </header>
@@ -76,13 +76,13 @@ export default function Onboarding({ onComplete, userName }: OnboardingProps) {
               <li key={s.label} className="grid grid-cols-[28px_minmax(0,1fr)] gap-4">
                 <div className="flex flex-col">
                   <span className={`w-7 h-7 rounded-full grid place-items-center border font-mono text-[11px] ${
-                    s.done ? "bg-[#e6dfcc] border-[#e6dfcc] text-[#121211]" : s.current ? "border-[#e6dfcc] text-[#e6dfcc]" : "border-[#3a3a36] ob-tx3"
+                    s.done ? "bg-ob-ac border-ob-ac text-ob-onac" : s.current ? "border-ob-ac text-ob-ac" : "border-ob-ln2 ob-tx3"
                   }`}>
                     {s.done ? (
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-10" /></svg>
                     ) : i + 1}
                   </span>
-                  {i < steps.length - 1 && <span className="w-px h-9 mx-auto my-1" style={{ background: s.done ? "#e6dfcc" : "#3a3a36" }} />}
+                  {i < steps.length - 1 && <span className="w-px h-9 mx-auto my-1" style={{ background: s.done ? "var(--ob-ac)" : "var(--ob-ln2)" }} />}
                 </div>
                 <div className="pt-1">
                   <div>{s.label}</div>
@@ -113,7 +113,7 @@ export default function Onboarding({ onComplete, userName }: OnboardingProps) {
               <label className={FIELD}>Projects &amp; work experience <span className="ob-tx3">(one achievement per line)</span>
                 <textarea className="ob-input min-h-[112px] resize-none" rows={4} value={resumeExperience} onChange={(e) => setResumeExperience(e.target.value)} placeholder={"Built X that handled Y\nReduced Z by N%"} />
               </label>
-              <div className="flex justify-end pt-1.5 border-t border-[#2b2b28]">
+              <div className="flex justify-end pt-1.5 border-t border-ob-ln">
                 <button type="button" className="ob-btn ob-pr ob-btn-lg mt-[18px]" onClick={() => setStep(2)}>
                   Continue to target role
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
@@ -136,7 +136,7 @@ export default function Onboarding({ onComplete, userName }: OnboardingProps) {
               <label className={FIELD}>Responsibilities <span className="ob-tx3">(one per line)</span>
                 <textarea className="ob-input min-h-[120px] resize-none" rows={5} value={targetResponsibilities} onChange={(e) => setTargetResponsibilities(e.target.value)} placeholder="Paste responsibilities from the job description" />
               </label>
-              <div className="flex justify-between flex-wrap gap-3 pt-1.5 border-t border-[#2b2b28]">
+              <div className="flex justify-between flex-wrap gap-3 pt-1.5 border-t border-ob-ln">
                 <button type="button" className="ob-btn ob-btn-lg mt-[18px]" onClick={() => setStep(1)}>Back</button>
                 <button type="button" className="ob-btn ob-pr ob-btn-lg mt-[18px]" onClick={handleFinish}>
                   Save and start prep

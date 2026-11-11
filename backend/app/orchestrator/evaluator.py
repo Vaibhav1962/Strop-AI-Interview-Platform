@@ -70,6 +70,8 @@ def insufficient_session_reason(session: Any) -> str | None:
     return "A fair assessment needs " + "; ".join(missing) + "."
 
 
+from app.orchestrator.delivery_scoring import count_tics  # noqa: E402
+
 COMMUNICATION_DIMENSION_DEFS = [
     ("clarity", "Clarity & Articulation", "Precision of technical vocabulary, diction, and audible clarity"),
     ("structure", "Structure & Synthesis", "Top-down communication, signposting, and logical answer structuring"),
@@ -144,22 +146,9 @@ def compute_speech_telemetry(transcript: list[dict[str, Any]], deliberation_seco
         cand_mins = 0.0
         wpm = 0
 
-    filler_patterns = {
-        "um": r"\bum\b",
-        "uh": r"\buh\b",
-        "like": r"\blike\b",
-        "you know": r"\byou know\b",
-        "basically": r"\bbasically\b",
-        "actually": r"\bactually\b",
-    }
-    breakdown = {}
-    total_fillers = 0
-    text_lower = all_text.lower()
-    for word, pattern in filler_patterns.items():
-        matches = len(re.findall(pattern, text_lower))
-        if matches > 0:
-            breakdown[word] = matches
-            total_fillers += matches
+    # Verbal tics, not just "um" and "uh": speech to text usually drops those, but keeps "simply", "basically", "you know"
+    weighted, breakdown = count_tics(all_text)
+    total_fillers = int(round(weighted))
 
     return {
         "total_words": total_words,
@@ -1010,9 +999,9 @@ Do NOT output markdown backticks (```json). Output raw valid JSON only."""
         sanitized_dims = []
         for dim_id, dim_name, dim_desc in COMMUNICATION_DIMENSION_DEFS:
             existing = raw_dims.get(dim_id, {})
-            rating = existing.get("rating", "Strong")
+            rating = existing.get("rating", "Adequate")
             if rating not in ("Exemplary", "Strong", "Adequate", "Developing"):
-                rating = "Strong"
+                rating = "Adequate"
             obs = existing.get("observation") or f"Candidate demonstrated {rating.lower()} performance in {dim_name.lower()}."
             quote = existing.get("evidence_quote")
             if not quote and cand_quotes:
@@ -1026,9 +1015,9 @@ Do NOT output markdown backticks (```json). Output raw valid JSON only."""
                 "evidence_quote": quote,
             })
 
-        overall_comms_rating = raw_comms.get("overall_rating", "Strong")
+        overall_comms_rating = raw_comms.get("overall_rating", "Adequate")
         if overall_comms_rating not in ("Exemplary", "Strong", "Adequate", "Developing"):
-            overall_comms_rating = "Strong"
+            overall_comms_rating = "Adequate"
 
         report_dict["communication_scorecard"] = {
             "overall_rating": overall_comms_rating,

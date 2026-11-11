@@ -1104,9 +1104,9 @@ export default function DsaCodingWorkspace({
   const allTestsPassed = testResults.length > 0 && testResults.every((r) => r.passed);
 
   return (
-    <div className={`flex flex-col h-full text-[#ebe9e2] overflow-hidden ${className}`}>
+    <div className={`flex flex-col h-full text-ob-tx overflow-hidden ${className}`}>
       {/* LeetCode Header Nav */}
-      <div className="h-11 border-b border-white/10 bg-[#161614] px-4 flex items-center justify-between shrink-0">
+      <div className="h-11 border-b border-ob-ov/10 bg-ob-bg2 px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span
@@ -1118,7 +1118,7 @@ export default function DsaCodingWorkspace({
                   : "bg-rose-400"
               }`}
             />
-            <span className="text-xs font-semibold tracking-wide text-[#ebe9e2] font-mono px-1 py-0.5">
+            <span className="text-xs font-semibold tracking-wide text-ob-tx font-mono px-1 py-0.5">
               {problem.title}
             </span>
           </div>
@@ -1135,8 +1135,8 @@ export default function DsaCodingWorkspace({
           </span>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-[#aaa89f]">
-          <span className="px-2 py-0.5 rounded bg-[#20201e] text-[11px] font-mono text-[#d3d1c9] border border-white/5">
+        <div className="flex items-center gap-2 text-xs text-ob-tx2">
+          <span className="px-2 py-0.5 rounded bg-ob-bg3 text-[11px] font-mono text-ob-soft border border-ob-ov/5">
             {problem.optimalTimeComplexity} Time | {problem.optimalSpaceComplexity} Space
           </span>
         </div>
@@ -1147,15 +1147,15 @@ export default function DsaCodingWorkspace({
         {/* ================================================================= */}
         {/* LEFT PANE: LeetCode Problem Description                           */}
         {/* ================================================================= */}
-        <div className="col-span-12 lg:col-span-6 flex flex-col border-r border-white/10 overflow-hidden h-full">
+        <div className="col-span-12 lg:col-span-6 flex flex-col border-r border-ob-ov/10 overflow-hidden h-full">
           {/* Problem Tabs */}
-          <div className="h-10 border-b border-white/10 bg-[#161614] px-3 flex items-center gap-2 shrink-0">
+          <div className="h-10 border-b border-ob-ov/10 bg-ob-bg2 px-3 flex items-center gap-2 shrink-0">
             <button
               onClick={() => setLeftTab("description")}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                 leftTab === "description"
-                  ? "bg-white/10 text-white shadow-sm font-semibold"
-                  : "text-[#aaa89f] hover:text-white hover:bg-white/5"
+                  ? "bg-ob-ov/10 text-ob-tx shadow-sm font-semibold"
+                  : "text-ob-tx2 hover:text-ob-tx hover:bg-ob-ov/5"
               }`}
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1168,8 +1168,8 @@ export default function DsaCodingWorkspace({
               onClick={() => setLeftTab("submissions")}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                 leftTab === "submissions"
-                  ? "bg-white/10 text-white shadow-sm font-semibold"
-                  : "text-[#aaa89f] hover:text-white hover:bg-white/5"
+                  ? "bg-ob-ov/10 text-ob-tx shadow-sm font-semibold"
+                  : "text-ob-tx2 hover:text-ob-tx hover:bg-ob-ov/5"
               }`}
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1180,11 +1180,11 @@ export default function DsaCodingWorkspace({
           </div>
 
           {/* Left Content Scrollable */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-6 text-xs text-[#d3d1c9] leading-relaxed font-sans bg-[#0d0d0c]">
+          <div className="flex-1 overflow-y-auto p-5 space-y-6 text-xs text-ob-soft leading-relaxed font-sans bg-ob-bg">
             {leftTab === "description" && (
               <>
                 <div>
-                  <h1 className="text-lg font-bold text-white mb-2">
+                  <h1 className="text-lg font-bold text-ob-tx mb-2">
                     {problem.title}
                   </h1>
                   <div className="flex items-center gap-2 mb-4">
@@ -1199,10 +1199,10 @@ export default function DsaCodingWorkspace({
                     >
                       {problem.difficulty}
                     </span>
-                    <span className="text-[11px] text-[#8f8d85]">Topics</span>
-                    <span className="text-[11px] text-[#8f8d85]">Companies</span>
+                    <span className="text-[11px] text-ob-tx3">Topics</span>
+                    <span className="text-[11px] text-ob-tx3">Companies</span>
                   </div>
-                  <p className="text-[#d3d1c9] whitespace-pre-line leading-relaxed font-normal">
+                  <p className="text-ob-soft whitespace-pre-line leading-relaxed font-normal">
                     {problem.description}
                   </p>
                 </div>
@@ -1211,21 +1211,21 @@ export default function DsaCodingWorkspace({
                 <div className="space-y-4">
                   {problem.examples.map((ex, idx) => (
                     <div key={idx} className="space-y-2">
-                      <div className="font-semibold text-[#d3d1c9]">
+                      <div className="font-semibold text-ob-soft">
                         Example {idx + 1}:
                       </div>
-                      <div className="bg-[#161614] border border-white/10 rounded-lg p-3 font-mono text-[11px] space-y-1">
+                      <div className="bg-ob-bg2 border border-ob-ov/10 rounded-lg p-3 font-mono text-[11px] space-y-1">
                         <div>
-                          <strong className="text-[#aaa89f] font-sans">Input: </strong>
-                          <span className="text-[#d3d1c9]">{ex.input}</span>
+                          <strong className="text-ob-tx2 font-sans">Input: </strong>
+                          <span className="text-ob-soft">{ex.input}</span>
                         </div>
                         <div>
-                          <strong className="text-[#aaa89f] font-sans">Output: </strong>
-                          <span className="text-[#d3d1c9]">{ex.output}</span>
+                          <strong className="text-ob-tx2 font-sans">Output: </strong>
+                          <span className="text-ob-soft">{ex.output}</span>
                         </div>
                         {ex.explanation && (
-                          <div className="pt-1 font-sans text-[#aaa89f] text-[11px]">
-                            <strong className="text-[#d3d1c9]">Explanation: </strong>
+                          <div className="pt-1 font-sans text-ob-tx2 text-[11px]">
+                            <strong className="text-ob-soft">Explanation: </strong>
                             <span>{ex.explanation}</span>
                           </div>
                         )}
@@ -1236,13 +1236,13 @@ export default function DsaCodingWorkspace({
 
                 {/* Constraints */}
                 <div>
-                  <div className="font-semibold text-[#d3d1c9] mb-2">
+                  <div className="font-semibold text-ob-soft mb-2">
                     Constraints:
                   </div>
-                  <ul className="space-y-1.5 list-disc list-inside font-mono text-[11px] text-[#aaa89f]">
+                  <ul className="space-y-1.5 list-disc list-inside font-mono text-[11px] text-ob-tx2">
                     {problem.constraints.map((c, i) => (
                       <li key={i}>
-                        <code className="bg-[#20201e] border border-white/10 px-1.5 py-0.5 rounded text-[#d3d1c9]">
+                        <code className="bg-ob-bg3 border border-ob-ov/10 px-1.5 py-0.5 rounded text-ob-soft">
                           {c}
                         </code>
                       </li>
@@ -1251,15 +1251,15 @@ export default function DsaCodingWorkspace({
                 </div>
 
                 {/* Tags */}
-                <div className="pt-4 border-t border-white/10">
-                  <div className="text-xs text-[#aaa89f] mb-2 font-semibold">
+                <div className="pt-4 border-t border-ob-ov/10">
+                  <div className="text-xs text-ob-tx2 mb-2 font-semibold">
                     Related Topics
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {problem.tagline.split(", ").map((tag) => (
                       <span
                         key={tag}
-                        className="px-2.5 py-1 rounded-full bg-[#20201e] hover:bg-[#1a1e2d] text-[11px] text-[#d3d1c9] cursor-pointer transition-colors border border-white/5"
+                        className="px-2.5 py-1 rounded-full bg-ob-bg3 hover:bg-ob-ov/10 text-[11px] text-ob-soft cursor-pointer transition-colors border border-ob-ov/5"
                       >
                         {tag}
                       </span>
@@ -1286,15 +1286,15 @@ export default function DsaCodingWorkspace({
         {/* ================================================================= */}
         <div className="col-span-12 lg:col-span-6 flex flex-col overflow-hidden h-full">
           {/* Editor Header Bar */}
-          <div className="h-10 border-b border-white/10 bg-[#161614] px-3 flex items-center justify-between shrink-0">
+          <div className="h-10 border-b border-ob-ov/10 bg-ob-bg2 px-3 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <select
                 value={selectedLanguage}
                 onChange={(e) => handleLanguageChange(e.target.value as ExecuteLanguage)}
-                className="bg-[#20201e] hover:bg-[#1c2030] border border-white/15 text-xs text-white rounded px-2.5 py-1 focus:outline-none cursor-pointer font-medium"
+                className="bg-ob-bg3 hover:bg-ob-ov/10 border border-ob-ov/15 text-xs text-ob-tx rounded px-2.5 py-1 focus:outline-none cursor-pointer font-medium"
               >
                 {LANGUAGES.map((l) => (
-                  <option key={l.id} value={l.id} className="bg-[#20201e] text-white">
+                  <option key={l.id} value={l.id} className="bg-ob-bg3 text-ob-tx">
                     {l.label}
                   </option>
                 ))}
@@ -1302,14 +1302,14 @@ export default function DsaCodingWorkspace({
 
               <button
                 onClick={handleResetCode}
-                className="px-2 py-1 text-xs text-[#aaa89f] hover:text-white rounded hover:bg-white/5 transition-colors cursor-pointer"
+                className="px-2 py-1 text-xs text-ob-tx2 hover:text-ob-tx rounded hover:bg-ob-ov/5 transition-colors cursor-pointer"
                 title="Reset to starter stub"
               >
                 Reset
               </button>
             </div>
 
-            <div className="text-[11px] text-[#8f8d85] font-mono">
+            <div className="text-[11px] text-ob-tx3 font-mono">
               Auto-saved
             </div>
           </div>
@@ -1321,7 +1321,7 @@ export default function DsaCodingWorkspace({
               height="100%"
               extensions={[LANGUAGE_EXTENSIONS[selectedLanguage], editorTheme]}
               onChange={(value) => setCode(value)}
-              theme="dark"
+              theme={theme === "light" ? "light" : "dark"}
               basicSetup={{
                 lineNumbers: true,
                 foldGutter: true,
@@ -1333,16 +1333,16 @@ export default function DsaCodingWorkspace({
           </div>
 
           {/* Bottom 40%: LeetCode Testcase & Console Drawer */}
-          <div className="flex-[4] flex flex-col border-t border-white/10 bg-[#0d0d0c] overflow-hidden">
+          <div className="flex-[4] flex flex-col border-t border-ob-ov/10 bg-ob-bg overflow-hidden">
             {/* Console Tabs */}
-            <div className="h-9 border-b border-white/10 bg-[#161614] px-3 flex items-center justify-between shrink-0">
+            <div className="h-9 border-b border-ob-ov/10 bg-ob-bg2 px-3 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setConsoleTab("testcase")}
                   className={`px-3 py-1 text-xs font-medium rounded transition-colors cursor-pointer flex items-center gap-1.5 ${
                     consoleTab === "testcase"
-                      ? "bg-white/10 text-white font-semibold shadow-sm"
-                      : "text-[#aaa89f] hover:text-white hover:bg-white/5"
+                      ? "bg-ob-ov/10 text-ob-tx font-semibold shadow-sm"
+                      : "text-ob-tx2 hover:text-ob-tx hover:bg-ob-ov/5"
                   }`}
                 >
                   <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1354,8 +1354,8 @@ export default function DsaCodingWorkspace({
                   onClick={() => setConsoleTab("result")}
                   className={`px-3 py-1 text-xs font-medium rounded transition-colors cursor-pointer flex items-center gap-1.5 ${
                     consoleTab === "result"
-                      ? "bg-white/10 text-white font-semibold shadow-sm"
-                      : "text-[#aaa89f] hover:text-white hover:bg-white/5"
+                      ? "bg-ob-ov/10 text-ob-tx font-semibold shadow-sm"
+                      : "text-ob-tx2 hover:text-ob-tx hover:bg-ob-ov/5"
                   }`}
                 >
                   <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1381,7 +1381,7 @@ export default function DsaCodingWorkspace({
             </div>
 
             {/* Console Body */}
-            <div className="flex-1 overflow-y-auto p-3 text-xs leading-relaxed font-sans bg-[#0d0d0c]">
+            <div className="flex-1 overflow-y-auto p-3 text-xs leading-relaxed font-sans bg-ob-bg">
               {/* TAB 1: TESTCASE INPUT */}
               {consoleTab === "testcase" && (
                 <div className="space-y-3">
@@ -1393,8 +1393,8 @@ export default function DsaCodingWorkspace({
                         onClick={() => setSelectedCaseIdx(idx)}
                         className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                           selectedCaseIdx === idx
-                            ? "bg-white/15 text-white font-semibold shadow-sm border border-white/20"
-                            : "bg-[#20201e] text-[#aaa89f] hover:text-white hover:bg-[#1a1e2d] border border-white/5"
+                            ? "bg-ob-ov/15 text-ob-tx font-semibold shadow-sm border border-ob-ov/20"
+                            : "bg-ob-bg3 text-ob-tx2 hover:text-ob-tx hover:bg-ob-ov/10 border border-ob-ov/5"
                         }`}
                       >
                         Case {idx + 1}
@@ -1404,7 +1404,7 @@ export default function DsaCodingWorkspace({
 
                   {/* Input field for chosen case */}
                   <div className="space-y-1.5">
-                    <div className="text-[11px] text-[#aaa89f] font-semibold font-mono">
+                    <div className="text-[11px] text-ob-tx2 font-semibold font-mono">
                       {problem.args.map((a) => a.name).join(", ") || "input"} =
                     </div>
                     <textarea
@@ -1416,7 +1416,7 @@ export default function DsaCodingWorkspace({
                           setCustomInputs((prev) => ({ ...prev, [activeVisibleCase.id]: val }));
                         }
                       }}
-                      className="w-full bg-[#161614] border border-white/10 focus:border-cyan-500/60 rounded-lg px-3 py-2 text-[#ebe9e2] font-mono text-xs focus:outline-none transition-colors"
+                      className="w-full bg-ob-bg2 border border-ob-ov/10 focus:border-cyan-500/60 rounded-lg px-3 py-2 text-ob-tx font-mono text-xs focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -1426,7 +1426,7 @@ export default function DsaCodingWorkspace({
               {consoleTab === "result" && (
                 <div className="space-y-3">
                   {testResults.length === 0 && !isRunning && !isSubmitting && (
-                    <div className="text-center py-6 text-[#8f8d85] italic text-xs">
+                    <div className="text-center py-6 text-ob-tx3 italic text-xs">
                       Run your code to evaluate against testcases.
                     </div>
                   )}
@@ -1434,7 +1434,7 @@ export default function DsaCodingWorkspace({
                   {testResults.length > 0 && (
                     <>
                       {/* Big Status Header */}
-                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                      <div className="flex items-center justify-between pb-2 border-b border-ob-ov/10">
                         <div className="flex items-center gap-3">
                           <span
                             className={`text-base font-bold tracking-tight ${
@@ -1443,12 +1443,12 @@ export default function DsaCodingWorkspace({
                           >
                             {allTestsPassed ? "Accepted" : "Wrong Answer"}
                           </span>
-                          <span className="text-[#aaa89f] font-mono text-xs">
+                          <span className="text-ob-tx2 font-mono text-xs">
                             Runtime: {activeResult?.executionTime || "0.04s"}
                           </span>
                         </div>
 
-                        <span className="text-[11px] font-mono text-[#aaa89f]">
+                        <span className="text-[11px] font-mono text-ob-tx2">
                           {testResults.filter((r) => r.passed).length} / {testResults.length} testcases passed
                         </span>
                       </div>
@@ -1461,8 +1461,8 @@ export default function DsaCodingWorkspace({
                             onClick={() => setSelectedCaseIdx(idx)}
                             className={`px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
                               selectedCaseIdx === idx
-                                ? "bg-white/15 text-white font-semibold shadow-sm border border-white/20"
-                                : "bg-[#20201e] text-[#aaa89f] hover:text-white hover:bg-[#1a1e2d] border border-white/5"
+                                ? "bg-ob-ov/15 text-ob-tx font-semibold shadow-sm border border-ob-ov/20"
+                                : "bg-ob-bg3 text-ob-tx2 hover:text-ob-tx hover:bg-ob-ov/10 border border-ob-ov/5"
                             }`}
                           >
                             <span
@@ -1477,21 +1477,21 @@ export default function DsaCodingWorkspace({
 
                       {/* Detail of chosen result */}
                       {activeResult && (
-                        <div className="space-y-2 p-3 rounded-lg border border-white/10 bg-[#161614] font-mono text-[11px]">
+                        <div className="space-y-2 p-3 rounded-lg border border-ob-ov/10 bg-ob-bg2 font-mono text-[11px]">
                           <div>
-                            <span className="text-[#aaa89f]">Input: </span>
-                            <div className="mt-1 p-2 rounded bg-black/40 text-[#ebe9e2] whitespace-pre-wrap border border-white/5">
+                            <span className="text-ob-tx2">Input: </span>
+                            <div className="mt-1 p-2 rounded bg-ob-bg text-ob-tx whitespace-pre-wrap border border-ob-ov/5">
                               {activeResult.testCase.input}
                             </div>
                           </div>
                           <div>
-                            <span className="text-[#aaa89f]">Output: </span>
+                            <span className="text-ob-tx2">Output: </span>
                             <span className={activeResult.passed ? "text-emerald-400" : "text-rose-400 font-semibold"}>
                               {activeResult.actualOutput}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[#aaa89f]">Expected: </span>
+                            <span className="text-ob-tx2">Expected: </span>
                             <span className="text-emerald-400">{activeResult.testCase.expectedOutput}</span>
                           </div>
 
@@ -1509,10 +1509,10 @@ export default function DsaCodingWorkspace({
             </div>
 
             {/* Bottom LeetCode Action Bar: Console (Left) | Run + Submit (Right) */}
-            <div className="h-11 border-t border-white/10 bg-[#0d0d0c] px-3 flex items-center justify-between shrink-0">
+            <div className="h-11 border-t border-ob-ov/10 bg-ob-bg px-3 flex items-center justify-between shrink-0">
               <button
                 onClick={() => setConsoleTab((prev) => (prev === "testcase" ? "result" : "testcase"))}
-                className="px-2.5 py-1 text-xs text-[#aaa89f] hover:text-white rounded hover:bg-white/5 flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-2.5 py-1 text-xs text-ob-tx2 hover:text-ob-tx rounded hover:bg-ob-ov/5 flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
@@ -1526,27 +1526,27 @@ export default function DsaCodingWorkspace({
                 <button
                   onClick={runVisibleTests}
                   disabled={isRunning || isSubmitting}
-                  className="px-3 py-1.5 rounded-lg bg-[#20201e] hover:bg-[#1c2030] text-[#d3d1c9] border border-white/15 text-xs font-medium transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg bg-ob-bg3 hover:bg-ob-ov/10 text-ob-soft border border-ob-ov/15 text-xs font-medium transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                   title="Run tests (Ctrl+')"
                 >
-                  <svg className="w-3 h-3 text-[#aaa89f]" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-3 h-3 text-ob-tx2" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                   <span>Run</span>
-                  <span className="hidden sm:inline-block text-[10px] font-mono text-[#aaa89f] px-1 py-0.2 rounded bg-white/5 border border-white/10">Ctrl+'</span>
+                  <span className="hidden sm:inline-block text-[10px] font-mono text-ob-tx2 px-1 py-0.2 rounded bg-ob-ov/5 border border-ob-ov/10">Ctrl+'</span>
                 </button>
 
                 <button
                   onClick={submitFullSolution}
                   disabled={isRunning || isSubmitting}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#2cbb5d] hover:bg-[#28a752] text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-950/40"
+                  className="px-3.5 py-1.5 rounded-lg bg-[#2cbb5d] hover:bg-[#28a752] text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-950/40"
                   title="Submit full solution (Ctrl+Enter)"
                 >
                   <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   <span>Submit</span>
-                  <span className="hidden sm:inline-block text-[10px] font-mono text-white/90 px-1 py-0.2 rounded bg-black/20 border border-white/20">Ctrl+Enter</span>
+                  <span className="hidden sm:inline-block text-[10px] font-mono text-white/90 px-1 py-0.2 rounded bg-black/20 border border-ob-ov/20">Ctrl+Enter</span>
                 </button>
               </div>
             </div>

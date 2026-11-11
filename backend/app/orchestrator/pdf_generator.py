@@ -101,6 +101,8 @@ BUZZWORDS = [
     "leverage", "robust", "seamless", "scalable", "best practices", "cutting-edge", "cutting edge", "synergy",
     "holistic", "paradigm", "state of the art", "game changer", "end-to-end", "optimal", "efficient",
 ]
+from app.orchestrator.delivery_scoring import cap_level, filler_level, pace_level, tic_stats  # noqa: E402
+
 HEDGES = ["basically", "kind of", "sort of", "i guess", "maybe", "probably", "simply", "i think", "you know"]
 
 _UNICODE_MAP = {
@@ -229,18 +231,22 @@ def build_content(report: dict[str, Any], transcript: list[dict[str, Any]]) -> d
     tele = card.get("telemetry") or {}
     cand_turns = [str(t.get("text", "")) for t in transcript if t.get("speaker") in ("Candidate", "You")]
 
-    comm_radar = [(COMM_LABELS.get(d.get("dimension_id"), str(d.get("name", ""))[:14]), _level(d.get("rating", ""))) for d in dims]
-    wpm = float(tele.get("estimated_wpm") or 0)
-    words = int(tele.get("total_words") or 0)
-    fillers = int(tele.get("filler_word_count") or 0)
-    if wpm > 0:
-        comm_radar.append(("Pace", 4 if 120 <= wpm <= 165 else 3 if 100 <= wpm <= 185 else 2))
-    per100 = (fillers / words * 100) if words else 0
-    if words > 0:
-        comm_radar.append(("Filler Control", 4 if per100 < 1 else 3 if per100 < 2 else 2 if per100 < 4 else 1))
+    # Evidence from the transcript, not the model's default rating: verbal tics cap the axes they make unreliable.
+    tic_total, tic_breakdown, tic_words, rate = tic_stats(cand_turns)
 
-    went = [{"title": d.get("name", ""), "body": d.get("observation", ""), "quote": d.get("evidence_quote") or ""} for d in dims if _level(d.get("rating", "")) >= 3]
-    work = [{"title": d.get("name", ""), "body": d.get("observation", ""), "quote": d.get("evidence_quote") or ""} for d in dims if _level(d.get("rating", "")) <= 2]
+    def lvl(d: dict[str, Any]) -> int:
+        return cap_level(_level(d.get("rating", "")), str(d.get("dimension_id", "")), rate)
+
+    comm_radar = [(COMM_LABELS.get(d.get("dimension_id"), str(d.get("name", ""))[:14]), lvl(d)) for d in dims]
+    wpm = float(tele.get("estimated_wpm") or 0)
+    pace = pace_level(wpm) if wpm > 0 else None
+    if pace is not None:
+        comm_radar.append(("Pace", pace))
+    if rate is not None:
+        comm_radar.append(("Filler Control", filler_level(rate)))
+
+    went = [{"title": d.get("name", ""), "body": d.get("observation", ""), "quote": d.get("evidence_quote") or ""} for d in dims if lvl(d) >= 3]
+    work = [{"title": d.get("name", ""), "body": d.get("observation", ""), "quote": d.get("evidence_quote") or ""} for d in dims if lvl(d) <= 2]
     pats = _patterns(cand_turns)
     for p in pats:
         if p["kind"] == "buzzword":
@@ -249,15 +255,18 @@ def build_content(report: dict[str, Any], transcript: list[dict[str, Any]]) -> d
         else:
             work.append({"title": f'Hedged with "{p["term"]}"', "quote": p["example"],
                          "body": f'"{p["term"]}" came up {p["count"]} times. It softens points you actually know and makes answers sound less certain than they are.'})
-    if words > 0:
-        if per100 >= 2:
-            work.append({"title": "Filler words", "body": f"{fillers} fillers in {words} words ({per100:.1f} per 100).", "quote": ""})
-        else:
-            went.append({"title": "Controlled delivery", "body": f"Only {fillers} filler words across {words} words.", "quote": ""})
-    if wpm > 165 or (0 < wpm < 110):
-        work.append({"title": "Speaking pace", "body": f"{int(wpm)} words per minute is outside the comfortable 120-160 range.", "quote": ""})
-    elif wpm > 0:
-        went.append({"title": "Speaking pace", "body": f"{int(wpm)} words per minute sits in the comfortable 120-160 range.", "quote": ""})
+    if rate is not None:
+        top = ", ".join(f'"{w}" {n}x' for w, n in sorted(tic_breakdown.items(), key=lambda kv: -kv[1])[:3])
+        total = round(tic_total)
+        if rate >= 1.0:
+            work.append({"title": "Filler words and verbal tics", "quote": "",
+                         "body": f"{total} filler or hedge words in {tic_words} words ({rate:.1f} per 100)" + (f": {top}." if top else ".")})
+        elif rate < 0.5:
+            went.append({"title": "Controlled delivery", "body": f"Only {total} filler or hedge words across {tic_words} words.", "quote": ""})
+    if pace is not None and pace <= 2:
+        work.append({"title": "Speaking pace", "body": f"{int(wpm)} words per minute is outside the comfortable 125-165 range.", "quote": ""})
+    elif pace == 4:
+        went.append({"title": "Speaking pace", "body": f"{int(wpm)} words per minute sits in the comfortable 125-165 range.", "quote": ""})
 
     advice = []
     for p in pats:
@@ -267,7 +276,7 @@ def build_content(report: dict[str, Any], transcript: list[dict[str, Any]]) -> d
             else f'Drop "{p["term"]}" and state the point directly. A short pause reads as more confident than a hedge.'
         )
     for d in dims:
-        if _level(d.get("rating", "")) <= 2:
+        if lvl(d) <= 2:
             advice.append(f'{d.get("name", "")}: {d.get("observation", "")}')
     advice += [
         "Lead with the decision, then the reasoning. For example: 'I will use a hash map keyed by the sorted string, because ...'.",

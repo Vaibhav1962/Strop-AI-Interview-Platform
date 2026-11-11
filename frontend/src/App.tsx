@@ -1,10 +1,11 @@
-import { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy, useState, useEffect, useRef } from "react";
 import Navigation, { type Page, ProfileMenu } from "./components/Navigation";
 import AppBackground from "./components/AppBackground";
 import { ToastContainer, useToast } from "./components/ui";
-import { type AuthUser, clearSession, getStoredUser } from "./lib/api";
+import { type AuthUser, clearSession, getStoredUser, getToken } from "./lib/api";
 import { syncUserProfileFromBackend } from "./lib/userDocuments";
 import { useTheme } from "./lib/theme";
+import ThemeToggle from "./components/ThemeToggle";
 
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
@@ -27,21 +28,18 @@ type AnyPage = Page | "landing" | "voice-interview" | "coding-interview" | "inte
 export default function App() {
   const [user, setUser] = useState<AuthUser | null>(() => {
     const stored = getStoredUser();
-    if (stored) return stored;
-    const hash = window.location.hash.replace("#", "").replace(/^\//, "");
-    if (hash && hash !== "landing") {
-      const devUser: AuthUser = {
-        id: "usr_lead_dev",
-        full_name: "Alex Vance",
-        email: "alex.vance@blackmesa.internal",
-        created_at: new Date().toISOString()
-      };
-      try {
-        localStorage.setItem("interviewiq_user", JSON.stringify(devUser));
-      } catch {}
-      return devUser;
+    // A signed-in session needs a token. A stored user without one cannot call the backend (every request would
+    // fail and the pages would just look empty), so it counts as signed out. This also clears the placeholder
+    // "Alex Vance" account that an earlier build saved when a page hash was opened without logging in.
+    if (stored && !getToken()) {
+      if (stored.id === "usr_lead_dev") {
+        try {
+          localStorage.removeItem("interviewiq_user");
+        } catch {}
+      }
+      return null;
     }
-    return null;
+    return stored;
   });
   const [page, setPage] = useState<AnyPage>(() => {
     const hash = window.location.hash.replace("#", "").replace(/^\//, "") as AnyPage;
@@ -52,7 +50,7 @@ export default function App() {
       "interview-report"
     ];
     if (hash && validPages.includes(hash)) return hash;
-    return getStoredUser() ? "dashboard" : "landing";
+    return getStoredUser() && getToken() ? "dashboard" : "landing";
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
@@ -62,7 +60,15 @@ export default function App() {
     }
   });
   const { toasts, add, remove } = useToast();
-  useTheme(); // Enforces dark mode
+  useTheme(); // Subscribes the app to theme changes
+
+  // The staggered rise plays on a page's first visit only; after that it is a quick cross-fade.
+  const visited = useRef(new Set<string>());
+  const pageSeen = useRef({ page: "", seen: false });
+  if (pageSeen.current.page !== page) {
+    pageSeen.current = { page, seen: visited.current.has(page) };
+    visited.current.add(page);
+  }
 
   const toggleSidebar = () => {
     setSidebarCollapsed((prev) => {
@@ -145,7 +151,7 @@ export default function App() {
 
   if (page === "voice-interview") {
     return (
-      <div className="h-screen h-[100dvh] min-h-[100dvh] flex flex-col overflow-hidden bg-[#0d0d0c] relative text-[#ebe9e2] safe-area-inset">
+      <div className="h-screen h-[100dvh] min-h-[100dvh] flex flex-col overflow-hidden bg-ob-bg relative text-ob-tx safe-area-inset">
         <AppBackground variant="immersive" />
         <div className="relative z-10 flex-1 flex flex-col min-h-0 overflow-hidden">
           <ErrorBoundary fallbackTitle="Voice Interview Assessment Error" onReset={() => navigate("interview-setup")}>
@@ -159,7 +165,7 @@ export default function App() {
 
   if (page === "coding-interview") {
     return (
-      <div className="h-screen h-[100dvh] min-h-[100dvh] flex flex-col overflow-hidden bg-[#0d0d0c] relative text-[#ebe9e2] safe-area-inset">
+      <div className="h-screen h-[100dvh] min-h-[100dvh] flex flex-col overflow-hidden bg-ob-bg relative text-ob-tx safe-area-inset">
         <AppBackground variant="immersive" />
         <div className="relative z-10 flex-1 flex flex-col min-h-0 overflow-hidden">
           <ErrorBoundary fallbackTitle="Coding Interview Assessment Error" onReset={() => navigate("interview-setup")}>
@@ -183,7 +189,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121211] text-[#ebe9e2] selection:bg-[#e6dfcc]/25">
+    <div className="min-h-screen bg-ob-bg1 text-ob-tx selection:bg-ob-ac/25">
       <Navigation
         current={page as Page}
         onNavigate={(p) => navigate(p)}
@@ -198,20 +204,23 @@ export default function App() {
         } pt-14 lg:pt-0`}
       >
         {/* Top bar: just the profile menu, no breadcrumb or divider */}
-        <div className="hidden sm:flex items-center justify-end h-[44px] px-6 relative z-40">
+        <div className="hidden sm:flex items-center justify-end gap-2.5 h-[44px] px-6 relative z-40">
+          <ThemeToggle />
           <ProfileMenu user={user} onLogout={handleLogout} />
         </div>
 
         <main className="flex-1 min-w-0">
-          <Suspense fallback={<div className="h-[60vh]" />}>
-            {pageComponents[page] ?? <Dashboard onNavigate={navigate} user={user} />}
-          </Suspense>
+          <div key={page} className={`ob-page ${pageSeen.current.seen ? "ob-seen" : ""}`}>
+            <Suspense fallback={<div className="h-[60vh]" />}>
+              {pageComponents[page] ?? <Dashboard onNavigate={navigate} user={user} />}
+            </Suspense>
+          </div>
         </main>
 
         {/* Status bar */}
-        <div className="flex flex-wrap justify-end gap-x-5 gap-y-1 px-6 py-[9px] border-t border-[#2b2b28] font-mono text-[11px] text-[#8f8d85]">
+        <div className="flex flex-wrap justify-end gap-x-5 gap-y-1 px-6 py-[9px] border-t border-ob-ln font-mono text-[11px] text-ob-tx3">
           <span className="flex items-center gap-2">
-            <span className="inline-block w-[7px] h-[7px] rounded-full bg-[#6fd6a4]" aria-hidden="true" />
+            <span className="inline-block w-[7px] h-[7px] rounded-full bg-ob-ok" aria-hidden="true" />
             signed in as {user.email}
           </span>
           <span>5 interview tracks</span>

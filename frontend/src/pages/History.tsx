@@ -1,4 +1,4 @@
-import { Button } from "../components/ui";
+import { Button, usePresence } from "../components/ui";
 import CandidateReportView from "../components/CandidateReportView";
 import { useState, useEffect } from "react";
 import {
@@ -78,6 +78,8 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [loading, setLoading] = useState(true);
+  const resetDlg = usePresence(confirmReset);
+  const detail = usePresence(detailModal);
 
   const handleDownloadPdf = async (sessionId: string, title?: string) => {
     try {
@@ -482,7 +484,7 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
   return (
     <div className="mx-auto w-full max-w-[1160px] px-5 sm:px-[clamp(20px,4vw,56px)] pt-2 pb-16 text-[14px] leading-[1.55]">
       {/* Tabs: interviews vs resume / job matches */}
-      <div className="ob-rise flex gap-1 border-b border-[#2b2b28]" style={{ ["--i" as string]: 3 }} role="tablist" aria-label="Archive sections">
+      <div className="ob-rise flex gap-1 border-b border-ob-ln" style={{ ["--i" as string]: 3 }} role="tablist" aria-label="Archive sections">
         {([
           { id: "interviews", label: "Interviews", n: interviewSessions.length },
           { id: "jd-matches", label: "Resume & JD matches", n: jdMatchReports.length },
@@ -497,7 +499,7 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
               setSearch("");
             }}
             className={`relative h-11 px-4 text-[13.5px] cursor-pointer transition-colors duration-300 -mb-px border-b ${
-              activeTab === t.id ? "text-[#ebe9e2] border-[#e6dfcc]" : "ob-tx3 border-transparent hover:text-[#ebe9e2]"
+              activeTab === t.id ? "text-ob-tx border-ob-ac" : "ob-tx3 border-transparent hover:text-ob-tx"
             }`}
           >
             {t.label}
@@ -509,13 +511,13 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
       {/* Search + track filters */}
       <div className="ob-rise flex gap-3 flex-wrap items-center mt-6 mb-5" style={{ ["--i" as string]: 3 }}>
         <div className="relative flex-[1_1_240px] max-w-[340px]">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#8f8d85" strokeWidth="1.8" strokeLinecap="round" className="absolute left-3.5 top-[14px]" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--ob-tx3)" strokeWidth="1.8" strokeLinecap="round" className="absolute left-3.5 top-[14px]" aria-hidden="true">
             <circle cx="11" cy="11" r="6" />
             <path d="M20 20l-4-4" />
           </svg>
           <input
             className="ob-input !h-[42px] !pl-[38px]"
-            style={{ background: "#181817" }}
+            style={{ background: "var(--ob-card)" }}
             aria-label="Search"
             placeholder={activeTab === "interviews" ? "Search sessions" : "Search job matches"}
             value={search}
@@ -529,10 +531,10 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
               type="button"
               aria-pressed={selectedTrackFilter === f.id}
               onClick={() => setSelectedTrackFilter(f.id)}
-              className={`h-[38px] px-3.5 border rounded-[9px] text-[13px] cursor-pointer transition-all duration-300 ${
+              className={`h-[38px] px-3.5 border rounded-[9px] text-[13px] cursor-pointer transition duration-300 ${
                 selectedTrackFilter === f.id
-                  ? "bg-[rgba(230,223,204,0.07)] border-[rgba(230,223,204,0.26)] text-[#ebe9e2]"
-                  : "border-[#3a3a36] text-[#aaa89f] hover:text-[#ebe9e2] hover:border-[#55544e]"
+                  ? "bg-[rgb(var(--ob-ac-rgb)/0.07)] border-[rgb(var(--ob-ac-rgb)/0.26)] text-ob-tx"
+                  : "border-ob-ln2 text-ob-tx2 hover:text-ob-tx hover:border-ob-ln3"
               }`}
             >
               {f.label}
@@ -542,9 +544,9 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
       </div>
 
       {activeTab === "jd-matches" ? (
-        <div className="ob-rise border-b border-[#2b2b28]" style={{ ["--i" as string]: 4 }}>
+        <div className="ob-rise border-b border-ob-ln" style={{ ["--i" as string]: 4 }}>
           {filteredJdMatches.length === 0 ? (
-            <div className="py-14 text-center border-t border-[#2b2b28]">
+            <div className="py-14 text-center border-t border-ob-ln">
               <div className="text-[17px] mb-1.5">{jdMatchReports.length === 0 ? "No resume matches yet" : "No matches found"}</div>
               <div className="ob-tx3 text-[13px] mb-5">
                 {jdMatchReports.length === 0
@@ -559,8 +561,8 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
             filteredJdMatches.map((m, i) => (
               <div
                 key={m.id}
-                className="grid grid-cols-1 sm:grid-cols-[84px_minmax(0,1fr)_200px_240px] gap-x-4 gap-y-2 items-center px-2 py-[18px] border-t border-[#2b2b28] transition-colors duration-300 hover:bg-[rgba(230,223,204,0.04)]"
-                style={{ animation: `ob-rise 0.7s var(--ob-ease) ${0.1 + i * 0.05}s both` }}
+                className={`grid grid-cols-1 sm:grid-cols-[84px_minmax(0,1fr)_200px_240px] gap-x-4 gap-y-2 items-center px-2 py-[18px] border-t border-ob-ln transition-colors duration-300 hover:bg-[rgb(var(--ob-ac-rgb)/0.04)] ${deletingId === m.id ? "ob-collapse" : ""}`}
+                style={deletingId === m.id ? undefined : { animation: `ob-rise 0.7s var(--ob-ease) ${0.1 + i * 0.05}s both` }}
               >
                 <span className="ob-mo text-xs ob-tx3 whitespace-nowrap">{(m.date || "").replace(/,\s*\d{4}$/, "")}</span>
                 <span className="min-w-0">
@@ -581,7 +583,7 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
                     disabled={deletingId === m.id}
                     aria-label={`Delete ${m.jdTitle}`}
                     title="Delete match"
-                    className="w-8 h-8 grid place-items-center rounded-[7px] text-[#8f8d85] hover:text-[#ff6a3d] hover:bg-[#20201e] transition-colors cursor-pointer"
+                    className="w-8 h-8 grid place-items-center rounded-[7px] text-ob-tx3 hover:text-ob-hot hover:bg-ob-bg3 transition-colors cursor-pointer"
                   >
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <polyline points="3 6 5 6 21 6" />
@@ -596,11 +598,22 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
       ) : (
       <div className="flex flex-wrap gap-4 items-start">
         {/* Sessions */}
-        <div className="ob-rise flex-[999_1_600px] min-w-0 border-b border-[#2b2b28]" style={{ ["--i" as string]: 4 }}>
+        <div className="ob-rise flex-[999_1_600px] min-w-0 border-b border-ob-ln" style={{ ["--i" as string]: 4 }}>
           {loading ? (
-            <div className="py-14 text-center ob-tx3 text-[13px] border-t border-[#2b2b28]">Loading your archive...</div>
+            <div role="status" aria-label="Loading your archive">
+              {[0, 1, 2, 3].map((k) => (
+                <div key={k} className="grid grid-cols-[84px_minmax(0,1fr)_96px] gap-x-4 items-center px-2 py-[18px] border-t border-ob-ln">
+                  <span className="ob-sk" style={{ width: 52, height: 12 }} />
+                  <span className="grid gap-2">
+                    <span className="ob-sk" style={{ width: `${62 - k * 9}%`, height: 14 }} />
+                    <span className="ob-sk" style={{ width: `${34 - k * 4}%`, height: 11 }} />
+                  </span>
+                  <span className="ob-sk justify-self-end" style={{ width: 72, height: 28 }} />
+                </div>
+              ))}
+            </div>
           ) : visibleSessions.length === 0 ? (
-            <div className="py-14 text-center border-t border-[#2b2b28]">
+            <div className="py-14 text-center border-t border-ob-ln">
               <div className="text-[17px] mb-1.5">{interviewSessions.length === 0 ? "No interviews yet" : "No sessions match"}</div>
               <div className="ob-tx3 text-[13px] mb-5">
                 {interviewSessions.length === 0
@@ -619,8 +632,8 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
               return (
                 <div
                   key={session.id}
-                  className="grid grid-cols-1 sm:grid-cols-[84px_minmax(0,1fr)_240px] gap-x-4 gap-y-2 items-center px-2 py-[18px] border-t border-[#2b2b28] transition-colors duration-300 hover:bg-[rgba(230,223,204,0.04)]"
-                  style={{ animation: `ob-rise 0.7s var(--ob-ease) ${0.1 + i * 0.05}s both` }}
+                  className={`grid grid-cols-1 sm:grid-cols-[84px_minmax(0,1fr)_240px] gap-x-4 gap-y-2 items-center px-2 py-[18px] border-t border-ob-ln transition-colors duration-300 hover:bg-[rgb(var(--ob-ac-rgb)/0.04)] ${deletingId === session.id ? "ob-collapse" : ""}`}
+                  style={deletingId === session.id ? undefined : { animation: `ob-rise 0.7s var(--ob-ease) ${0.1 + i * 0.05}s both` }}
                 >
                   <span className="ob-mo text-xs ob-tx3 whitespace-nowrap">{session.date.replace(/,\s*\d{4}$/, "")}</span>
                   <span className="min-w-0">
@@ -634,13 +647,13 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
                   <span className="flex items-center gap-2 sm:justify-end">
                     {evaluating ? (
                       <span className="relative group inline-flex">
-                        <button type="button" className="ob-btn ob-sm" disabled aria-disabled="true" aria-describedby={`gen-${session.id}`} style={{ opacity: 0.45, cursor: "not-allowed" }}>
+                        <button type="button" className="ob-btn ob-sm ob-shim" disabled aria-disabled="true" aria-describedby={`gen-${session.id}`} style={{ opacity: 0.75, cursor: "not-allowed" }}>
                           Report
                         </button>
                         <span
                           id={`gen-${session.id}`}
                           role="tooltip"
-                          className="pointer-events-none absolute right-0 bottom-full mb-2 w-56 rounded-lg border border-[#3a3a36] bg-[#181817] px-3 py-2 text-center text-[11.5px] leading-snug ob-tx2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.8)]"
+                          className="pointer-events-none absolute right-0 bottom-full mb-2 w-56 rounded-lg border border-ob-ln2 bg-ob-card px-3 py-2 text-center text-[11.5px] leading-snug ob-tx2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 shadow-[0_8px_24px_-8px_rgb(var(--ob-sh)/0.8)]"
                         >
                           Generating report. Estimated time 5–10 minutes.
                         </span>
@@ -663,7 +676,7 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
                       disabled={deletingId === session.id}
                       aria-label={`Delete ${session.title}`}
                       title="Delete session"
-                      className="w-8 h-8 grid place-items-center rounded-[7px] text-[#8f8d85] hover:text-[#ff6a3d] hover:bg-[#20201e] transition-colors cursor-pointer"
+                      className="w-8 h-8 grid place-items-center rounded-[7px] text-ob-tx3 hover:text-ob-hot hover:bg-ob-bg3 transition-colors cursor-pointer"
                     >
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <polyline points="3 6 5 6 21 6" />
@@ -680,36 +693,36 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
       )}
 
       {/* Reset History Confirmation Modal */}
-      {confirmReset && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 anim-fade-in">
-          <div className=" border border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 text-center anim-scale-in">
-            <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mx-auto">
+      {resetDlg.shown && (
+        <div className={`fixed inset-0 bg-ob-bg/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 ${resetDlg.closing ? "ob-exit-fade" : "anim-fade-in"}`}>
+          <div className={`bg-ob-bg2 border border-ob-ln rounded-2xl max-w-md w-full p-6 flex flex-col gap-4 text-center ${resetDlg.closing ? "ob-exit" : "ob-enter"}`}>
+            <div className="w-12 h-12 rounded-full border border-[rgba(255,106,61,0.4)] text-ob-hot flex items-center justify-center mx-auto">
               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">
-                Reset Interview History?
+              <h3 className="text-base font-medium text-ob-tx">
+                Reset interview history?
               </h3>
-              <p className="text-xs text-[#aaa89f] mt-2 leading-relaxed">
+              <p className="text-xs text-ob-tx2 mt-2 leading-relaxed">
                 This will permanently remove all interview sessions, evaluations, and transcripts from the backend database for your account. Future interviews will begin from a fresh baseline.
               </p>
             </div>
             <div className="flex items-center gap-3 mt-2">
               <button
                 onClick={() => setConfirmReset(false)}
-                className="flex-1 py-2.5 rounded-xl border border-white/10 bg-[#20201e] hover:bg-white/5 text-xs font-medium text-[#d3d1c9] transition-colors cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl border border-ob-ln bg-ob-bg3 hover:bg-ob-ov/5 text-xs font-medium text-ob-soft transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleResetHistory}
                 disabled={isResetting}
-                className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30"
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-[rgba(255,106,61,0.6)] text-ob-hot hover:bg-[rgba(255,106,61,0.08)]"
               >
-                {isResetting ? "Resetting..." : "Confirm Reset"}
+                {isResetting ? "Resetting..." : "Reset"}
               </button>
             </div>
           </div>
@@ -717,8 +730,8 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
       )}
 
       {/* Comprehensive Assessment & Transcript Inspection Modal */}
-      {detailModal && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 selection:bg-indigo-500/30 print:p-0 print:bg-white print:fixed-none anim-fade-in">
+      {detail.shown && ((dm) => (
+        <div className={`fixed inset-0 z-50 bg-ob-bg/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 print:p-0 print:bg-white print:fixed-none ${detail.closing ? "ob-exit-fade" : "anim-fade-in"}`}>
           <style>{`
             @media print {
               body { background: white !important; color: black !important; }
@@ -726,22 +739,22 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
               .print-modal { max-height: none !important; overflow: visible !important; border: none !important; box-shadow: none !important; }
             }
           `}</style>
-          <div className="bg-[#161614] border border-white/10 rounded-3xl max-w-[1500px] w-[96vw] max-h-[92vh] flex flex-col shadow-2xl overflow-hidden print-modal anim-scale-in">
+          <div className={`bg-ob-bg2 border border-ob-ln rounded-[18px] max-w-[1500px] w-[96vw] max-h-[92vh] flex flex-col overflow-hidden print-modal ${detail.closing ? "ob-exit" : "ob-enter"}`}>
             <div className="p-5 sm:p-7 overflow-y-auto flex-1">
-              {detailModal.report ? (
+              {dm.report ? (
                 <CandidateReportView
-                  report={detailModal.report}
+                  report={dm.report}
                   session={{
-                    id: detailModal.session.id,
-                    track: detailModal.session.track,
-                    title: detailModal.session.title,
-                    date: detailModal.session.date,
-                    formattedDuration: detailModal.session.formattedDuration,
-                    duration_seconds: detailModal.session.durationSeconds,
-                    audio_url: detailModal.session.audio_url,
-                    startedAt: detailModal.session.startedAt,
+                    id: dm.session.id,
+                    track: dm.session.track,
+                    title: dm.session.title,
+                    date: dm.session.date,
+                    formattedDuration: dm.session.formattedDuration,
+                    duration_seconds: dm.session.durationSeconds,
+                    audio_url: dm.session.audio_url,
+                    startedAt: dm.session.startedAt,
                   }}
-                  transcript={detailModal.lines}
+                  transcript={dm.lines}
                   onClose={() => {
                     setDetailModal(null);
                     clearSelectedReportId();
@@ -751,13 +764,13 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
                 />
               ) : (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between gap-4 pb-4 border-b border-white/10">
+                  <div className="flex items-center justify-between gap-4 pb-4 border-b border-ob-ln">
                     <div>
-                      <h2 className="text-xl font-bold text-white">
-                        {detailModal.session.title}
+                      <h2 className="text-xl font-medium text-ob-tx">
+                        {dm.session.title}
                       </h2>
-                      <p className="text-xs text-[#aaa89f] mt-1">
-                        {detailModal.session.track} · {detailModal.session.date} · {detailModal.session.formattedDuration}
+                      <p className="text-xs text-ob-tx2 mt-1">
+                        {dm.session.track} · {dm.session.date} · {dm.session.formattedDuration}
                       </p>
                     </div>
                     <button
@@ -765,7 +778,7 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
                         setDetailModal(null);
                         clearSelectedReportId();
                       }}
-                      className="p-2 rounded-xl text-[#aaa89f] hover:text-white hover:bg-white/5 cursor-pointer"
+                      className="p-2 rounded-xl text-ob-tx2 hover:text-ob-tx hover:bg-ob-ov/5 cursor-pointer"
                     >
                       ✕
                     </button>
@@ -773,42 +786,42 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
 
                   <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 flex items-center justify-between gap-4">
                     <div>
-                      <span className="font-bold block mb-0.5">Evaluation Status: {detailModal.session.competencyLevel}</span>
+                      <span className="font-bold block mb-0.5">Evaluation Status: {dm.session.competencyLevel}</span>
                       <span>The full assessment report is not yet finalized. You can review the raw transcript below.</span>
                     </div>
-                    {detailModal.session.evaluationStatus === "failed" && (
+                    {dm.session.evaluationStatus === "failed" && (
                       <Button
                         variant="glow"
                         size="xs"
-                        onClick={() => handleRetryEvaluation(detailModal.session.id)}
-                        disabled={retryingId === detailModal.session.id}
+                        onClick={() => handleRetryEvaluation(dm.session.id)}
+                        disabled={retryingId === dm.session.id}
                       >
-                        {retryingId === detailModal.session.id ? "Retrying..." : "Retry Evaluation"}
+                        {retryingId === dm.session.id ? "Retrying..." : "Retry Evaluation"}
                       </Button>
                     )}
                   </div>
 
                   <div className="space-y-3">
-                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-[#aaa89f]">
-                      Interview Transcript ({detailModal.lines.length} Turns)
+                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-ob-tx2">
+                      Interview Transcript ({dm.lines.length} Turns)
                     </h3>
                     <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
-                      {detailModal.lines.map((line: any, idx: number) => {
+                      {dm.lines.map((line: any, idx: number) => {
                         const isAi = line.speaker === "Alex" || line.speaker === "AI" || line.speaker === "Interviewer";
                         return (
                           <div
                             key={idx}
                             className={`p-3 rounded-xl border text-xs ${
                               isAi
-                                ? "bg-blue-50/50 bg-blue-950/20 border-blue-100 border-blue-900/30"
-                                : "bg-[#20201e] border-white/5"
+                                ? "bg-transparent border-ob-ln"
+                                : "bg-ob-bg3 border-ob-ln"
                             }`}
                           >
-                            <div className="flex items-center justify-between mb-1 text-[10px] font-mono font-semibold text-[#aaa89f]">
+                            <div className="flex items-center justify-between mb-1 text-[10px] font-mono font-semibold text-ob-tx2">
                               <span>{isAi ? "Alex (Interviewer)" : "Candidate"}</span>
                               <span>{line.time || ""}</span>
                             </div>
-                            <p className="leading-relaxed text-[#2a2c38] text-[#d3d1c9]">{line.text}</p>
+                            <p className="leading-relaxed text-ob-soft">{line.text}</p>
                           </div>
                         );
                       })}
@@ -819,7 +832,7 @@ export default function History({ onNavigate }: { onNavigate: (p: string) => voi
             </div>
           </div>
         </div>
-      )}
+      ))(detail.shown)}
     </div>
   );
 }

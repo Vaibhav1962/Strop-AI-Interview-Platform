@@ -7,6 +7,7 @@ import { python } from "@codemirror/lang-python";
 import { ApiError, type ExecuteLanguage } from "../lib/api";
 import { executeCode, warmUpPython } from "../lib/codeExecution";
 import { buildEditorTheme } from "../lib/editorTheme";
+import { useTheme } from "../lib/theme";
 
 const LANGUAGES = ["Python", "JavaScript", "C++", "Java"] as const satisfies readonly ExecuteLanguage[];
 type Language = (typeof LANGUAGES)[number];
@@ -165,21 +166,41 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
     }
   };
 
-  const editorTheme = useMemo(() => buildEditorTheme(fontSize, false), [fontSize]);
+  // Ctrl/Cmd+Enter runs the code and gives the Run button the same brief press as a click.
+  const [pressed, setPressed] = useState(false);
+  const runRef = useRef(runCode);
+  runRef.current = runCode;
+  const runningRef = useRef(running);
+  runningRef.current = running;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey) || runningRef.current) return;
+      e.preventDefault();
+      e.stopPropagation(); // keep the editor from also inserting a blank line
+      setPressed(true);
+      window.setTimeout(() => setPressed(false), 160);
+      runRef.current();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
+
+  const { theme } = useTheme();
+  const editorTheme = useMemo(() => buildEditorTheme(fontSize, theme === "light"), [fontSize, theme]);
 
   const fileName: Record<Language, string> = { Python: "main.py", JavaScript: "main.js", "C++": "main.cpp", Java: "Main.java" };
   const dd =
-    "appearance-none h-[34px] pl-3 pr-8 border border-[#3a3a36] rounded-lg bg-[#121211] text-[#ebe9e2] font-mono text-[12.5px] cursor-pointer outline-none hover:border-[#55544e] focus:border-[#55544e] transition-colors";
+    "appearance-none h-[34px] pl-3 pr-8 border border-ob-ln2 rounded-lg bg-ob-bg1 text-ob-tx font-mono text-[12.5px] cursor-pointer outline-none hover:border-ob-ln3 focus:border-ob-ln3 transition-colors";
   const ibtn =
-    "w-[34px] h-[34px] rounded-lg border border-[#3a3a36] text-[#ebe9e2] font-mono text-[11px] cursor-pointer hover:bg-[#20201e] hover:border-[#55544e] transition-colors disabled:opacity-30 disabled:cursor-not-allowed";
+    "w-[34px] h-[34px] rounded-lg border border-ob-ln2 text-ob-tx font-mono text-[11px] cursor-pointer hover:bg-ob-bg3 hover:border-ob-ln3 transition-colors disabled:opacity-30 disabled:cursor-not-allowed";
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-98px)] p-3 gap-3 text-[14px] leading-[1.55]">
       <div ref={containerRef} className="flex-1 flex flex-wrap gap-3 items-stretch min-h-[640px]">
         {/* Editor */}
-        <section className="ob-rise flex-[2_1_620px] min-w-0 flex flex-col overflow-hidden rounded-xl border border-[#2b2b28] bg-[#181817]" style={{ ["--i" as string]: 0 }}>
-          <div className="flex items-center justify-between gap-2.5 flex-wrap px-3.5 min-h-12 border-b border-[#2b2b28] shrink-0">
-            <span className="inline-flex items-center gap-2 h-12 font-mono text-xs border-b border-[#e6dfcc] -mb-px">
+        <section className="ob-rise flex-[2_1_620px] min-w-0 flex flex-col overflow-hidden rounded-xl border border-ob-ln bg-ob-card" style={{ ["--i" as string]: 0 }}>
+          <div className="flex items-center justify-between gap-2.5 flex-wrap px-3.5 min-h-12 border-b border-ob-ln shrink-0">
+            <span className="inline-flex items-center gap-2 h-12 font-mono text-xs border-b border-ob-ac -mb-px">
               <span style={{ color: "var(--ob-hot)" }}>●</span>
               {fileName[language]}
             </span>
@@ -190,7 +211,7 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
                     <option key={lang} value={lang}>{lang}</option>
                   ))}
                 </select>
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#8f8d85" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="absolute right-[11px] top-[11px] pointer-events-none" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ob-tx3)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="absolute right-[11px] top-[11px] pointer-events-none" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
               </span>
               <span className="relative inline-flex">
                 <select aria-label="Starter template" value={preset} onChange={(e) => handlePresetChange(e.target.value as PresetId)} className={dd}>
@@ -198,7 +219,7 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
                     <option key={p.id} value={p.id}>{p.title}</option>
                   ))}
                 </select>
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#8f8d85" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="absolute right-[11px] top-[11px] pointer-events-none" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ob-tx3)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="absolute right-[11px] top-[11px] pointer-events-none" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
               </span>
               <button type="button" aria-label="Decrease font size" className={ibtn} onClick={() => adjustFontSize(-1)} disabled={fontSize <= MIN_FONT_SIZE}>A−</button>
               <span className="font-mono text-[11.5px] ob-tx3 min-w-[34px] text-center">{fontSize}px</span>
@@ -213,9 +234,9 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
               >
                 Reset
               </button>
-              <button type="button" className="ob-btn ob-pr ob-sm" onClick={runCode} disabled={running}>
+              <button type="button" className="ob-btn ob-pr ob-sm" onClick={runCode} disabled={running} title="Run (Ctrl+Enter)" style={pressed ? { transform: "scale(0.96)" } : undefined}>
                 {running ? (
-                  <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-[#3a3a36] border-t-[#121211] animate-spin" />
+                  <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-ob-ln2 border-t-ob-bg1 animate-spin" />
                 ) : (
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z" /></svg>
                 )}
@@ -224,7 +245,7 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
             </div>
           </div>
 
-          <div className="flex-1 min-h-[480px] overflow-hidden bg-[#121211]">
+          <div className="flex-1 min-h-[480px] overflow-hidden bg-ob-bg1">
             <CodeMirror
               value={code}
               onChange={(value) => setCode(value)}
@@ -235,11 +256,11 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
               basicSetup={{ foldGutter: false }}
             />
           </div>
-          <div className="flex gap-[18px] flex-wrap px-4 py-[9px] border-t border-[#2b2b28] font-mono text-[11px] ob-tx3 shrink-0">
+          <div className="flex gap-[18px] flex-wrap px-4 py-[9px] border-t border-ob-ln font-mono text-[11px] ob-tx3 shrink-0">
             <span>{language}</span>
             <span>UTF-8</span>
             <span className="ml-auto flex items-center gap-2">
-              <span className="inline-block w-[7px] h-[7px] rounded-full bg-[#6fd6a4]" aria-hidden="true" />
+              <span className="inline-block w-[7px] h-[7px] rounded-full bg-ob-ok" aria-hidden="true" />
               Judge0 sandbox
             </span>
           </div>
@@ -247,8 +268,8 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
 
         {/* Input / output */}
         <div ref={rightColRef} className="flex-[1_1_340px] min-w-0 flex flex-col gap-3">
-          <section className="ob-rise flex-[0_0_220px] flex flex-col overflow-hidden rounded-xl border border-[#2b2b28] bg-[#181817]" style={{ ["--i" as string]: 1 }}>
-            <div className="flex items-center justify-between gap-2.5 px-3.5 h-12 border-b border-[#2b2b28] shrink-0">
+          <section className="ob-rise flex-[0_0_220px] flex flex-col overflow-hidden rounded-xl border border-ob-ln bg-ob-card" style={{ ["--i" as string]: 1 }}>
+            <div className="flex items-center justify-between gap-2.5 px-3.5 h-12 border-b border-ob-ln shrink-0">
               <span className="ob-lb">Input</span>
               <span className="ob-chip ob-sq" style={{ height: 22, fontSize: 11 }}>stdin</span>
             </div>
@@ -258,34 +279,39 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
               spellCheck={false}
               aria-label="Program input"
               placeholder="Anything typed here is sent to your program as standard input."
-              className="flex-1 w-full min-h-[120px] p-3.5 bg-transparent border-0 text-[#ebe9e2] font-mono text-[13px] leading-[1.7] outline-none resize-none placeholder:text-[#8f8d85]"
+              className="flex-1 w-full min-h-[120px] p-3.5 bg-transparent border-0 text-ob-tx font-mono text-[13px] leading-[1.7] outline-none resize-none placeholder:text-ob-tx3"
             />
           </section>
 
-          <section className="ob-rise flex-1 flex flex-col overflow-hidden rounded-xl border border-[#2b2b28] bg-[#181817] min-h-[260px]" style={{ ["--i" as string]: 2 }}>
-            <div className="flex items-center justify-between gap-2.5 px-3.5 h-12 border-b border-[#2b2b28] shrink-0">
+          <section className="ob-rise flex-1 flex flex-col overflow-hidden rounded-xl border border-ob-ln bg-ob-card min-h-[260px]" style={{ ["--i" as string]: 2 }}>
+            <div className="flex items-center justify-between gap-2.5 px-3.5 h-12 border-b border-ob-ln shrink-0">
               <span className="ob-lb">Output</span>
               {running ? (
                 <span className="ob-chip ob-sq" style={{ height: 22, fontSize: 11, color: "var(--ob-hot)", borderColor: "rgba(255,106,61,.4)" }}>
-                  <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-[#3a3a36] border-t-[#e6dfcc] animate-spin" />
+                  <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-ob-ln2 border-t-ob-ac animate-spin" />
                   running
                 </span>
               ) : outputTone === "success" ? (
-                <span className="ob-chip ob-sq ob-ok" style={{ height: 22, fontSize: 11 }}>success</span>
+                <span className="ob-chip ob-sq ob-ok ob-pop" style={{ height: 22, fontSize: 11 }}>success</span>
               ) : outputTone === "error" ? (
-                <span className="ob-chip ob-sq ob-err" style={{ height: 22, fontSize: 11 }}>error</span>
+                <span className="ob-chip ob-sq ob-err ob-pop" style={{ height: 22, fontSize: 11 }}>error</span>
               ) : null}
             </div>
             <div className="flex-1 overflow-auto px-4 py-3.5 font-mono text-[13px] leading-[1.9]" aria-live="polite">
               {running ? (
                 <div className="ob-tx3">
                   $ run {fileName[language]}
-                  <span className="inline-block w-2 h-3.5 bg-[#ff6a3d] align-[-2px] ml-1 animate-pulse" aria-hidden="true" />
+                  <span className="inline-block w-2 h-3.5 bg-ob-hot align-[-2px] ml-1 animate-pulse" aria-hidden="true" />
                 </div>
               ) : output === null ? (
                 <div className="ob-tx3">Run your code to see the output here.</div>
               ) : (
-                <pre className={`m-0 whitespace-pre-wrap break-words font-[inherit] ${outputTone === "error" ? "text-[#f08a98]" : "text-[#ebe9e2]"}`}>{output}</pre>
+                /* Lines print in quick succession; long output stops staggering after the first screenful. */
+                <pre key={output} className={`m-0 whitespace-pre-wrap break-words font-[inherit] ${outputTone === "error" ? "text-ob-er" : "text-ob-tx"}`}>
+                  {output.split("\n").map((line, i) => (
+                    <span key={i} className={i < 40 ? "ob-pop block min-h-[1.9em]" : "block min-h-[1.9em]"} style={i < 40 ? { ["--i" as string]: i } : undefined}>{line}</span>
+                  ))}
+                </pre>
               )}
             </div>
           </section>

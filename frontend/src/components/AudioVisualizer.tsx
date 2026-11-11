@@ -54,20 +54,16 @@ export default function AudioVisualizer({
       const gap = (width - bars * barWidth) / (bars - 1);
 
       // Color themes for AI vs Candidate
-      let grad: CanvasGradient;
-      if (source === "ai") {
-        grad = ctx.createLinearGradient(0, height, 0, 0);
-        grad.addColorStop(0, "rgba(230, 223, 204, 0.4)");
-        grad.addColorStop(1, "rgba(230, 223, 204, 0.95)");
-      } else if (source === "candidate") {
-        grad = ctx.createLinearGradient(0, height, 0, 0);
-        grad.addColorStop(0, "rgba(111, 214, 164, 0.4)");
-        grad.addColorStop(1, "rgba(111, 214, 164, 0.95)");
-      } else {
-        grad = ctx.createLinearGradient(0, height, 0, 0);
-        grad.addColorStop(0, "rgba(120, 127, 149, 0.2)");
-        grad.addColorStop(1, "rgba(120, 127, 149, 0.5)");
-      }
+      // Read the live theme so the bars stay visible when the theme flips.
+      const light = document.documentElement.classList.contains("light");
+      const rgb = source === "ai"
+        ? (light ? "42, 38, 27" : "230, 223, 204")
+        : source === "candidate"
+        ? (light ? "31, 138, 90" : "111, 214, 164")
+        : (light ? "108, 103, 83" : "120, 127, 149");
+      const grad = ctx.createLinearGradient(0, height, 0, 0);
+      grad.addColorStop(0, `rgba(${rgb}, ${source === "ai" || source === "candidate" ? 0.4 : 0.2})`);
+      grad.addColorStop(1, `rgba(${rgb}, ${source === "ai" || source === "candidate" ? 0.95 : 0.5})`);
 
       ctx.fillStyle = grad;
 
@@ -111,7 +107,7 @@ export default function AudioVisualizer({
   }, [active, source, bars, height]);
 
   return (
-    <div className={`inline-flex items-center gap-3 px-3 py-1.5 rounded-xl bg-black/[0.03] bg-[#141620] border border-[#e2e5ec] border-[#232634] shadow-xs ${className}`}>
+    <div className={`inline-flex items-center gap-3 px-3 py-1.5 rounded-xl bg-ob-bg2 border border-ob-ln shadow-xs ${className}`}>
       <div className="flex items-center gap-2">
         <span
           className={`w-2 h-2 rounded-full ${
@@ -119,11 +115,11 @@ export default function AudioVisualizer({
               ? source === "ai"
                 ? "bg-blue-500 animate-pulse"
                 : "bg-emerald-500 animate-pulse"
-              : "bg-[#8b8f9e] opacity-40"
+              : "bg-ob-tx3 opacity-40"
           }`}
         />
         {label && (
-          <span className="text-[11px] font-mono font-medium text-[#4b5162] text-[#8f8d85]">
+          <span className="text-[11px] font-mono font-medium text-ob-tx3">
             {label}
           </span>
         )}

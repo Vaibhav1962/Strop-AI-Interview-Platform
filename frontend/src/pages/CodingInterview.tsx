@@ -5,6 +5,7 @@ import { java } from "@codemirror/lang-java";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { buildEditorTheme } from "../lib/editorTheme";
+import { useTheme } from "../lib/theme";
 import { DSA_PROBLEMS, type DsaProblem } from "../lib/dsaProblemBank";
 import { saveInterviewSession, type ExecuteLanguage } from "../lib/api";
 import { executeCode, warmUpPython } from "../lib/codeExecution";
@@ -35,7 +36,8 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const editorTheme = useMemo(() => buildEditorTheme(13, false), []);
+  const { theme } = useTheme();
+  const editorTheme = useMemo(() => buildEditorTheme(13, theme === "light"), [theme]);
   const currentExtension = useMemo(() => [LANGUAGE_EXTENSIONS[selectedLang]], [selectedLang]);
 
   useEffect(() => {
@@ -190,12 +192,12 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
 
   const hintUnlocked = failedRuns >= 2;
   const dd =
-    "appearance-none h-[34px] pl-3 pr-8 border border-[#3a3a36] rounded-lg bg-[#0d0d0c] text-[#ebe9e2] font-mono text-xs cursor-pointer outline-none hover:border-[#55544e] focus:border-[#55544e] transition-colors";
+    "appearance-none h-[34px] pl-3 pr-8 border border-ob-ln2 rounded-lg bg-ob-bg text-ob-tx font-mono text-xs cursor-pointer outline-none hover:border-ob-ln3 focus:border-ob-ln3 transition-colors";
   const diffCls = problem.difficulty === "Hard" ? "ob-err" : problem.difficulty === "Medium" ? "ob-warn" : "ob-ok";
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-[#0d0d0c] text-[#ebe9e2] z-10 text-[14px] leading-[1.55]">
-      <header className="flex items-center justify-between flex-wrap gap-3.5 px-[clamp(16px,2vw,28px)] py-3.5 border-b border-[#2b2b28] shrink-0">
+    <div className="h-full flex flex-col overflow-hidden bg-ob-bg text-ob-tx z-10 text-[14px] leading-[1.55]">
+      <header className="flex items-center justify-between flex-wrap gap-3.5 px-[clamp(16px,2vw,28px)] py-3.5 border-b border-ob-ln shrink-0">
         <div className="flex items-center gap-4 flex-wrap">
           <button type="button" className="ob-btn" onClick={() => onNavigate("dashboard")}>
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
@@ -208,14 +210,14 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
                   <option key={p.id} value={idx}>{p.title}</option>
                 ))}
               </select>
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#8f8d85" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="absolute right-[11px] top-[11px] pointer-events-none" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ob-tx3)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="absolute right-[11px] top-[11px] pointer-events-none" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
             </span>
             <span className={`ob-chip ob-sq ${diffCls}`}>{problem.difficulty}</span>
           </div>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
           <span className="font-mono text-[12.5px] ob-tx2 flex items-center gap-2.5" aria-label={`Elapsed ${fmtTime(elapsed)} of ${fmtTime(timeLimitSecs)}`}>
-            <span className={`inline-block w-[7px] h-[7px] rounded-full ${timeWarning ? "bg-[#ff6a3d]" : "bg-[#6fd6a4]"}`} aria-hidden="true" />
+            <span className={`inline-block w-[7px] h-[7px] rounded-full ${timeWarning ? "bg-ob-hot" : "bg-ob-ok"}`} aria-hidden="true" />
             {fmtTime(elapsed)}
             <span className="ob-bar !h-[3px] !w-[120px]"><i style={{ width: `${Math.min(100, (elapsed / timeLimitSecs) * 100)}%`, animation: "none" }} /></span>
             {fmtTime(timeLimitSecs)}
@@ -232,8 +234,8 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
 
       <div className="flex-1 flex flex-wrap gap-3 px-[clamp(12px,1.5vw,20px)] pt-3 pb-4 min-h-0 overflow-y-auto lg:overflow-hidden">
         {/* Problem */}
-        <section className="ob-rise flex-[1_1_320px] max-w-[420px] min-w-0 flex flex-col overflow-hidden rounded-xl border border-[#2b2b28] bg-[#161614] min-h-[420px]" style={{ ["--i" as string]: 0 }}>
-          <div className="flex items-center justify-between px-4 h-[42px] border-b border-[#2b2b28] shrink-0">
+        <section className="ob-rise flex-[1_1_320px] max-w-[420px] min-w-0 flex flex-col overflow-hidden rounded-xl border border-ob-ln bg-ob-bg2 min-h-[420px]" style={{ ["--i" as string]: 0 }}>
+          <div className="flex items-center justify-between px-4 h-[42px] border-b border-ob-ln shrink-0">
             <span className="ob-lb">Problem</span>
             <span className="ob-mo text-[11.5px] ob-tx3">{problem.examples.length} examples</span>
           </div>
@@ -248,7 +250,7 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
             {problem.examples.map((ex, i) => (
               <div key={i}>
                 <div className="ob-lb mb-2">Example {i + 1}</div>
-                <div className="ob-mo text-xs bg-[#0d0d0c] border border-[#2b2b28] rounded-lg p-3 leading-[1.8] whitespace-pre-line">
+                <div className="ob-mo text-xs bg-ob-bg border border-ob-ln rounded-lg p-3 leading-[1.8] whitespace-pre-line">
                   in&nbsp; {ex.input}
                   {"\n"}out {ex.output}
                 </div>
@@ -261,7 +263,7 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
                 <div className="ob-mo text-xs leading-[1.9]">{problem.constraints.map((c, i) => <div key={i}>{c}</div>)}</div>
               </div>
             )}
-            <div className="border border-dashed border-[#3a3a36] rounded-[10px] p-3.5 text-[12.5px]">
+            <div className="border border-dashed border-ob-ln2 rounded-[10px] p-3.5 text-[12.5px]">
               <div className="flex items-start justify-between gap-2.5">
                 <span>
                   <span className="ob-tx block">Structural hint</span>
@@ -282,8 +284,8 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
 
         {/* Editor + console */}
         <section className="flex-[2_1_520px] min-w-0 flex flex-col gap-3 min-h-[520px]">
-          <div className="ob-rise flex-1 flex flex-col min-h-[320px] overflow-hidden rounded-xl border border-[#2b2b28] bg-[#161614]" style={{ ["--i" as string]: 1 }}>
-            <div className="flex items-center justify-between gap-2.5 px-4 h-[42px] border-b border-[#2b2b28] shrink-0">
+          <div className="ob-rise flex-1 flex flex-col min-h-[320px] overflow-hidden rounded-xl border border-ob-ln bg-ob-bg2" style={{ ["--i" as string]: 1 }}>
+            <div className="flex items-center justify-between gap-2.5 px-4 h-[42px] border-b border-ob-ln shrink-0">
               <span className="ob-mo text-xs flex items-center gap-2.5"><span className="ob-txa">●</span>solution</span>
               <div className="flex items-center gap-2">
                 <span className="relative inline-flex">
@@ -292,7 +294,7 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
                       <option key={lang} value={lang}>{lang}</option>
                     ))}
                   </select>
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#8f8d85" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="absolute right-[11px] top-[11px] pointer-events-none" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--ob-tx3)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="absolute right-[11px] top-[11px] pointer-events-none" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
                 </span>
                 <button type="button" className="ob-btn ob-sm" onClick={() => onNavigate("compiler")}>Full compiler</button>
                 <span className="ob-mo text-[11.5px] ob-tx3 hidden md:inline">⌘↵ runs</span>
@@ -311,21 +313,21 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
             </div>
           </div>
 
-          <div className="ob-rise flex flex-col overflow-hidden rounded-xl border border-[#2b2b28] bg-[#161614] shrink-0" style={{ ["--i" as string]: 2, maxHeight: 240 }}>
-            <div className="flex items-center justify-between gap-2.5 px-4 h-[42px] border-b border-[#2b2b28] shrink-0">
+          <div className="ob-rise flex flex-col overflow-hidden rounded-xl border border-ob-ln bg-ob-bg2 shrink-0" style={{ ["--i" as string]: 2, maxHeight: 240 }}>
+            <div className="flex items-center justify-between gap-2.5 px-4 h-[42px] border-b border-ob-ln shrink-0">
               <span className="ob-lb">Console</span>
               <span className="flex items-center gap-2.5">
                 {testStatus === "running" && <span className="ob-chip ob-sq ob-live">running</span>}
                 {testStatus === "passed" && <span className="ob-chip ob-sq ob-ok">ran cleanly</span>}
                 {testStatus === "failed" && <span className="ob-chip ob-sq ob-err">failed</span>}
                 {output && (
-                  <button type="button" onClick={() => { setOutput(null); setTestStatus("idle"); }} className="ob-mo text-[11.5px] ob-tx3 hover:text-[#ebe9e2] cursor-pointer">clear</button>
+                  <button type="button" onClick={() => { setOutput(null); setTestStatus("idle"); }} className="ob-mo text-[11.5px] ob-tx3 hover:text-ob-tx cursor-pointer">clear</button>
                 )}
               </span>
             </div>
             <div className="ob-scroll overflow-y-auto px-[18px] py-3 min-h-[56px]" aria-live="polite">
               {output ? (
-                <pre className={`m-0 font-mono text-xs leading-[1.7] whitespace-pre-wrap ${testStatus === "failed" ? "text-[#f08a98]" : testStatus === "passed" ? "text-[#ebe9e2]" : "ob-tx2"}`}>{output}</pre>
+                <pre className={`m-0 font-mono text-xs leading-[1.7] whitespace-pre-wrap ${testStatus === "failed" ? "text-ob-er" : testStatus === "passed" ? "text-ob-tx" : "ob-tx2"}`}>{output}</pre>
               ) : (
                 <div className="ob-tx3 text-[13px]">Run your code to see the output here.</div>
               )}
@@ -336,7 +338,7 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
 
       {/* Completion modal */}
       {showCompleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(13,13,12,0.8)", backdropFilter: "blur(6px)" }} role="dialog" aria-modal="true" aria-labelledby="coding-done-title">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "color-mix(in srgb, var(--ob-bg) 80%, transparent)", backdropFilter: "blur(6px)" }} role="dialog" aria-modal="true" aria-labelledby="coding-done-title">
           <div className="ob-pane max-w-md w-full p-7 flex flex-col gap-5">
             <div>
               <div className="ob-lb ob-txa">Submitted</div>
@@ -345,7 +347,7 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
                 Your {selectedLang} implementation of {problem.title} was recorded in your history.
               </p>
             </div>
-            <div className="rounded-[10px] border border-[#2b2b28] bg-[#0d0d0c] p-4 flex items-center justify-between gap-4">
+            <div className="rounded-[10px] border border-ob-ln bg-ob-bg p-4 flex items-center justify-between gap-4">
               <div>
                 <div className="text-[13px]">{testStatus === "passed" ? "Ran cleanly in the sandbox" : testStatus === "failed" ? "Last run failed" : "Not run before submit"}</div>
                 <div className="ob-mo text-xs ob-tx3 mt-0.5">{fmtTime(elapsed)} · {selectedLang}</div>

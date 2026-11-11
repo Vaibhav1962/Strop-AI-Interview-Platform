@@ -1,5 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="14" fill="#121211"/>
-  <path d="M48 16H26Q19 16 19 22V23Q19 29 26 29H38Q45 29 45 35V36Q45 42 38 42H16" stroke="#e6dfcc" stroke-width="8" stroke-linejoin="round"/>
-  <path d="M12 49L20 43" stroke="#ff6a3d" stroke-width="3.5" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="t" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f3eddb"/><stop offset="1" stop-color="#cfc6aa"/></linearGradient>
+    <linearGradient id="b" x1="6" y1="46" x2="58" y2="18" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ff7a3d"/><stop offset="1" stop-color="#ff4d1a"/></linearGradient>
+    <linearGradient id="h" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <clipPath id="c"><rect x="1" y="1" width="62" height="62" rx="16"/></clipPath>
+    <mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><path d="M4 45.5L60 18.5" stroke="#000" stroke-width="7.5"/></mask>
+  </defs>
+  <g clip-path="url(#c)">
+    <rect width="64" height="64" fill="url(#t)"/><rect width="64" height="64" fill="url(#h)"/>
+    <g mask="url(#m)"><path d="M45 13.5H26A9.25 9.25 0 0 0 26 32H38A9.25 9.25 0 0 1 38 50.5H19" stroke="#14120c" stroke-width="8" stroke-linejoin="round"/></g>
+    <path d="M4 45.5L60 18.5" stroke="url(#b)" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
 </svg>

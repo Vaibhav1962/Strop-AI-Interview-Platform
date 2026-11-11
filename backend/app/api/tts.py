@@ -6,13 +6,14 @@ remains 100% consistent throughout an interview and never switches mid-session.
 Keeps all provider credentials strictly server-side and enforces user authentication.
 """
 
+import asyncio
 import base64
 import time
 import os
 import struct
 from typing import Optional
-import httpx
 from app.groq_keys import groq_keys
+from app.http_client import shared_client
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field
 
@@ -137,30 +138,49 @@ def _join_wavs(chunks: list[bytes]) -> bytes:
     return out.getvalue()
 
 
+def _retry_after(res, default: float = 60.0) -> float:
+    """Seconds the provider asked us to wait, clamped to something sensible."""
+    try:
+        wait = float(res.headers.get("retry-after", ""))
+    except (TypeError, ValueError):
+        wait = default
+    return min(120.0, max(5.0, wait))
+
+
 async def _synthesize_groq(clean_text: str, api_key: str, voice: str = GROQ_TTS_VOICE, tag: str = "groq") -> Optional[bytes]:
     """Groq Orpheus TTS (free tier). Returns WAV bytes, or None when unavailable (terms not accepted, quota, error)."""
     if _cooling_down(tag):
         return None
     try:
+        client = shared_client()
+        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+
+        async def one(piece: str):
+            return await client.post(
+                GROQ_TTS_URL,
+                headers=headers,
+                json={"model": GROQ_TTS_MODEL, "voice": voice, "input": piece, "response_format": "wav"},
+                timeout=20.0,
+            )
+
+        # The pieces do not depend on each other, so they are synthesized together instead of one after another;
+        # a long reply used to wait for each ~190 character piece in turn.
+        pieces = _split_for_groq(clean_text)
         chunks: list[bytes] = []
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for piece in _split_for_groq(clean_text):
-                res = await client.post(
-                    GROQ_TTS_URL,
-                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                    json={"model": GROQ_TTS_MODEL, "voice": voice, "input": piece, "response_format": "wav"},
-                )
+        for start in range(0, len(pieces), 6):
+            for res in await asyncio.gather(*(one(p) for p in pieces[start : start + 6])):
                 if res.status_code != 200:
                     print(f"[Backend TTS] Groq Orpheus status {res.status_code}: {res.text[:160]}")
                     if res.status_code == 400 and "terms" in res.text.lower():
-                        _start_cooldown(tag, 3600.0, "model terms not accepted (accept them at console.groq.com/playground?model=canopylabs%2Forpheus-v1-english)")
+                        # Short on purpose: once the terms are accepted the voice should come back within a couple of minutes.
+                        _start_cooldown(tag, 120.0, "model terms not accepted (accept them at console.groq.com/playground?model=canopylabs%2Forpheus-v1-english)")
                     elif res.status_code == 429:
-                        _start_cooldown(tag, 60.0, "rate limited")
+                        _start_cooldown(tag, _retry_after(res), "rate limited")
                     return None
                 chunks.append(res.content)
         return _join_wavs(chunks) if chunks else None
     except Exception as e:
-        print(f"[Backend TTS] Groq Orpheus error: {e}")
+        print(f"[Backend TTS] Groq Orpheus error: {type(e).__name__}: {e}")
         return None
 
 
@@ -179,80 +199,88 @@ async def _synthesize_elevenlabs(clean_text: str, api_key: str, voice_id: str = 
         return None
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_128"
     try:
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            res = await client.post(
-                url,
-                headers={
-                    "xi-api-key": api_key,
-                    "Content-Type": "application/json",
+        res = await shared_client().post(
+            url,
+            headers={
+                "xi-api-key": api_key,
+                "Content-Type": "application/json",
+            },
+            json={
+                "text": clean_text,
+                "model_id": "eleven_flash_v2_5",
+                "voice_settings": {
+                    "stability": 0.55,
+                    "similarity_boost": 0.8,
+                    "style": 0.0,
+                    "use_speaker_boost": True,
                 },
-                json={
-                    "text": clean_text,
-                    "model_id": "eleven_flash_v2_5",
-                    "voice_settings": {
-                        "stability": 0.55,
-                        "similarity_boost": 0.8,
-                        "style": 0.0,
-                        "use_speaker_boost": True,
-                    },
-                },
-            )
-            if res.status_code == 200 and len(res.content) > 200:
-                return res.content
-            print(f"[Backend TTS] ElevenLabs returned {res.status_code}: {res.text[:200]}")
-            if "quota_exceeded" in res.text or res.status_code in (402, 429):
-                _start_cooldown("elevenlabs", 600.0, "quota exhausted")
+            },
+            timeout=6.0,
+        )
+        if res.status_code == 200 and len(res.content) > 200:
+            return res.content
+        print(f"[Backend TTS] ElevenLabs returned {res.status_code}: {res.text[:200]}")
+        if "quota_exceeded" in res.text or res.status_code in (402, 429):
+            _start_cooldown("elevenlabs", 600.0, "quota exhausted")
     except Exception as e:
-        print(f"[Backend TTS] ElevenLabs network error: {e}")
+        print(f"[Backend TTS] ElevenLabs network error: {type(e).__name__}: {e}")
     return None
+
+
+# The page gives up on a sentence after about 7 seconds, so the whole Gemini attempt (every model it tries) stays
+# inside that. Anything still running after the page has moved on only wastes quota.
+GEMINI_TTS_BUDGET_SECONDS = 6.0
 
 
 async def _synthesize_gemini(clean_text: str, api_key: str, voice_name: str = "Charon") -> Optional[bytes]:
     """Synthesizes text using Gemini Neural TTS with fallback across compatible model aliases."""
     started = time.monotonic()
+    client = shared_client()
     for model in GEMINI_TTS_MODELS:
-        # The page gives up on a sentence after a few seconds; do not keep trying models it has stopped waiting for.
-        if time.monotonic() - started > 12.0:
+        remaining = GEMINI_TTS_BUDGET_SECONDS - (time.monotonic() - started)
+        if remaining < 1.0:
             break
         if _cooling_down(f"gemini:{model}"):
             continue
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-            async with httpx.AsyncClient(timeout=8.0) as client:
-                res = await client.post(
-                    url,
-                    headers={"Content-Type": "application/json"},
-                    json={
-                        "contents": [{"parts": [{"text": clean_text}]}],
-                        "generationConfig": {
-                            "responseModalities": ["AUDIO"],
-                            "speechConfig": {
-                                "voiceConfig": {
-                                    "prebuiltVoiceConfig": {
-                                        "voiceName": voice_name,
-                                    }
+            res = await client.post(
+                url,
+                headers={"Content-Type": "application/json"},
+                json={
+                    "contents": [{"parts": [{"text": clean_text}]}],
+                    "generationConfig": {
+                        "responseModalities": ["AUDIO"],
+                        "speechConfig": {
+                            "voiceConfig": {
+                                "prebuiltVoiceConfig": {
+                                    "voiceName": voice_name,
                                 }
-                            },
+                            }
                         },
                     },
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-                    part = next((p for p in parts if p.get("inlineData", {}).get("data")), None)
-                    if part:
-                        raw_b64 = part["inlineData"]["data"]
-                        audio_bytes = base64.b64decode(raw_b64)
-                        if not audio_bytes.startswith(b"RIFF") and not audio_bytes.startswith(b"ID3"):
-                            audio_bytes = pcm_to_wav(audio_bytes, sample_rate=24000)
-                        return audio_bytes
-                elif res.status_code == 429:
-                    # Free-tier TTS limits are per model and per minute, so retry that model after a short pause.
-                    _start_cooldown(f"gemini:{model}", 45.0, "rate limited")
-                else:
-                    print(f"[Backend TTS] Gemini model {model} status {res.status_code}: {res.text[:120]}")
+                },
+                timeout=min(5.0, remaining),
+            )
+            if res.status_code == 200:
+                data = res.json()
+                parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+                part = next((p for p in parts if p.get("inlineData", {}).get("data")), None)
+                if part:
+                    raw_b64 = part["inlineData"]["data"]
+                    audio_bytes = base64.b64decode(raw_b64)
+                    if not audio_bytes.startswith(b"RIFF") and not audio_bytes.startswith(b"ID3"):
+                        audio_bytes = pcm_to_wav(audio_bytes, sample_rate=24000)
+                    return audio_bytes
+            elif res.status_code == 429:
+                # Free-tier TTS limits are per model and per minute, so retry that model after a short pause.
+                _start_cooldown(f"gemini:{model}", _retry_after(res, 45.0), "rate limited")
+            else:
+                print(f"[Backend TTS] Gemini model {model} status {res.status_code}: {res.text[:120]}")
         except Exception as e:
-            print(f"[Backend TTS] Gemini model {model} error: {e}")
+            # A timeout means the model is overloaded right now. Skip it for a while instead of making every
+            # sentence wait for it again (this used to cost up to 8 seconds per model, per sentence).
+            _start_cooldown(f"gemini:{model}", 30.0, f"{type(e).__name__} (overloaded or unreachable)")
     return None
 
 

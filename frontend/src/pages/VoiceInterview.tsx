@@ -28,6 +28,7 @@ import {
 } from "../lib/dsaProblemBank";
 import LiquidMicWave from "../components/LiquidMicWave";
 import AudioVisualizer from "../components/AudioVisualizer";
+import PresenceRing from "../components/PresenceRing";
 import DsaCodingWorkspace from "../components/DsaCodingWorkspace";
 
 type UIPhase =
@@ -188,7 +189,9 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
     retry: retryMedia,
   } = useMediaCapture();
 
-  const micVolume = useMicVolume(stream, micOn);
+  const liveMicLevel = useRef(0);
+  const micVolume = useMicVolume(stream, micOn, liveMicLevel);
+  const getLiveMicLevel = useCallback(() => liveMicLevel.current, []);
   const micVolumeRef = useRef(0);
   micVolumeRef.current = micVolume;
 
@@ -850,7 +853,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
     const initial = (userResume?.name || "Candidate").charAt(0).toUpperCase();
 
     return (
-      <div className="ob-app h-full w-full flex flex-col overflow-y-auto" style={{ background: "#121211" }}>
+      <div className="ob-app h-full w-full flex flex-col overflow-y-auto" style={{ background: "var(--ob-bg1)" }}>
         <header className="flex items-center justify-between gap-4 px-4 sm:px-8 h-16 border-b ob-bd shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <Logo size={26} />
@@ -866,7 +869,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           className="flex-1 grid place-items-center px-4 sm:px-8 py-8 sm:py-10"
           style={{
             backgroundImage:
-              "radial-gradient(900px 480px at 80% -10%, rgba(230,223,204,0.075), transparent 62%), radial-gradient(720px 420px at 4% 108%, rgba(255,106,61,0.05), transparent 62%)",
+              "radial-gradient(900px 480px at 80% -10%, rgb(var(--ob-ac-rgb)/0.075), transparent 62%), radial-gradient(720px 420px at 4% 108%, rgba(255,106,61,0.05), transparent 62%)",
           }}
         >
           <div className="w-full max-w-[1120px] grid gap-5 items-start grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
@@ -893,13 +896,13 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                 <i className="ob-cb a" /><i className="ob-cb b" /><i className="ob-cb c" /><i className="ob-cb d" />
 
                 {/* Overlays */}
-                <span className="ob-chip absolute left-3.5 top-3.5" style={{ background: "rgba(13,13,12,0.6)", backdropFilter: "blur(6px)" }}>
+                <span className="ob-chip absolute left-3.5 top-3.5" style={{ background: "color-mix(in srgb, var(--ob-bg) 60%, transparent)", backdropFilter: "blur(6px)" }}>
                   <span className="ob-rec" aria-hidden="true" />
                   Preview
                 </span>
                 <div
                   className="absolute left-3.5 right-3.5 bottom-3.5 flex items-end justify-between gap-3"
-                  style={{ textShadow: "0 1px 8px rgba(0,0,0,0.8)" }}
+                  style={{ textShadow: "0 1px 8px rgb(var(--ob-sh)/0.8)" }}
                 >
                   <span className="ob-mo text-[11.5px] ob-tx truncate">{userResume?.name || "You"}</span>
                   <div className="flex items-end gap-[3px] h-6 shrink-0" aria-hidden="true">
@@ -912,7 +915,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                             width: 3,
                             height: 7 + (i % 6) * 3,
                             borderRadius: 2,
-                            background: on ? "var(--ob-ok)" : "rgba(255,255,255,0.22)",
+                            background: on ? "var(--ob-ok)" : "rgb(var(--ob-ov)/0.22)",
                             transition: "background 90ms linear",
                           }}
                         />
@@ -933,7 +936,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                     <li key={c.key} className={`flex items-center gap-3 py-2.5 text-[13px] ${i > 0 ? "border-t ob-bd" : ""}`}>
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: dotColor[c.state], boxShadow: c.state === "ok" ? "0 0 0 3px rgba(111,214,164,0.14)" : "none", transition: "all .4s var(--ob-ease)" }}
+                        style={{ background: dotColor[c.state], boxShadow: c.state === "ok" ? "0 0 0 3px rgba(111,214,164,0.14)" : "none", transition: `background-color .5s var(--ob-ease) ${i * 140}ms, box-shadow .5s var(--ob-ease) ${i * 140}ms` }}
                         aria-hidden="true"
                       />
                       <span className="w-[92px] shrink-0">{c.label}</span>
@@ -978,10 +981,10 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                       role="radio"
                       aria-checked={targetDurationMinutes === m}
                       onClick={() => setTargetDurationMinutes(m)}
-                      className={`h-12 rounded-[10px] border text-[14px] cursor-pointer transition-all duration-300 ${
+                      className={`h-12 rounded-[10px] border text-[14px] cursor-pointer transition duration-300 ${
                         targetDurationMinutes === m
-                          ? "bg-[rgba(230,223,204,0.08)] border-[rgba(230,223,204,0.5)] text-[#ebe9e2]"
-                          : "border-[#3a3a36] text-[#aaa89f] hover:text-[#ebe9e2] hover:border-[#55544e]"
+                          ? "bg-[rgb(var(--ob-ac-rgb)/0.08)] border-[rgb(var(--ob-ac-rgb)/0.5)] text-ob-tx"
+                          : "border-ob-ln2 text-ob-tx2 hover:text-ob-tx hover:border-ob-ln3"
                       }`}
                     >
                       {m} min
@@ -998,13 +1001,13 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   </div>
                 ) : (
                   <>
-                    <button type="button" onClick={handleJoinInterview} className="ob-btn ob-pr ob-btn-lg w-full group" style={{ height: 56, fontSize: 15 }}>
+                    <button type="button" onClick={handleJoinInterview} className={`ob-btn ob-pr ob-btn-lg w-full group ${readyCount === checks.length ? "ob-ready" : ""}`} style={{ height: 56, fontSize: 15 }}>
                       Join interview
                       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                     </button>
                     <div className="flex items-center justify-between gap-3 mt-3 px-1 ob-mo text-[11px] ob-tx3">
                       <span>The clock starts when you join</span>
-                      <span className="flex items-center gap-1.5">press <kbd className="px-1.5 py-0.5 rounded border border-[#3a3a36] text-[10.5px] ob-tx2">Enter</kbd></span>
+                      <span className="flex items-center gap-1.5">press <kbd className="px-1.5 py-0.5 rounded border border-ob-ln2 text-[10.5px] ob-tx2">Enter</kbd></span>
                     </div>
                   </>
                 )}
@@ -1027,7 +1030,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
       { label: "Opening dialogue", done: "Prepared", active: "Preparing" },
     ];
     return (
-      <div className="ob-app h-full w-full flex flex-col overflow-y-auto" style={{ background: "#121211" }}>
+      <div className="ob-app h-full w-full flex flex-col overflow-y-auto" style={{ background: "var(--ob-bg1)" }}>
         <header className="flex items-center gap-3 px-4 sm:px-8 h-16 border-b ob-bd shrink-0">
           <Logo size={26} />
           <span className="text-[14px] font-medium">{trackInfo.title}</span>
@@ -1048,13 +1051,13 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                 return (
                   <li key={st.label} className={`flex items-center gap-3 py-3.5 text-[13.5px] ${i > 0 ? "border-t ob-bd" : ""}`}>
                     <span
-                      className={`w-5 h-5 rounded-full border grid place-items-center shrink-0 ${done ? "bg-[#e6dfcc] border-[#e6dfcc] text-[#121211]" : active ? "border-[#e6dfcc]" : "border-[#3a3a36]"}`}
+                      className={`w-5 h-5 rounded-full border grid place-items-center shrink-0 ${done ? "bg-ob-ac border-ob-ac text-ob-onac" : active ? "border-ob-ac" : "border-ob-ln2"}`}
                       aria-hidden="true"
                     >
                       {done ? (
-                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-10" /></svg>
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path className="ob-tick" pathLength={1} d="M5 12l5 5 9-10" /></svg>
                       ) : active ? (
-                        <span className="w-2.5 h-2.5 rounded-full border-[1.5px] border-[#3a3a36] border-t-[#e6dfcc] animate-spin" />
+                        <span className="w-2.5 h-2.5 rounded-full border-[1.5px] border-ob-ln2 border-t-ob-ac animate-spin" />
                       ) : null}
                     </span>
                     <span className={done || active ? "" : "ob-tx3"}>{st.label}</span>
@@ -1123,12 +1126,17 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           )}
           <div
             className="ob-mo flex items-center gap-2.5 text-[12.5px] ob-tx2"
-            style={elapsed >= targetDurationMinutes * 60 ? { color: "var(--ob-hot)" } : undefined}
+            // The clock warms toward orange across the final minute instead of switching at zero.
+            style={{
+              ["--warm" as string]: `${Math.round(Math.min(1, Math.max(0, (elapsed - (targetDurationMinutes * 60 - 60)) / 60)) * 100)}%`,
+              color: "color-mix(in srgb, var(--ob-hot) var(--warm), var(--ob-tx2))",
+              transition: "color 1s linear",
+            }}
             aria-label={`Elapsed ${formatTime(elapsed)} of ${targetDurationMinutes} minutes${elapsed >= targetDurationMinutes * 60 ? ", time is up" : ""}`}
           >
             <span className="ob-rec" aria-hidden="true" />
             <span className="hidden sm:inline">{elapsed >= targetDurationMinutes * 60 ? "time up" : "rec"}</span>
-            <span className={elapsed >= targetDurationMinutes * 60 ? "" : "ob-tx"}>{formatTime(elapsed)}</span>
+            <span style={{ color: "color-mix(in srgb, var(--ob-hot) var(--warm), var(--ob-tx))", transition: "color 1s linear" }}>{formatTime(elapsed)}</span>
             <span className={elapsed >= targetDurationMinutes * 60 ? "hidden sm:inline" : "ob-tx3 hidden sm:inline"}>
               / {String(targetDurationMinutes).padStart(2, "0")}:00
             </span>
@@ -1369,18 +1377,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
             <div className="ob-pane flex-1 flex flex-col overflow-hidden min-h-[360px]">
               {/* Who is talking */}
               <div className="flex items-center gap-3.5 px-5 py-3.5 border-b ob-bd shrink-0">
-                <span
-                  className="w-10 h-10 rounded-full border grid place-items-center text-[13px] font-semibold shrink-0"
-                  style={{
-                    borderColor: alexIsTalking && speaking ? "var(--ob-ac)" : "var(--ob-ln2)",
-                    background: "var(--ob-bg3)",
-                    boxShadow: alexIsTalking && speaking ? "0 0 0 5px var(--ob-ac2)" : "0 0 0 0 transparent",
-                    transition: "box-shadow .5s var(--ob-ease), border-color .5s var(--ob-ease)",
-                  }}
-                  aria-hidden="true"
-                >
-                  A
-                </span>
+                <PresenceRing getLevel={getAudioLevel} active={alexIsTalking && speaking}>A</PresenceRing>
                 <div className="min-w-0 flex-1">
                   <div className="text-[13.5px] leading-tight">
                     Alex <span className="ob-tx3">· interviewer</span>
@@ -1390,12 +1387,11 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   </div>
                 </div>
                 <div className="shrink-0 flex items-center justify-end min-w-[110px]">
-                  {uiPhase === "alex_speaking" ? (
-                    <AudioVisualizer getLevel={getAudioLevel} active={speaking} source="ai" bars={20} height={30} />
-                  ) : uiPhase === "candidate_turn" ? (
-                    <AudioVisualizer level={micVolume} active={micOn && micVolume > 0.03} source="candidate" bars={20} height={30} />
+                  {/* While Alex speaks, the halo around his avatar carries the level; the bars are the candidate's mic. */}
+                  {uiPhase === "candidate_turn" ? (
+                    <AudioVisualizer level={micVolume} getLevel={getLiveMicLevel} active={micOn && micVolume > 0.03} source="candidate" bars={20} height={30} />
                   ) : uiPhase === "thinking" ? (
-                    <span className="w-3.5 h-3.5 border-[1.5px] border-[#3a3a36] border-t-[#e6dfcc] rounded-full animate-spin" aria-hidden="true" />
+                    <span className="w-3.5 h-3.5 border-[1.5px] border-ob-ln2 border-t-ob-ac rounded-full animate-spin" aria-hidden="true" />
                   ) : null}
                 </div>
               </div>
@@ -1435,7 +1431,10 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                           color: isAlex ? "var(--ob-tx)" : "var(--ob-tx2)",
                         }}
                       >
-                        {turn.text}
+                        {/* The live turn settles in word by word; earlier turns are plain text. */}
+                        {active
+                          ? turn.text.split(/(\s+)/).map((tok, i) => (/^\s*$/.test(tok) ? tok : <span key={i} className="st-word max-w-full">{tok}</span>))
+                          : turn.text}
                         {active && isAlex && alexIsTalking && streamingNow && <span className="ob-cur" aria-hidden="true" />}
                       </p>
                     </div>
@@ -1632,7 +1631,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
 
       {/* Confirmation Modal */}
       {confirmEnd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(13,13,12,0.78)", backdropFilter: "blur(6px)" }} role="dialog" aria-modal="true" aria-labelledby="end-dialog-title">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "color-mix(in srgb, var(--ob-bg) 78%, transparent)", backdropFilter: "blur(6px)" }} role="dialog" aria-modal="true" aria-labelledby="end-dialog-title">
           <div className="ob-app ob-pane max-w-md w-full p-7 flex flex-col gap-5" style={{ background: "var(--ob-bg2)" }}>
             <div>
               <h3 id="end-dialog-title" className="m-0 text-[17px] font-medium" style={{ letterSpacing: "-0.01em" }}>
@@ -1657,32 +1656,32 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
 
       {/* Voice & API Key Configuration Modal */}
       {showApiKeyModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0e111a] border border-[#e2e5ec] dark:border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-ob-bg2 border border-ob-ov/10 rounded-2xl w-full max-w-md p-6 shadow-2xl shadow-black/30 relative">
             <button
               onClick={() => setShowApiKeyModal(false)}
-              className="absolute top-4 right-4 text-[#aaa89f] dark:text-zinc-400 hover:text-[#16171d] dark:hover:text-white text-xs px-2 py-1 rounded-lg border border-[#e2e5ec] dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 text-zinc-400 hover:text-ob-tx text-xs px-2 py-1 rounded-lg border border-ob-ov/10 hover:bg-ob-ov/5 transition-colors cursor-pointer"
             >
               ✕
             </button>
 
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-sm">
                 AI
               </div>
               <div>
-                <h3 className="text-base font-semibold text-[#16171d] dark:text-white">Neural Voice & API Key Settings</h3>
-                <p className="text-xs text-[#aaa89f] dark:text-zinc-400">Configure your TTS voice provider</p>
+                <h3 className="text-base font-semibold text-ob-tx">Neural Voice & API Key Settings</h3>
+                <p className="text-xs text-zinc-400">Configure your TTS voice provider</p>
               </div>
             </div>
 
             {/* Quota Diagnostics Warning */}
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 mb-4 text-xs text-amber-800 dark:text-amber-300 flex flex-col gap-1.5">
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 mb-4 text-xs text-amber-300 flex flex-col gap-1.5">
               <div className="font-semibold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500" />
                 Current Voice Status
               </div>
-              <p className="text-[11px] text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
+              <p className="text-[11px] text-amber-200/90 leading-relaxed">
                 ElevenLabs: <strong>0 credits remaining (401 Quota Exceeded)</strong>.<br />
                 Google Gemini TTS: <strong>10 requests/day limit reached (Free Tier 429)</strong>.
               </p>
@@ -1690,7 +1689,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
 
             <div className="flex flex-col gap-3.5">
               <div>
-                <label className="block text-xs font-medium text-[#16171d] dark:text-zinc-300 mb-1">
+                <label className="block text-xs font-medium text-zinc-300 mb-1">
                   ElevenLabs API Key (Brian HD Voice)
                 </label>
                 <input
@@ -1698,12 +1697,12 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   value={customElevenKey}
                   onChange={(e) => setCustomElevenKey(e.target.value)}
                   placeholder="sk_..."
-                  className="w-full bg-[#f8f6f0] dark:bg-black/40 border border-[#e2e5ec] dark:border-white/10 rounded-xl px-3.5 py-2 text-xs text-[#16171d] dark:text-white placeholder:text-[#8f8d85] dark:placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full bg-ob-bg border border-ob-ov/10 rounded-xl px-3.5 py-2 text-xs text-ob-tx placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#16171d] dark:text-zinc-300 mb-1">
+                <label className="block text-xs font-medium text-zinc-300 mb-1">
                   Google Gemini API Key (Charon Voice / Billed Project)
                 </label>
                 <input
@@ -1711,32 +1710,32 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   value={customGeminiKey}
                   onChange={(e) => setCustomGeminiKey(e.target.value)}
                   placeholder="AIzaSy... or AQ..."
-                  className="w-full bg-[#f8f6f0] dark:bg-black/40 border border-[#e2e5ec] dark:border-white/10 rounded-xl px-3.5 py-2 text-xs text-[#16171d] dark:text-white placeholder:text-[#8f8d85] dark:placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full bg-ob-bg border border-ob-ov/10 rounded-xl px-3.5 py-2 text-xs text-ob-tx placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
 
               {/* Emergency Browser Natural Voice Option */}
-              <div className="pt-2 border-t border-[#e2e5ec] dark:border-white/5 flex items-start gap-2.5">
+              <div className="pt-2 border-t border-ob-ov/5 flex items-start gap-2.5">
                 <input
                   type="checkbox"
                   id="browser_voice_toggle"
                   checked={allowBrowserVoice}
                   onChange={(e) => setAllowBrowserVoice(e.target.checked)}
-                  className="mt-0.5 rounded border-[#e2e5ec] dark:border-white/20 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-black/40 cursor-pointer"
+                  className="mt-0.5 rounded border-ob-ov/20 text-indigo-600 focus:ring-indigo-500 bg-ob-bg cursor-pointer"
                 />
-                <label htmlFor="browser_voice_toggle" className="text-xs text-[#aaa89f] dark:text-zinc-300 cursor-pointer leading-tight">
-                  <span className="font-semibold text-[#16171d] dark:text-white">Emergency Browser Voice Fallback</span>
-                  <p className="text-[11px] text-[#aaa89f] dark:text-zinc-400 mt-0.5">
+                <label htmlFor="browser_voice_toggle" className="text-xs text-zinc-300 cursor-pointer leading-tight">
+                  <span className="font-semibold text-ob-tx">Emergency Browser Voice Fallback</span>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
                     If cloud quotas are exhausted, speak aloud using your browser's online natural voice rather than staying silent.
                   </p>
                 </label>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-[#e2e5ec] dark:border-white/10">
+            <div className="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-ob-ov/10">
               <button
                 onClick={() => setShowApiKeyModal(false)}
-                className="px-3.5 py-2 text-xs text-[#aaa89f] dark:text-zinc-400 hover:text-[#16171d] dark:hover:text-white rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                className="px-3.5 py-2 text-xs text-zinc-400 hover:text-ob-tx rounded-lg hover:bg-ob-ov/5 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1755,7 +1754,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   localStorage.setItem("iq_allow_browser_voice", allowBrowserVoice ? "true" : "false");
                   setShowApiKeyModal(false);
                 }}
-                className="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-[#0d0d0c] rounded-xl shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-ob-onac rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer"
               >
                 Save Settings
               </button>

@@ -62,13 +62,14 @@ async function fetchAudioBufferFromBackend(
   }
 
   // The playback queue waits on each sentence in order, so one slow request holds up everything behind it.
-  // Give each attempt a short deadline, and retry once only when the failure was quick (a rate limit or a blip).
+  // Give each attempt a short deadline (the server stops trying its providers at about the same moment), and retry
+  // once only when the failure was quick and could plausibly clear (a rate limit or a network blip).
   for (let attempt = 0; attempt < 2; attempt++) {
     const startedAt = Date.now();
     let retryable = true;
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      const timeout = setTimeout(() => controller.abort(), 7000);
 
       const res = await fetch(`${API_BASE_URL}/tts`, {
         method: "POST",
@@ -91,7 +92,8 @@ async function fetchAudioBufferFromBackend(
         }
       } else {
         console.warn(`[NeuralTTS] Backend TTS returned status ${res.status}`);
-        retryable = res.status >= 500 || res.status === 429;
+        // 503 means every voice provider is unavailable right now; asking again a moment later cannot help.
+        retryable = res.status === 429 || (res.status >= 500 && res.status !== 503);
       }
     } catch (err) {
       console.warn("[NeuralTTS] Backend TTS fetch error:", err);
@@ -157,6 +159,9 @@ export function useElevenLabsTTS() {
   // After a cloud voice failure, the next few seconds of speech use the browser voice directly, so a reply is not
   // spoken half in one voice and half skipped.
   const browserVoiceUntilRef = useRef(0);
+  // Consecutive replies where the cloud voice failed. Each failure costs the candidate a wait, so the browser voice is
+  // used for longer every time (20s, 60s, 3 min, 5 min) until a cloud voice works again.
+  const cloudFailStreakRef = useRef(0);
   const drainResolverRef = useRef<(() => void) | null>(null);
 
   const getCtx = useCallback(() => {
@@ -378,12 +383,16 @@ export function useElevenLabsTTS() {
         }
 
         if (rawBuffer) {
+          cloudFailStreakRef.current = 0;
           await playBuffer(rawBuffer, currentToken, item.turnId);
         } else {
           // Cloud TTS failed for this sentence. Dropping it would leave Alex's reply with missing lines, so the
-          // browser voice speaks it (and the next few seconds of this reply) unless it has been switched off.
+          // browser voice speaks it (and the next stretch of speech) unless it has been switched off.
           if (allowBrowser) {
-            browserVoiceUntilRef.current = Date.now() + 20000;
+            if (!useBrowserNow) {
+              const streak = ++cloudFailStreakRef.current;
+              browserVoiceUntilRef.current = Date.now() + Math.min(300000, 20000 * 3 ** (streak - 1));
+            }
             setSpeaking(true);
             await speakWithBrowserNaturalVoice(item.text);
             setSpeaking(false);
@@ -418,7 +427,13 @@ export function useElevenLabsTTS() {
         return;
       }
 
-      const p = getAudioBuffer(clean, sessionId);
+      // While the browser voice is covering for a failing cloud voice, do not send a request that is known to be
+      // going to fail (each one used to also keep the server busy trying every provider).
+      const browserCovering =
+        typeof window !== "undefined" &&
+        localStorage.getItem("iq_allow_browser_voice") !== "false" &&
+        Date.now() < browserVoiceUntilRef.current;
+      const p = browserCovering ? Promise.resolve<ArrayBuffer | null>(null) : getAudioBuffer(clean, sessionId);
       queueRef.current.push({
         id: Date.now() + Math.random(),
         text: clean,

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
  * Noise-gated so quiet room hiss doesn't register, with a fast attack /
  * slower release envelope so it feels responsive but doesn't flicker.
  */
-export function useMicVolume(stream: MediaStream | null, active = true) {
+export function useMicVolume(stream: MediaStream | null, active = true, liveRef?: { current: number }) {
   const [volume, setVolume] = useState(0);
   const rafRef = useRef<number | null>(null);
   const smoothedRef = useRef(0);
@@ -49,14 +49,16 @@ export function useMicVolume(stream: MediaStream | null, active = true) {
       const prev = smoothedRef.current;
       const smoothed = target > prev ? prev + (target - prev) * 0.55 : prev + (target - prev) * 0.12;
       smoothedRef.current = smoothed;
+      // Per-frame value for canvas meters, so they stay smooth without re-rendering the page.
+      if (liveRef) liveRef.current = smoothed;
 
       // Delta threshold throttling: dispatch state updates only on meaningful volume deltas,
-      // silence transitions, or bounded intervals (~20fps max) to eliminate main-thread render churn.
+      // silence transitions, or bounded intervals (~8fps max; smooth meters read liveRef instead) to eliminate main-thread render churn.
       const now = performance.now();
       const delta = Math.abs(smoothed - lastDispatchedRef.current);
       const timeSinceLast = now - lastTimeRef.current;
 
-      if (delta >= 0.02 || (smoothed === 0 && lastDispatchedRef.current !== 0) || timeSinceLast >= 50) {
+      if (delta >= 0.06 || (smoothed === 0 && lastDispatchedRef.current !== 0) || timeSinceLast >= 120) {
         lastDispatchedRef.current = smoothed;
         lastTimeRef.current = now;
         setVolume(smoothed);

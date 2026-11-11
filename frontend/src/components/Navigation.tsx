@@ -1,5 +1,7 @@
 import Logo from "./Logo";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { usePresence } from "./ui";
+import ThemeToggle from "./ThemeToggle";
 import { type AuthUser, getCurrentUserId, resetInterviewSessions } from "../lib/api";
 import { resetOrchestratorSessions } from "../lib/orchestratorClient";
 import { clearSelectedReportId, getReportHistoryKey } from "../lib/reportGenerator";
@@ -96,6 +98,7 @@ export function ProfileMenu({ user, onLogout }: { user?: AuthUser | null; onLogo
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const menu = usePresence(open, 180);
 
   const deleteAllData = async () => {
     setBusy(true);
@@ -151,22 +154,22 @@ export function ProfileMenu({ user, onLogout }: { user?: AuthUser | null; onLogo
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="w-8 h-8 p-0 rounded-full bg-[#20201e] border border-[#3a3a36] inline-flex items-center justify-center text-center leading-none tracking-normal text-[11px] font-semibold text-[#e6dfcc] cursor-pointer hover:border-[#55544e] transition-colors"
+        className="w-8 h-8 p-0 rounded-full bg-ob-bg3 border border-ob-ln2 inline-flex items-center justify-center text-center leading-none tracking-normal text-[11px] font-semibold text-ob-ac cursor-pointer hover:border-ob-ln3 transition-colors"
       >
         {initials(user?.full_name)}
       </button>
-      {open && (
+      {menu.shown && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+8px)] w-[260px] rounded-xl border border-[#2b2b28] bg-[#181817] shadow-[0_16px_40px_-12px_rgba(0,0,0,0.8)] z-[70] overflow-hidden anim-fade-in"
+          className={`absolute right-0 top-[calc(100%+8px)] w-[260px] rounded-xl border border-ob-ln bg-ob-card shadow-[0_16px_40px_-12px_rgb(var(--ob-sh)/0.8)] z-[70] overflow-hidden origin-top-right ${menu.closing ? "ob-exit" : "ob-enter"}`}
         >
-          <div className="px-4 py-3.5 border-b border-[#2b2b28]">
-            <div className="text-[13.5px] text-[#ebe9e2] truncate">{user?.full_name || "Candidate"}</div>
-            <div className="text-[12px] text-[#8f8d85] truncate mt-0.5">{user?.email || ""}</div>
+          <div className="px-4 py-3.5 border-b border-ob-ln">
+            <div className="text-[13.5px] text-ob-tx truncate">{user?.full_name || "Candidate"}</div>
+            <div className="text-[12px] text-ob-tx3 truncate mt-0.5">{user?.email || ""}</div>
           </div>
           {confirming ? (
-            <div className="px-4 py-3.5 border-b border-[#2b2b28]">
-              <div className="text-[13px] text-[#ebe9e2] leading-snug">Delete every interview, transcript and report? This cannot be undone.</div>
+            <div className="px-4 py-3.5 border-b border-ob-ln">
+              <div className="text-[13px] text-ob-tx leading-snug">Delete every interview, transcript and report? This cannot be undone.</div>
               <div className="flex gap-2 mt-3">
                 <button type="button" disabled={busy} onClick={deleteAllData} className="ob-btn ob-sm ob-dg cursor-pointer">
                   {busy ? "Deleting..." : "Delete"}
@@ -182,7 +185,7 @@ export function ProfileMenu({ user, onLogout }: { user?: AuthUser | null; onLogo
                 setNote(null);
                 setConfirming(true);
               }}
-              className="w-full flex items-center gap-2.5 px-4 h-11 text-[13.5px] text-[#aaa89f] hover:bg-[#20201e] hover:text-[#ff6a3d] transition-colors cursor-pointer text-left border-b border-[#2b2b28]"
+              className="w-full flex items-center gap-2.5 px-4 h-11 text-[13.5px] text-ob-tx2 hover:bg-ob-bg3 hover:text-ob-hot transition-colors cursor-pointer text-left border-b border-ob-ln"
             >
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
@@ -190,7 +193,7 @@ export function ProfileMenu({ user, onLogout }: { user?: AuthUser | null; onLogo
               Delete all my data
             </button>
           )}
-          {note && <div className="px-4 py-2.5 text-[12px] text-[#aaa89f] border-b border-[#2b2b28]">{note}</div>}
+          {note && <div className="px-4 py-2.5 text-[12px] text-ob-tx2 border-b border-ob-ln">{note}</div>}
           <button
             type="button"
             role="menuitem"
@@ -198,7 +201,7 @@ export function ProfileMenu({ user, onLogout }: { user?: AuthUser | null; onLogo
               setOpen(false);
               onLogout?.();
             }}
-            className="w-full flex items-center gap-2.5 px-4 h-11 text-[13.5px] text-[#aaa89f] hover:bg-[#20201e] hover:text-[#ff6a3d] transition-colors cursor-pointer text-left"
+            className="w-full flex items-center gap-2.5 px-4 h-11 text-[13.5px] text-ob-tx2 hover:bg-ob-bg3 hover:text-ob-hot transition-colors cursor-pointer text-left"
           >
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
@@ -208,6 +211,67 @@ export function ProfileMenu({ user, onLogout }: { user?: AuthUser | null; onLogo
         </div>
       )}
     </div>
+  );
+}
+
+/** The grouped link list. One marker glides to the active item instead of each item switching on and off. */
+function NavList({ current, isCollapsed, onGo }: { current: Page; isCollapsed: boolean; onGo: (id: string) => void }) {
+  const navRef = useRef<HTMLElement>(null);
+  const [mark, setMark] = useState<{ y: number; h: number } | null>(null);
+  const [glide, setGlide] = useState(false);
+  const lastCurrent = useRef(current);
+  const isActive = (item: NavLink) => item.id === current || !!item.alias?.includes(current);
+
+  useLayoutEffect(() => {
+    const el = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    setMark(el ? { y: el.offsetTop, h: el.offsetHeight } : null);
+    // Glide only when the page changed; when the rail expands or collapses the marker just follows.
+    setGlide(lastCurrent.current !== current);
+    lastCurrent.current = current;
+  }, [current, isCollapsed]);
+
+  return (
+    <nav ref={navRef} className="relative flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "none" }} aria-label="Primary">
+      {mark && (
+        <span
+          aria-hidden="true"
+          className="absolute left-0 right-0 top-0 rounded-[7px] bg-[rgb(var(--ob-ac-rgb)/0.07)] pointer-events-none"
+          style={{ height: mark.h, transform: `translateY(${mark.y}px)`, transition: glide ? "transform 0.4s var(--ob-ease)" : "none" }}
+        >
+          <span className="absolute left-0 top-[11px] bottom-[11px] w-[2px] rounded-full bg-ob-ac" />
+        </span>
+      )}
+      {NAV_GROUPS.map((g) => (
+        <div key={g.label}>
+          {!isCollapsed && (
+            <div className="mt-4 mx-2.5 mb-1.5 font-mono text-[10.5px] font-medium tracking-[0.1em] uppercase text-ob-tx3">
+              {g.label}
+            </div>
+          )}
+          {isCollapsed && <div className="h-3" />}
+          {g.items.map((item) => {
+            const on = isActive(item);
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onGo(item.id)}
+                aria-current={on ? "page" : undefined}
+                title={isCollapsed ? item.label : undefined}
+                className={`relative w-full flex items-center gap-2.5 min-h-10 px-2.5 rounded-[7px] text-left transition-[color,background-color,transform] duration-300 cursor-pointer hover:translate-x-0.5 ${
+                  isCollapsed ? "justify-center px-0" : ""
+                } ${on ? "text-ob-tx" : "text-ob-tx2 hover:bg-ob-bg3 hover:text-ob-tx"}`}
+              >
+                <span className={`transition-colors duration-300 ${on ? "text-ob-ac" : ""}`}>
+                  <Icon d={item.d} />
+                </span>
+                {!isCollapsed && <span className="text-[14px]">{item.label}</span>}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
   );
 }
 
@@ -240,19 +304,19 @@ export default function Navigation({
     setHovered(false);
   };
 
-  const isActive = (item: NavLink) => item.id === current || !!item.alias?.includes(current);
+  const drawer = usePresence(mobileOpen);
   const go = (id: string) => {
     onNavigate(id);
     setMobileOpen(false);
   };
 
   const panel = (isCollapsed: boolean, isDrawer: boolean) => (
-    <div className="h-full w-[232px] lg:w-full flex flex-col gap-0.5 px-3 py-[18px] bg-[#121211] overflow-hidden">
+    <div className="h-full w-[232px] lg:w-full flex flex-col gap-0.5 px-3 py-[18px] bg-ob-bg1 overflow-hidden">
       <div className={`flex items-center justify-between gap-1.5 ${isCollapsed ? "flex-col" : ""}`}>
         <button
           type="button"
           onClick={() => go("dashboard")}
-          className="flex items-center gap-2.5 px-2.5 pt-1 pb-3.5 font-semibold tracking-[-0.01em] text-[#ebe9e2] cursor-pointer"
+          className="flex items-center gap-2.5 px-2.5 pt-1 pb-3.5 font-semibold tracking-[-0.01em] text-ob-tx cursor-pointer"
           aria-label="Strop dashboard"
         >
           <BrandMark />
@@ -261,38 +325,7 @@ export default function Navigation({
       </div>
 
 
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "none" }} aria-label="Primary">
-        {NAV_GROUPS.map((g) => (
-          <div key={g.label}>
-            {!isCollapsed && (
-              <div className="mt-4 mx-2.5 mb-1.5 font-mono text-[10.5px] font-medium tracking-[0.1em] uppercase text-[#8f8d85]">
-                {g.label}
-              </div>
-            )}
-            {isCollapsed && <div className="h-3" />}
-            {g.items.map((item) => {
-              const on = isActive(item);
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => go(item.id)}
-                  aria-current={on ? "page" : undefined}
-                  title={isCollapsed ? item.label : undefined}
-                  className={`w-full flex items-center gap-2.5 min-h-10 px-2.5 rounded-[7px] text-left transition-all duration-300 cursor-pointer hover:translate-x-0.5 ${
-                    isCollapsed ? "justify-center px-0" : ""
-                  } ${on ? "bg-[rgba(230,223,204,0.07)] text-[#ebe9e2]" : "text-[#aaa89f] hover:bg-[#20201e] hover:text-[#ebe9e2]"}`}
-                >
-                  <span className={on ? "text-[#e6dfcc]" : ""}>
-                    <Icon d={item.d} />
-                  </span>
-                  {!isCollapsed && <span className="text-[14px]">{item.label}</span>}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-      </nav>
+      <NavList current={current} isCollapsed={isCollapsed} onGo={go} />
 
     </div>
   );
@@ -307,26 +340,27 @@ export default function Navigation({
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) closeNow();
         }}
-        className={`hidden lg:block fixed inset-y-0 left-0 border-r border-[#2b2b28] bg-[#121211] overflow-hidden transition-[width,box-shadow] duration-[550ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          hovered ? "w-[232px] z-40 shadow-[24px_0_48px_-24px_rgba(0,0,0,0.7)]" : "w-16 z-30"
+        className={`hidden lg:block fixed inset-y-0 left-0 border-r border-ob-ln bg-ob-bg1 overflow-hidden transition-[width,box-shadow] duration-[550ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          hovered ? "w-[232px] z-40 shadow-[24px_0_48px_-24px_rgb(var(--ob-sh)/0.7)]" : "w-16 z-30"
         }`}
       >
         {panel(!hovered, true)}
       </aside>
 
       {/* Mobile top bar + drawer */}
-      <header className="lg:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 border-b border-[#2b2b28] bg-[#121211]">
-        <button type="button" onClick={() => go("dashboard")} className="flex items-center gap-2.5 font-semibold text-[#ebe9e2] cursor-pointer">
+      <header className="lg:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 border-b border-ob-ln bg-ob-bg1">
+        <button type="button" onClick={() => go("dashboard")} className="flex items-center gap-2.5 font-semibold text-ob-tx cursor-pointer">
           <BrandMark />
           Strop
         </button>
         <div className="flex items-center gap-2">
+        <ThemeToggle />
         <ProfileMenu user={user} onLogout={onLogout} />
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
-          className="w-10 h-10 rounded-[8px] grid place-items-center text-[#aaa89f] hover:bg-[#20201e] cursor-pointer"
+          className="w-10 h-10 rounded-[8px] grid place-items-center text-ob-tx2 hover:bg-ob-bg3 cursor-pointer"
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
             <path d="M4 7h16M4 12h16M4 17h16" />
@@ -334,10 +368,10 @@ export default function Navigation({
         </button>
         </div>
       </header>
-      {mobileOpen && (
+      {drawer.shown && (
         <div className="lg:hidden fixed inset-0 z-40 flex" role="dialog" aria-modal="true" aria-label="Menu">
-          <div className="w-[260px] max-w-[84vw] h-full border-r border-[#2b2b28]">{panel(false, true)}</div>
-          <button type="button" className="flex-1 bg-[#121211]/70 backdrop-blur-sm cursor-pointer" aria-label="Close menu" onClick={() => setMobileOpen(false)} />
+          <div className={`${drawer.closing ? "ob-drawer-out" : "anim-drawer"} w-[260px] max-w-[84vw] h-full border-r border-ob-ln`}>{panel(false, true)}</div>
+          <button type="button" className={`${drawer.closing ? "ob-exit-fade" : "anim-fade-in"} flex-1 bg-ob-bg1/70 backdrop-blur-sm cursor-pointer`} aria-label="Close menu" onClick={() => setMobileOpen(false)} />
         </div>
       )}
 

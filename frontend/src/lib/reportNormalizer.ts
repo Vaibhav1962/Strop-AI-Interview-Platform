@@ -1,4 +1,5 @@
 import { cleanSessionTitle } from "./sessionMetrics";
+import { ticStats, capLevel, fillerLevel, paceLevel } from "./deliveryScoring";
 import type { BarsEvaluationReport, CompetencyEvaluation } from "./orchestratorClient";
 import type { ComprehensiveInterviewReport } from "./reportGenerator";
 
@@ -490,36 +491,35 @@ export function normalizeReportForCandidate(
     const telemetry = commsCard?.telemetry || {
       total_words: transcript.filter((t) => t.speaker === "Candidate").reduce((acc, t) => acc + t.text.split(/\s+/).length, 0),
       candidate_speaking_minutes: Math.round(durationSeconds * 0.55 / 60 * 10) / 10,
-      estimated_wpm: 135,
-      filler_word_count: 2,
+      estimated_wpm: 0,
+      filler_word_count: 0,
     };
 
-    let wpmAssessment = "Optimal Speaking Pace (120-160 WPM target)";
+    let wpmAssessment = "Comfortable pace (125-165 WPM target)";
     if (telemetry.estimated_wpm > 165) wpmAssessment = "Rapid pace · Consider pausing between major points";
-    else if (telemetry.estimated_wpm < 110 && telemetry.estimated_wpm > 0) wpmAssessment = "Deliberate pace · Can increase momentum on familiar topics";
+    else if (telemetry.estimated_wpm < 125 && telemetry.estimated_wpm > 0) wpmAssessment = "Deliberate pace · Can increase momentum on familiar topics";
 
     const candidateTurns = transcript.filter((t) => t.speaker === "Candidate").map((t) => t.text);
     const patterns = findSpeechPatterns(candidateTurns);
 
+    // Evidence from the transcript, not the model's default rating: verbal tics cap the axes they make unreliable.
+    const tics = ticStats(candidateTurns);
+    const levelOf = (d: { id: string; rating: string }) => capLevel(ratingToLevel(d.rating), d.id, tics.rate);
+
     const commRadar: { dimension: string; level: number; fullMark: number }[] = commDims.map((d) => ({
       dimension: COMM_AXIS_LABELS[d.id] || d.name.split(/[&,]/)[0].trim().slice(0, 14),
-      level: ratingToLevel(d.rating),
+      level: levelOf(d),
       fullMark: 4,
     }));
-    if (telemetry.estimated_wpm > 0) {
-      const w = telemetry.estimated_wpm;
-      commRadar.push({ dimension: "Pace", level: w >= 120 && w <= 165 ? 4 : w >= 100 && w <= 185 ? 3 : 2, fullMark: 4 });
-    }
-    if (telemetry.total_words > 0) {
-      const per100 = (telemetry.filler_word_count / telemetry.total_words) * 100;
-      commRadar.push({ dimension: "Filler Control", level: per100 < 1 ? 4 : per100 < 2 ? 3 : per100 < 4 ? 2 : 1, fullMark: 4 });
-    }
+    const pace = telemetry.estimated_wpm > 0 ? paceLevel(telemetry.estimated_wpm) : null;
+    if (pace !== null) commRadar.push({ dimension: "Pace", level: pace, fullMark: 4 });
+    if (tics.rate !== null) commRadar.push({ dimension: "Filler Control", level: fillerLevel(tics.rate), fullMark: 4 });
 
     const wentWell: { title: string; detail: string; quote?: string }[] = commDims
-      .filter((d) => ratingToLevel(d.rating) >= 3)
+      .filter((d) => levelOf(d) >= 3)
       .map((d) => ({ title: d.name, detail: d.observation, quote: d.quote }));
     const needsWork: { title: string; detail: string; quote?: string }[] = commDims
-      .filter((d) => ratingToLevel(d.rating) <= 2)
+      .filter((d) => levelOf(d) <= 2)
       .map((d) => ({ title: d.name, detail: d.observation, quote: d.quote }));
     for (const pat of patterns) {
       needsWork.push({
@@ -531,22 +531,26 @@ export function normalizeReportForCandidate(
         quote: pat.example,
       });
     }
-    if (telemetry.total_words > 0) {
-      const per100 = (telemetry.filler_word_count / telemetry.total_words) * 100;
-      if (per100 >= 2) {
-        const top = Object.entries(telemetry.filler_words_breakdown || {}).sort((a, b) => Number(b[1]) - Number(a[1]))[0];
+    if (tics.rate !== null) {
+      const top = Object.entries(tics.breakdown)
+        .sort((x, y) => y[1] - x[1])
+        .slice(0, 3)
+        .map(([w, n]) => `"${w}" ${n}x`)
+        .join(", ");
+      const total = Math.round(tics.weighted);
+      if (tics.rate >= 1.0) {
         needsWork.push({
-          title: "Filler words",
-          detail: `${telemetry.filler_word_count} fillers in ${telemetry.total_words} words (${per100.toFixed(1)} per 100)${top ? `, mostly "${top[0]}"` : ""}.`,
+          title: "Filler words and verbal tics",
+          detail: `${total} filler or hedge words in ${tics.words} words (${tics.rate.toFixed(1)} per 100)${top ? `: ${top}` : ""}.`,
         });
-      } else {
-        wentWell.push({ title: "Controlled delivery", detail: `Only ${telemetry.filler_word_count} filler words across ${telemetry.total_words} words.` });
+      } else if (tics.rate < 0.5) {
+        wentWell.push({ title: "Controlled delivery", detail: `Only ${total} filler or hedge words across ${tics.words} words.` });
       }
     }
-    if (telemetry.estimated_wpm > 165 || (telemetry.estimated_wpm > 0 && telemetry.estimated_wpm < 110)) {
+    if (pace !== null && pace <= 2) {
       needsWork.push({ title: "Speaking pace", detail: wpmAssessment });
-    } else if (telemetry.estimated_wpm > 0) {
-      wentWell.push({ title: "Speaking pace", detail: `${telemetry.estimated_wpm} words per minute sits in the comfortable 120-160 range.` });
+    } else if (pace === 4) {
+      wentWell.push({ title: "Speaking pace", detail: `${telemetry.estimated_wpm} words per minute sits in the comfortable 125-165 range.` });
     }
 
     const advice: string[] = [];
@@ -557,7 +561,7 @@ export function normalizeReportForCandidate(
           : `Drop "${pat.term}" and state the point directly. A short pause reads as more confident than a hedge.`,
       );
     }
-    for (const d of commDims.filter((x) => ratingToLevel(x.rating) <= 2)) {
+    for (const d of commDims.filter((x) => levelOf(x) <= 2)) {
       advice.push(`${d.name}: ${d.observation}`);
     }
     advice.push(
@@ -573,8 +577,8 @@ export function normalizeReportForCandidate(
         speakingMinutes: telemetry.candidate_speaking_minutes,
         wpm: telemetry.estimated_wpm,
         wpmAssessment,
-        fillerCount: telemetry.filler_word_count,
-        fillerBreakdown: telemetry.filler_words_breakdown,
+        fillerCount: Math.round(tics.weighted),
+        fillerBreakdown: tics.breakdown,
       },
       dimensions: commDims,
       coachingTips: advice.slice(0, 6),

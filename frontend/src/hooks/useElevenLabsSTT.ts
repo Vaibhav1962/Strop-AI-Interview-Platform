@@ -13,18 +13,22 @@ export function setSttQuotaExceeded(val: boolean) {
  * Server executes ElevenLabs Scribe with Gemini Transcribe fallback.
  * Zero private API keys exposed to browser client.
  */
-async function transcribeAudioWithBackend(blob: Blob, opts: { final?: boolean } = {}): Promise<string | null> {
-  if (blob.size < 400) return null;
+async function transcribeAudioWithBackend(
+  blob: Blob,
+  opts: { final?: boolean } = {},
+): Promise<{ text: string; failed: boolean }> {
+  if (blob.size < 400) return { text: "", failed: false };
 
   // The final transcription is the one the answer is built from, so it gets a longer timeout and one retry
   // (a transient 429/5xx or a cold model should not lose a whole spoken answer).
   const attempts = opts.final ? 2 : 1;
   for (let attempt = 0; attempt < attempts; attempt++) {
     const text = await postAudio(blob, opts.final ? 30000 : 15000);
-    if (text !== undefined) return text || null;
+    if (text !== undefined) return { text, failed: false };
     if (attempt + 1 < attempts) await new Promise((r) => setTimeout(r, 1500));
   }
-  return null;
+  // The request itself failed (as opposed to "the server heard nothing"), so callers can say so.
+  return { text: "", failed: true };
 }
 
 /** Returns the cleaned text, "" when the server heard nothing, or undefined when the request itself failed. */
@@ -53,6 +57,8 @@ async function postAudio(blob: Blob, timeoutMs: number): Promise<string | undefi
 
     if (res.ok) {
       const data = await res.json();
+      // An error payload is a failed request, not a silent recording.
+      if (data?.error && !data?.text) return undefined;
       const text = (data.text as string)?.trim() || "";
       const clean = text
         .replace(/^\[[a-zA-Z\s]+\]$/i, "")
@@ -75,12 +81,12 @@ async function transcribeAudioMultiTier(
   blob: Blob,
   _onQuotaExceeded?: () => void,
   opts: { final?: boolean } = {},
-): Promise<{ text: string; engine: "elevenlabs" | "gemini" | "backend" | "none" }> {
-  const text = await transcribeAudioWithBackend(blob, opts);
+): Promise<{ text: string; engine: "elevenlabs" | "gemini" | "backend" | "none"; failed: boolean }> {
+  const { text, failed } = await transcribeAudioWithBackend(blob, opts);
   if (text) {
-    return { text, engine: "backend" };
+    return { text, engine: "backend", failed: false };
   }
-  return { text: "", engine: "none" };
+  return { text: "", engine: "none", failed };
 }
 
 /**
@@ -113,6 +119,9 @@ export function useElevenLabsSTT(stream: MediaStream | null) {
   const lastTranscribedChunkCountRef = useRef(0);
   const latestTranscriptRef = useRef("");
   const recognitionRef = useRef<any>(null);
+  // True once the browser's own speech recognition is actually producing text. While it is, the server does not
+  // also need to re-transcribe the growing recording for the live preview.
+  const browserLiveTextRef = useRef(false);
 
   const stopAudioCapture = useCallback(() => {
     isCapturingRef.current = false;
@@ -182,9 +191,13 @@ export function useElevenLabsSTT(stream: MediaStream | null) {
     }
   }, []);
 
-  // Periodic live snapshot using Neural AI (Gemini 3.5 Transcribe)
+  // Periodic live preview from the server, for browsers that have no speech recognition of their own (Brave, Firefox).
+  // Each snapshot re-sends everything recorded so far, so a 60 second answer used to upload about 9 times its own
+  // length in audio and burn the free tier's hourly audio allowance. When the browser is already delivering live
+  // text, the only server transcription needed is the final one.
   const runLiveSnapshot = useCallback(async () => {
     if (!isCapturingRef.current) return;
+    if (browserLiveTextRef.current) return;
     if (isSnapshotInFlightRef.current) return;
 
     const currentCount = pcmSamplesRef.current.length;
@@ -223,6 +236,7 @@ export function useElevenLabsSTT(stream: MediaStream | null) {
     recordedChunksRef.current = [];
     latestTranscriptRef.current = "";
     lastTranscribedChunkCountRef.current = 0;
+    browserLiveTextRef.current = false;
     setLiveTranscript("");
     setSttError(null);
 
@@ -257,6 +271,7 @@ export function useElevenLabsSTT(stream: MediaStream | null) {
           }
           const trimmed = fullTranscript.trim();
           if (trimmed) {
+            browserLiveTextRef.current = true;
             latestTranscriptRef.current = trimmed;
             setLiveTranscript(trimmed);
           }
@@ -269,6 +284,7 @@ export function useElevenLabsSTT(stream: MediaStream | null) {
           // Some Chromium builds block the browser speech service. Stop retrying it and rely on server-side
           // transcription of the captured audio. This is not an error the candidate needs to see.
           if (e.error === "network" || e.error === "not-allowed" || e.error === "service-not-allowed") {
+            browserLiveTextRef.current = false; // the server preview takes over again
             try {
               recognition.onend = null;
             } catch {}
@@ -303,11 +319,10 @@ export function useElevenLabsSTT(stream: MediaStream | null) {
       track.enabled = true;
     });
 
-    // Live server-side transcription: re-transcribe the growing recording every few seconds so text
-    // appears while the candidate speaks, even when the browser has no speech recognition.
+    // Live server-side transcription for browsers without their own recognition (see runLiveSnapshot).
     snapshotTimerRef.current = window.setInterval(() => {
       runLiveSnapshot();
-    }, 4000);
+    }, 6000);
 
     // 2. Initialize Native MediaRecorder channel (Hardware Level Capture)
     try {
@@ -394,6 +409,9 @@ export function useElevenLabsSTT(stream: MediaStream | null) {
           latestTranscriptRef.current = finalAnswer;
           setLiveTranscript(finalAnswer);
           setActiveEngine(result.engine);
+        } else if (result.failed && !finalAnswer) {
+          // The server could not transcribe (every engine failed). Say so rather than looking like silence.
+          setSttError("Speech recognition is unavailable right now. Choose Type text, or try again in a moment.");
         }
       } catch (err) {
         console.warn("[useElevenLabsSTT] Final transcription error:", err);

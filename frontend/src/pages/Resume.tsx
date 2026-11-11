@@ -129,7 +129,7 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
   const publications = currentResume?.publications || [];
   const contactLine = [contact?.email, contact?.phone, contact?.location].filter(Boolean).join(" · ");
   const parsed = Boolean(currentResume) && !analyzing;
-  const PROP = "grid grid-cols-[110px_minmax(0,1fr)] gap-3.5 py-2.5 border-t border-[#2b2b28] text-[13.5px]";
+  const PROP = "grid grid-cols-[110px_minmax(0,1fr)] gap-3.5 py-2.5 border-t border-ob-ln text-[13.5px]";
   const SEC = "flex justify-between items-center gap-3";
 
   return (
@@ -154,10 +154,10 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
           { label: "Structured", done: parsed && skills.length > 0 },
           { label: `${claims.length || projects.length} ${claims.length ? "claims" : "projects"} indexed`, done: parsed && (claims.length > 0 || projects.length > 0) },
         ].map((st) => (
-          <span key={st.label} className={`inline-flex items-center gap-2 text-[12.5px] ${st.done ? "text-[#ebe9e2]" : "ob-tx3"}`}>
-            <span className={`w-[18px] h-[18px] rounded-full border grid place-items-center ${st.done ? "bg-[#e6dfcc] border-[#e6dfcc] text-[#121211]" : "border-[#3a3a36]"}`} aria-hidden="true">
+          <span key={st.label} className={`inline-flex items-center gap-2 text-[12.5px] ${st.done ? "text-ob-tx" : "ob-tx3"}`}>
+            <span className={`w-[18px] h-[18px] rounded-full border grid place-items-center transition-colors duration-500 ${st.done ? "bg-ob-ac border-ob-ac text-ob-onac" : "border-ob-ln2"}`} aria-hidden="true">
               {st.done && (
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-10" /></svg>
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path className="ob-tick" pathLength={1} d="M5 12l5 5 9-10" /></svg>
               )}
             </span>
             {st.label}
@@ -196,7 +196,7 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
               <div className={SEC}><span className="ob-lb">Experience · {experience.length}</span></div>
               <div className="mt-2">
                 {experience.map((x, i) => (
-                  <div key={i} className="py-[18px] border-t border-[#2b2b28] first:border-t-0">
+                  <div key={i} className="py-[18px] border-t border-ob-ln first:border-t-0">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4">
                       <div className="text-[16px] tracking-[-0.01em]">{[x.role, x.company].filter(Boolean).join(" · ")}</div>
                       <div className="ob-mo text-[11.5px] ob-tx3">{[x.dates, x.location].filter(Boolean).join(" · ")}</div>
@@ -216,7 +216,7 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
               <div className={SEC}><span className="ob-lb">Education · {education.length}</span></div>
               <div className="mt-2">
                 {education.map((e, i) => (
-                  <div key={i} className="py-[16px] border-t border-[#2b2b28] first:border-t-0">
+                  <div key={i} className="py-[16px] border-t border-ob-ln first:border-t-0">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4">
                       <div className="text-[16px] tracking-[-0.01em]">{e.institution}</div>
                       <div className="ob-mo text-[11.5px] ob-tx3">{[e.dates, e.gpa ? `GPA ${e.gpa}` : ""].filter(Boolean).join(" · ")}</div>
@@ -242,7 +242,7 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
               <div className={SEC}><span className="ob-lb">Projects · {projects.length}</span></div>
               <div className="mt-2">
                 {projects.map((p, i) => (
-                  <div key={i} className="py-[18px] border-t border-[#2b2b28] first:border-t-0">
+                  <div key={i} className="py-[18px] border-t border-ob-ln first:border-t-0">
                     <div className="text-[16px] tracking-[-0.01em]">{p.name}</div>
                     {p.description && <p className="mt-1.5 mb-3 ob-tx2 text-[13px]">{p.description}</p>}
                     {(p.technologies?.length || p.metrics?.length) ? (
@@ -262,7 +262,7 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
             <div className={SEC}><span className="ob-lb">Skills · {skills.length} extracted</span></div>
             {skills.length ? (
               <div className="flex flex-wrap gap-[7px] mt-2.5">
-                {skills.map((s) => <span key={s} className="ob-chip ob-sq ob-live">{s}</span>)}
+                {skills.map((s, i) => <span key={s} className="ob-chip ob-sq ob-live ob-pop" style={{ ["--i" as string]: i }}>{s}</span>)}
               </div>
             ) : (
               <div className="ob-tx3 text-[13px] mt-3">No skills extracted yet.</div>
@@ -291,8 +291,8 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
         {(pdfPreviewUrl || currentResume) && (
           <aside className="ob-rise w-full min-w-0 lg:sticky lg:top-4" style={{ ["--i" as string]: 5 }} aria-label="Resume document">
             {pdfPreviewUrl && (
-            <div className="rounded-xl border border-[#2b2b28] bg-[#181817] overflow-hidden">
-              <div className="flex items-center justify-between px-4 h-11 border-b border-[#2b2b28]">
+            <div className="rounded-xl border border-ob-ln bg-ob-card overflow-hidden">
+              <div className="flex items-center justify-between px-4 h-11 border-b border-ob-ln">
                 <span className="ob-lb">Document</span>
                 <span className="flex items-center gap-3">
                   <button type="button" onClick={() => window.open(pdfPreviewUrl, "_blank")} className="ob-mo text-[11.5px] ob-txa cursor-pointer">Open full size ↗</button>
@@ -300,12 +300,14 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
                 </span>
               </div>
               {/* One letter-size page: the window is exactly as tall as the page it shows */}
-              <div className="relative w-full bg-white" style={{ aspectRatio: "8.5 / 11" }}>
+              <div className="relative w-full bg-white overflow-hidden" style={{ aspectRatio: "8.5 / 11" }}>
                 <iframe
                   src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
                   title="Resume document"
                   className="absolute inset-0 w-full h-full border-0 block"
                 />
+                {/* A scan line passes over the page while it is being read. */}
+                {analyzing && <div className="ob-scanline" aria-hidden="true" />}
               </div>
             </div>
             )}

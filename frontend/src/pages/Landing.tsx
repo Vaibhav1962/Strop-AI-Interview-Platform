@@ -1,6 +1,7 @@
 import LandingContent from "../components/landing/LandingContent";
 import { useEffect, useState } from "react";
 import { ApiError, type AuthUser, login, saveSession, signup } from "../lib/api";
+import { usePresence } from "../components/ui";
 
 type AuthMode = "login" | "signup";
 
@@ -17,6 +18,8 @@ export default function Landing({ onEnter }: { onEnter: (user: AuthUser) => void
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const auth = usePresence(authOpen);
 
   const resetAuthForm = () => {
     setPassword("");
@@ -97,26 +100,26 @@ export default function Landing({ onEnter }: { onEnter: (user: AuthUser) => void
   };
 
   return (
-    <div className="st-grain min-h-screen bg-[#121211] text-[#ebe9e2] relative overflow-x-clip text-[14px] leading-[1.55] selection:bg-[#e6dfcc]/25">
+    <div className="st-grain min-h-screen bg-ob-bg1 text-ob-tx relative overflow-x-clip text-[14px] leading-[1.55] selection:bg-ob-ac/25">
       <LandingContent onSignup={() => goToAuth("signup")} onLogin={() => goToAuth("login")} />
 
-      {authOpen && (
+      {auth.shown && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4 anim-fade-in"
-          style={{ background: "rgba(18,18,17,0.78)", backdropFilter: "blur(6px)" }}
+          className={`fixed inset-0 z-[80] flex items-center justify-center p-4 ${auth.closing ? "ob-exit-fade" : "anim-fade-in"}`}
+          style={{ background: "color-mix(in srgb, var(--ob-bg1) 88%, transparent)" }}
           onMouseDown={(e) => e.target === e.currentTarget && closeAuth()}
           role="dialog"
           aria-modal="true"
         >
           <form
-            className="relative ob-card !p-7 grid gap-4 w-full max-w-[440px] max-h-[92vh] overflow-y-auto hover:!translate-y-0 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.8)]" aria-labelledby="auth-title"
+            className={`relative ob-card !p-7 grid gap-4 w-full max-w-[440px] max-h-[92vh] overflow-y-auto shadow-[0_24px_64px_-16px_rgb(var(--ob-sh)/0.8)] ${auth.closing ? "ob-exit" : "ob-enter"}`} aria-labelledby="auth-title"
             onSubmit={(e) => {
               e.preventDefault();
               handleAuthSubmit();
             }}
             noValidate
           >
-            <button type="button" onClick={closeAuth} aria-label="Close" className="absolute top-3 right-3 w-8 h-8 rounded-[7px] grid place-items-center ob-tx3 hover:bg-[#20201e] hover:text-[#ebe9e2] transition-colors cursor-pointer">
+            <button type="button" onClick={closeAuth} aria-label="Close" className="absolute top-3 right-3 w-8 h-8 rounded-[7px] grid place-items-center ob-tx3 hover:bg-ob-bg3 hover:text-ob-tx transition-colors cursor-pointer">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
             <div className="flex justify-between items-baseline pr-8">
@@ -127,29 +130,29 @@ export default function Landing({ onEnter }: { onEnter: (user: AuthUser) => void
               </button>
             </div>
 
-            {successMessage && <div className="text-[13px] text-[#6fd6a4]" role="status">{successMessage}</div>}
+            {successMessage && <div className="text-[13px] text-ob-ok" role="status">{successMessage}</div>}
 
             {mode === "signup" && (
               <label className={FIELD}>Full name
                 <input className="ob-input !h-11" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" aria-invalid={Boolean(fieldErrors.name)} />
-                {fieldErrors.name && <span className="text-[#f08a98]">{fieldErrors.name}</span>}
+                {fieldErrors.name && <span className="text-ob-er">{fieldErrors.name}</span>}
               </label>
             )}
             <label className={FIELD}>Work email
               <input className="ob-input !h-11" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" aria-invalid={Boolean(fieldErrors.email)} />
-              {fieldErrors.email && <span className="text-[#f08a98]">{fieldErrors.email}</span>}
+              {fieldErrors.email && <span className="text-ob-er">{fieldErrors.email}</span>}
             </label>
             <label className={FIELD}>Password
               <input className="ob-input !h-11" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} aria-invalid={Boolean(fieldErrors.password)} />
-              {fieldErrors.password && <span className="text-[#f08a98]">{fieldErrors.password}</span>}
+              {fieldErrors.password && <span className="text-ob-er">{fieldErrors.password}</span>}
             </label>
             {mode === "signup" && (
               <label className={FIELD}>Confirm password
                 <input className="ob-input !h-11" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" aria-invalid={Boolean(fieldErrors.confirmPassword)} />
-                {fieldErrors.confirmPassword && <span className="text-[#f08a98]">{fieldErrors.confirmPassword}</span>}
+                {fieldErrors.confirmPassword && <span className="text-ob-er">{fieldErrors.confirmPassword}</span>}
               </label>
             )}
-            {formError && <div className="text-[13px] text-[#f08a98]" role="alert">{formError}</div>}
+            {formError && <div className="text-[13px] text-ob-er" role="alert">{formError}</div>}
             <button type="submit" className="ob-btn ob-pr ob-btn-lg w-full" disabled={loading}>
               {loading ? "Please wait..." : mode === "signup" ? "Create account" : "Sign in"}
             </button>

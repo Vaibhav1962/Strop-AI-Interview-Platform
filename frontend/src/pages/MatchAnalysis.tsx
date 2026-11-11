@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Segmented } from "../components/ui";
 import { getUserResume, getUserJD, cleanCandidateName } from "../lib/userDocuments";
 import { computeAccurateMatch, getActiveJdMatchReport, type ResumeQuality } from "../lib/jdMatcher";
 
@@ -58,7 +59,7 @@ function QualityPanel({ quality }: { quality?: ResumeQuality | null }) {
             ) : (
               <div className="mt-2">
                 {c.issues.map((it, i) => (
-                  <div key={i} className="py-3.5 border-t border-[#2b2b28]">
+                  <div key={i} className="py-3.5 border-t border-ob-ln">
                     {it.quote && (
                       <div className="border-l-2 pl-3 text-[12.5px] italic ob-tx2 leading-relaxed" style={{ borderColor: "var(--ob-ln3)" }}>
                         "{it.quote}"
@@ -87,6 +88,7 @@ export default function MatchAnalysis({ onNavigate }: { onNavigate: (p: string) 
   const userJD = getUserJD();
   const [activeReport] = useState(() => getActiveJdMatchReport());
   const [tab, setTab] = useState<"technical" | "quality">("technical");
+  const [hoverRow, setHoverRow] = useState<number | null>(null);
 
   const analysis = useMemo(() => {
     if (activeReport && activeReport.analysis) return activeReport.analysis;
@@ -138,7 +140,7 @@ export default function MatchAnalysis({ onNavigate }: { onNavigate: (p: string) 
         <div>
           <div className="flex items-center gap-3 mb-5 font-mono text-xs ob-tx3">
             <span>1 Job description</span>
-            <i className="inline-block w-9 h-px bg-[#3a3a36]" />
+            <i className="inline-block w-9 h-px bg-ob-ln2" />
             <b className="ob-tx font-medium">2 Match analysis</b>
           </div>
           <div className="ob-rise ob-lb" style={{ ["--i" as string]: 0 }}>
@@ -154,8 +156,8 @@ export default function MatchAnalysis({ onNavigate }: { onNavigate: (p: string) 
       <div className="ob-card ob-rise flex flex-wrap gap-9 items-center !p-7 mt-[30px] hover:!translate-y-0" style={{ ["--i" as string]: 4 }}>
         <div className="relative w-[156px] h-[156px] shrink-0">
           <svg viewBox="0 0 100 100" width="156" height="156" aria-hidden="true">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="#2b2b28" strokeWidth="4" />
-            <circle className="ob-rg" cx="50" cy="50" r="42" fill="none" stroke="#e6dfcc" strokeWidth="4" strokeLinecap="round" pathLength={100} strokeDasharray={`${score} 100`} transform="rotate(-90 50 50)" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="var(--ob-ln)" strokeWidth="4" />
+            <circle className="ob-rg" cx="50" cy="50" r="42" fill="none" stroke="var(--ob-ac)" strokeWidth="4" strokeLinecap="round" pathLength={100} strokeDasharray={`${score} 100`} transform="rotate(-90 50 50)" />
           </svg>
           <div className="absolute inset-0 grid place-items-center content-center text-center">
             <div className="text-[44px] font-medium tracking-[-0.04em] leading-none">
@@ -181,19 +183,16 @@ export default function MatchAnalysis({ onNavigate }: { onNavigate: (p: string) 
       </div>
 
       {/* Tabs */}
-      <div className="ob-rise inline-flex p-[3px] border border-[#2b2b28] rounded-[9px] bg-[#181817] mt-5" role="tablist" aria-label="Analysis sections" style={{ ["--i" as string]: 5 }}>
-        {([["technical", "Technical alignment"], ["quality", "Resume quality"]] as const).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            onClick={() => setTab(id)}
-            className={`px-4 h-9 rounded-[7px] text-[13px] cursor-pointer transition-colors duration-300 ${tab === id ? "bg-[#e6dfcc] text-[#121211]" : "text-[#aaa89f] hover:text-[#ebe9e2]"}`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="ob-rise mt-5" style={{ ["--i" as string]: 5 }}>
+        <Segmented
+          label="Analysis sections"
+          value={tab}
+          onChange={setTab}
+          options={[
+            { id: "technical", label: "Technical alignment" },
+            { id: "quality", label: "Resume quality" },
+          ]}
+        />
       </div>
 
       {tab === "technical" && (
@@ -205,34 +204,43 @@ export default function MatchAnalysis({ onNavigate }: { onNavigate: (p: string) 
             <span className="ob-lb">Requirement graph</span>
             <span className="ob-mo text-[11.5px] ob-tx3"><span className="ob-txa">━</span> evidenced &nbsp;<span style={{ color: "var(--ob-wn)" }}>┅</span> unsupported</span>
           </div>
-          <svg viewBox={`0 0 760 ${svgH}`} width="100%" className="block mt-2" role="img" aria-label={`${evidenced.length} requirements linked to resume evidence, ${unsupported.length} with no evidence`}>
+          {/* Hovering a requirement brightens its link and its evidence, and quiets the rest. */}
+          <svg viewBox={`0 0 760 ${svgH}`} width="100%" className="block mt-2" role="img" aria-label={`${evidenced.length} requirements linked to resume evidence, ${unsupported.length} with no evidence`} onMouseLeave={() => setHoverRow(null)}>
             {graphRows.map((m, i) => {
               const y = 30 + i * rowH;
               const boxIdx = evidenceBoxes.indexOf(m.sourceProject || "Skills section");
               const by = 30 + Math.max(0, boxIdx) * 60;
+              const fade = { opacity: hoverRow === null || hoverRow === i ? 1 : 0.22, transition: "opacity 0.35s var(--ob-ease)" };
               return m.matched ? (
-                <path key={`l${i}`} className="ob-lk" pathLength={1} style={{ ["--i" as string]: i }} d={`M210 ${y}C340 ${y} 380 ${by} 520 ${by}`} fill="none" stroke="#e6dfcc" strokeOpacity=".55" strokeWidth="1.2" />
+                <g key={`l${i}`} style={fade}>
+                  <path className="ob-lk" pathLength={1} style={{ ["--i" as string]: i }} d={`M210 ${y}C340 ${y} 380 ${by} 520 ${by}`} fill="none" stroke="var(--ob-ac)" strokeOpacity={hoverRow === i ? 1 : 0.55} strokeWidth={hoverRow === i ? 1.6 : 1.2} />
+                </g>
               ) : (
-                <path key={`l${i}`} d={`M210 ${y}L330 ${y}`} fill="none" stroke="#e8bd6f" strokeWidth="1.2" strokeDasharray="3 3" />
+                <path key={`l${i}`} style={fade} d={`M210 ${y}L330 ${y}`} fill="none" stroke="var(--ob-wn)" strokeWidth="1.2" strokeDasharray="3 3" />
               );
             })}
             <g fontFamily="Inter,sans-serif" fontSize="13">
               {graphRows.map((m, i) => {
                 const y = 30 + i * rowH;
                 return (
-                  <g key={`n${i}`}>
-                    <circle cx="198" cy={y} r="5" fill={m.matched ? "#e6dfcc" : "#121211"} stroke={m.matched ? undefined : "#e8bd6f"} strokeDasharray={m.matched ? undefined : "2 2"} />
-                    <text x="184" y={y + 4} textAnchor="end" fill={m.matched ? "#ebe9e2" : "#e8bd6f"}>{m.skill.length > 22 ? m.skill.slice(0, 21) + "…" : m.skill}</text>
-                    {!m.matched && <text x="336" y={y + 4} fontFamily="JetBrains Mono,monospace" fontSize="11" fill="#e8bd6f">no evidence</text>}
+                  <g key={`n${i}`} onMouseEnter={() => setHoverRow(i)} style={{ opacity: hoverRow === null || hoverRow === i ? 1 : 0.35, transition: "opacity 0.35s var(--ob-ease)" }}>
+                    <rect x="0" y={y - rowH / 2} width={m.matched ? 215 : 430} height={rowH} fill="transparent" />
+                    <circle cx="198" cy={y} r="5" fill={m.matched ? "var(--ob-ac)" : "var(--ob-bg1)"} stroke={m.matched ? undefined : "var(--ob-wn)"} strokeDasharray={m.matched ? undefined : "2 2"} />
+                    <text x="184" y={y + 4} textAnchor="end" fill={m.matched ? "var(--ob-tx)" : "var(--ob-wn)"}>{m.skill.length > 22 ? m.skill.slice(0, 21) + "…" : m.skill}</text>
+                    {!m.matched && <text x="336" y={y + 4} fontFamily="JetBrains Mono,monospace" fontSize="11" fill="var(--ob-wn)">no evidence</text>}
                   </g>
                 );
               })}
-              {evidenceBoxes.map((label, i) => (
-                <g key={label}>
-                  <rect x="520" y={12 + i * 60} width="220" height="36" rx="8" fill="#181817" stroke="#3a3a36" />
-                  <text x="534" y={35 + i * 60} fill="#ebe9e2">{label.length > 28 ? label.slice(0, 27) + "…" : label}</text>
+              {evidenceBoxes.map((label, i) => {
+                const hovered = hoverRow !== null ? graphRows[hoverRow] : null;
+                const lit = !hovered || (hovered.matched && (hovered.sourceProject || "Skills section") === label);
+                return (
+                <g key={label} style={{ opacity: lit ? 1 : 0.3, transition: "opacity 0.35s var(--ob-ease)" }}>
+                  <rect x="520" y={12 + i * 60} width="220" height="36" rx="8" fill="var(--ob-card)" stroke="var(--ob-ln2)" />
+                  <text x="534" y={35 + i * 60} fill="var(--ob-tx)">{label.length > 28 ? label.slice(0, 27) + "…" : label}</text>
                 </g>
-              ))}
+                );
+              })}
             </g>
           </svg>
         </div>
@@ -248,7 +256,7 @@ export default function MatchAnalysis({ onNavigate }: { onNavigate: (p: string) 
           {analysis.gaps.length ? (
             <div className="mt-2">
               {analysis.gaps.map((g, i) => (
-                <div key={i} className="py-3.5 border-t border-[#2b2b28] first:border-t-0">
+                <div key={i} className="ob-pop py-3.5 border-t border-ob-ln first:border-t-0" style={{ ["--i" as string]: i * 3 + 14 }}>
                   <div className="flex justify-between items-start gap-3">
                     <span className="text-[14.5px]">{g.jdRequirement}</span>
                     <span className={`ob-chip ob-sq shrink-0 ${sevCls(g.severity)}`}>{g.severity}</span>
@@ -270,7 +278,7 @@ export default function MatchAnalysis({ onNavigate }: { onNavigate: (p: string) 
           <div className="mt-2">
             {analysis.strongMatches.length === 0 && <div className="mt-3 ob-tx3 text-[13px]">No strong matches found yet.</div>}
             {analysis.strongMatches.map((h, i) => (
-              <div key={i} className="py-3.5 border-t border-[#2b2b28] first:border-t-0">
+              <div key={i} className="ob-pop py-3.5 border-t border-ob-ln first:border-t-0" style={{ ["--i" as string]: i * 3 + 14 }}>
                 <div className="flex justify-between items-start gap-3">
                   <span className="text-[14.5px]">{h.jdRequirement}</span>
                   <span className="ob-chip ob-sq ob-ok shrink-0">{h.strength}</span>

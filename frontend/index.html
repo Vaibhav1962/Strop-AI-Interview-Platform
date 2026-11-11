@@ -8,6 +8,19 @@
       content="Provides AI-driven interview insights and personalized training to help job seekers improve skills and boost confidence for successful interviews."
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#0d0d0c" />
+    <script>
+      try {
+        var t = localStorage.getItem("interviewiq_theme");
+        if (t === "light") {
+          document.documentElement.classList.add("light");
+          document.documentElement.classList.remove("dark");
+          document.documentElement.style.colorScheme = "light";
+        } else {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (e) {}
+    </script>
     <title>Strop</title>
   </head>
   <body>

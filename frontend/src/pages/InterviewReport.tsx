@@ -84,7 +84,7 @@ export default function InterviewReport({ onNavigate }: { onNavigate: (page: str
     return (
       <div className="min-h-[60vh] grid place-items-center px-5 text-center">
         <div>
-          <span className="inline-block w-5 h-5 rounded-full border-2 border-[#3a3a36] border-t-[#e6dfcc] animate-spin" aria-hidden="true" />
+          <span className="inline-block w-5 h-5 rounded-full border-2 border-ob-ln2 border-t-ob-ac animate-spin" aria-hidden="true" />
           <h2 className="text-[17px] font-medium mt-4 mb-1">Loading your report</h2>
           <p className="ob-tx3 text-[13px] m-0">Gathering the evaluation, transcript and evidence.</p>
         </div>

@@ -21,6 +21,24 @@ _usage: dict[tuple[str, str], list[tuple[float, int]]] = {}
 USAGE_WINDOW_SECONDS = 60.0
 
 
+_logged_keys = False
+
+
+def _log_key_status(keys: list[tuple[str, str]]) -> None:
+    """Say once, at first use, how many accounts are configured. Never logs a key."""
+    global _logged_keys
+    if _logged_keys:
+        return
+    _logged_keys = True
+    ids = ", ".join(key_id for key_id, _ in keys) or "none"
+    msg = f"[Groq] {len(keys)} API key(s) loaded ({ids})."
+    if not keys:
+        msg += " Set GROQ_API_KEY to use Groq."
+    elif len(keys) == 1:
+        msg += " GROQ2_API_KEY is empty, so there is no fallback account when this one is rate limited."
+    print(msg)
+
+
 def groq_keys() -> list[tuple[str, str]]:
     """[(key_id, key)] for every configured key, skipping blanks and duplicates. key_id is safe to log."""
     from app.config import get_settings
@@ -37,6 +55,7 @@ def groq_keys() -> list[tuple[str, str]]:
         if key and key not in seen:
             seen.add(key)
             keys.append((key_id, key))
+    _log_key_status(keys)
     return keys
 
 
