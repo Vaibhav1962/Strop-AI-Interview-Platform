@@ -28,7 +28,6 @@ import {
   type DsaProblem,
 } from "../lib/dsaProblemBank";
 import LiquidMicWave from "../components/LiquidMicWave";
-import PresenceRing from "../components/PresenceRing";
 import DsaCodingWorkspace from "../components/DsaCodingWorkspace";
 
 type UIPhase =
@@ -1034,61 +1033,25 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
   // ---------------------------------------------------------------------------
   return (
     <div className="ob-app h-full w-full flex flex-col overflow-hidden">
-      {/* Top bar: interviewer identity, live status, recording clock, end call */}
-      <header className="flex items-center justify-between flex-wrap gap-x-6 gap-y-3 px-4 sm:px-8 py-3.5 border-b ob-bd shrink-0 z-20">
-        <div className="flex items-center gap-3 min-w-0">
-          <span
-            className="w-9 h-9 rounded-full border grid place-items-center text-xs font-semibold shrink-0"
-            style={{ borderColor: "var(--ob-ln2)", background: "var(--ob-bg3)" }}
-            aria-hidden="true"
-          >
-            A
+      {/* Top bar: what this is, where you are, the clock, and a way out. Nothing else. */}
+      <header className="flex items-center justify-between gap-4 px-4 sm:px-8 h-14 border-b ob-bd shrink-0 z-20">
+        <div className="min-w-0 flex items-baseline gap-3">
+          <span className="text-[14px] font-medium truncate">{trackInfo.title}</span>
+          <span className="ob-mo text-[11.5px] ob-tx3 truncate hidden sm:inline" aria-label="Interview progress">
+            {uiPhase === "completed"
+              ? "Complete"
+              : stage === "self_intro"
+              ? "Introduction"
+              : selectedTrack === "dsa"
+              ? dsaProblemUnlocked ? "Coding discussion" : "Problem briefing"
+              : `Question ${Math.min(mainQuestionsAsked + 1, interviewTopics.length)} of ${interviewTopics.length}`}
           </span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[13.5px]">
-              <span>Alex</span>
-              <span className="ob-chip hidden sm:inline-flex">Staff interviewer</span>
-            </div>
-            <div className="ob-mo text-[11px] ob-tx3 truncate">
-              {trackInfo.title} · {userResume.name}
-            </div>
-          </div>
         </div>
 
-        {/* Errors only: who is talking now lives in the conversation pane, next to the words */}
-        <div className="flex items-center justify-center flex-1 min-w-[220px] min-h-[38px]">
-          <div className="flex items-center gap-3 flex-wrap justify-center">
-            {uiPhase === "completed" ? (
-              <span className="ob-chip ob-live">Interview complete</span>
-            ) : (
-              <span className="ob-chip" aria-label="Interview progress">
-                {stage === "self_intro"
-                  ? "Introduction"
-                  : selectedTrack === "dsa"
-                  ? dsaProblemUnlocked ? "Coding discussion" : "Problem briefing"
-                  : `Question ${Math.min(mainQuestionsAsked + 1, interviewTopics.length)} of ${interviewTopics.length}`}
-              </span>
-            )}
-
-            {inferenceError && (
-              <span className="ob-chip ob-err" role="alert" style={{ height: "auto", minHeight: 24, whiteSpace: "normal", padding: "3px 10px" }}>
-                {inferenceError}
-                <button
-                  type="button"
-                  onClick={() => setInferenceError(null)}
-                  className="underline font-semibold cursor-pointer"
-                >
-                  Dismiss
-                </button>
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {selectedTrack === "dsa" && (
-            <span className={`ob-chip hidden sm:inline-flex ${dsaProblemUnlocked ? "ob-live" : "ob-warn"}`}>
-              {dsaProblemUnlocked ? "Coding active" : "Briefing stage"}
+        <div className="flex items-center gap-4 shrink-0">
+          {elapsed >= targetDurationMinutes * 60 && uiPhase !== "completed" && (
+            <span className="ob-mo text-[11.5px] hidden md:inline" style={{ color: "var(--ob-hot)" }} role="status">
+              Over time. Finish your answer and Alex will wrap up
             </span>
           )}
           <div
@@ -1102,17 +1065,9 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
             aria-label={`Elapsed ${formatTime(elapsed)} of ${targetDurationMinutes} minutes${elapsed >= targetDurationMinutes * 60 ? ", time is up" : ""}`}
           >
             <span className="ob-rec" aria-hidden="true" />
-            <span className="hidden sm:inline">{elapsed >= targetDurationMinutes * 60 ? "time up" : "rec"}</span>
             <span style={{ color: "color-mix(in srgb, var(--ob-hot) var(--warm), var(--ob-tx))", transition: "color 1s linear" }}>{formatTime(elapsed)}</span>
-            <span className={elapsed >= targetDurationMinutes * 60 ? "hidden sm:inline" : "ob-tx3 hidden sm:inline"}>
-              / {String(targetDurationMinutes).padStart(2, "0")}:00
-            </span>
+            <span className="ob-tx3 hidden sm:inline">/ {String(targetDurationMinutes).padStart(2, "0")}:00</span>
           </div>
-          {elapsed >= targetDurationMinutes * 60 && uiPhase !== "completed" && (
-            <span className="ob-chip ob-err hidden md:inline-flex" style={{ color: "var(--ob-hot)", borderColor: "rgba(255,106,61,.45)", background: "rgba(255,106,61,.08)" }} role="status">
-              Over time. Finish your answer and Alex will wrap up
-            </span>
-          )}
           <button type="button" onClick={() => setConfirmEnd(true)} className="ob-btn ob-dg ob-sm">
             End call
           </button>
@@ -1130,66 +1085,15 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
         <i style={{ width: `${Math.min(100, (elapsed / (targetDurationMinutes * 60)) * 100)}%`, background: elapsed >= targetDurationMinutes * 60 ? "var(--ob-hot)" : undefined }} />
       </div>
 
+      {inferenceError && (
+        <div className="px-4 sm:px-8 py-2 flex items-center gap-3 border-b ob-bd text-[12.5px] shrink-0" role="alert" style={{ color: "var(--ob-er)" }}>
+          <span className="flex-1 min-w-0">{inferenceError}</span>
+          <button type="button" onClick={() => setInferenceError(null)} className="underline underline-offset-4 cursor-pointer shrink-0">Dismiss</button>
+        </div>
+      )}
+
       {/* Workspace Sub-renders for Modular, Persistent Layout */}
       {(() => {
-        const renderFaceCamTile = ({ isCompact = false }: { isCompact?: boolean } = {}) => {
-          const camLive = cameraOn && hasVideoTrack;
-          return (
-            <div
-              className={`${camLive ? "ob-cam" : "relative overflow-hidden grid place-items-center border border-ob-ln bg-ob-bg2"} shrink-0 w-full`}
-              style={{ borderRadius: 14, ...(isCompact ? { height: 168 } : { aspectRatio: "4 / 3" }) }}
-            >
-              {camLive ? (
-                <video ref={attachVideoNode} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover scale-x-[-1]" />
-              ) : (
-                <span
-                  className="w-12 h-12 -mt-6 rounded-full border grid place-items-center text-base font-medium ob-tx"
-                  style={{ borderColor: "var(--ob-ln2)", background: "var(--ob-bg3)" }}
-                  aria-hidden="true"
-                >
-                  {(userResume?.name || "Candidate").charAt(0).toUpperCase()}
-                </span>
-              )}
-
-              {/* Controls sit inside the tile, like a video call, so there is no second box under it */}
-              <div className="absolute left-0 right-0 bottom-3.5 flex items-center justify-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={toggleMic}
-                  className={`ob-cbtn ${micOn ? "" : "ob-off"}`}
-                  aria-label={micOn ? "Mute microphone" : "Unmute microphone"}
-                  aria-pressed={!micOn}
-                >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
-                    <path d={micOn
-                      ? "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"
-                      : "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"} />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleCamera}
-                  className={`ob-cbtn ${cameraOn ? "" : "ob-off"}`}
-                  aria-label={cameraOn ? "Turn camera off" : "Turn camera on"}
-                  aria-pressed={!cameraOn}
-                >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d={cameraOn ? "M3 7h12v10H3zM15 11l6-3v8l-6-3" : "M3 7h12v10H3zM15 11l6-3v8l-6-3M4 4l16 16"} />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Mic level: one hairline that fills with your voice */}
-              <div className="absolute left-0 right-0 bottom-0 h-[3px]" style={{ background: "rgb(var(--ob-ov)/0.1)" }} aria-hidden="true">
-                <div
-                  className="h-full origin-left"
-                  style={{ background: "var(--ob-ok)", transform: `scaleX(${micOn ? Math.min(1, micVolume * 3.2) : 0})`, transition: "transform 140ms linear" }}
-                />
-              </div>
-            </div>
-          );
-        };
-
         // One conversation pane: who is talking, the transcript, and where you answer.
         // Every turn is drawn the same way (same size, same colour per speaker). Only opacity changes as a line ages,
         // and the in-progress line keeps the same React key it will have once committed, so nothing flashes or recolours
@@ -1231,13 +1135,6 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               <div className="ob-composer px-5 py-3.5 flex flex-col gap-3 shrink-0" style={{ background: "var(--ob-bg)" }}>
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2.5">
-                    <span className="ob-lb">
-                      {stage === "self_intro"
-                        ? "Your introduction"
-                        : selectedTrack === "dsa"
-                        ? "Algorithmic discussion"
-                        : `Question ${Math.min(mainQuestionsAsked + 1, interviewTopics.length)}`}
-                    </span>
                     {isFollowUp && <span className="ob-chip ob-warn">Deep dive</span>}
                   </div>
                   {uiPhase === "candidate_turn" && !isEditingInput && (
@@ -1336,45 +1233,62 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               </div>
           );
 
-          if (composerOnly) return <div className="ob-pane shrink-0 overflow-hidden">{composer}</div>;
+          const camLive = cameraOn && hasVideoTrack;
+          const micLevel = micOn ? Math.min(1, micVolume * 3.2) : 0;
+          const iconBtn = { width: 34, height: 34 } as const;
+
+          // Alex's state on the left; your mic and camera on the right. One strip, no avatars or badges.
+          const strip = (
+            <div className="flex items-center gap-4 px-5 py-3 border-b ob-bd shrink-0">
+              <div className="min-w-0 flex-1">
+                <div className="text-[13.5px] leading-tight">Alex</div>
+                <div key={uiPhase} className="anim-fade-in ob-mo text-[11.5px] ob-tx3 truncate mt-0.5" role="status">
+                  {stateLabel}
+                </div>
+              </div>
+              {uiPhase === "thinking" && (
+                <span className="w-3.5 h-3.5 border-[1.5px] border-ob-ln2 border-t-ob-ac rounded-full animate-spin shrink-0" aria-hidden="true" />
+              )}
+              {uiPhase === "candidate_turn" && (
+                <div className="w-[84px] h-[3px] rounded-full overflow-hidden shrink-0 hidden sm:block" style={{ background: "rgb(var(--ob-ov)/0.1)" }} aria-hidden="true">
+                  <div className="h-full origin-left" style={{ background: "var(--ob-ok)", transform: `scaleX(${micLevel})`, transition: "transform 140ms linear" }} />
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button type="button" onClick={toggleMic} className={`ob-cbtn ${micOn ? "" : "ob-off"}`} style={iconBtn} aria-label={micOn ? "Mute microphone" : "Unmute microphone"} aria-pressed={!micOn}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+                    <path d={micOn ? "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3" : "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"} />
+                  </svg>
+                </button>
+                <button type="button" onClick={toggleCamera} className={`ob-cbtn ${cameraOn ? "" : "ob-off"}`} style={iconBtn} aria-label={cameraOn ? "Turn camera off" : "Turn camera on"} aria-pressed={!cameraOn}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d={cameraOn ? "M3 7h12v10H3zM15 11l6-3v8l-6-3" : "M3 7h12v10H3zM15 11l6-3v8l-6-3M4 4l16 16"} />
+                  </svg>
+                </button>
+              </div>
+              {camLive && (
+                <video ref={attachVideoNode} autoPlay playsInline muted className="w-[88px] h-[66px] rounded-[9px] object-cover scale-x-[-1] shrink-0 border border-ob-ln" />
+              )}
+            </div>
+          );
+
+          if (composerOnly) {
+            return (
+              <div className="ob-pane shrink-0 overflow-hidden">
+                {strip}
+                {composer}
+              </div>
+            );
+          }
 
           return (
             <div className="ob-pane flex-1 flex flex-col overflow-hidden min-h-[360px]">
-              {/* Who is talking */}
-              <div className="flex items-center gap-3.5 px-5 py-3.5 border-b ob-bd shrink-0">
-                <PresenceRing getLevel={getAudioLevel} active={alexIsTalking && speaking}>A</PresenceRing>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[13.5px] leading-tight">
-                    Alex <span className="ob-tx3">· interviewer</span>
-                  </div>
-                  <div key={uiPhase} className="anim-fade-in ob-mo text-[11.5px] ob-tx3 truncate mt-0.5" role="status">
-                    {stateLabel}
-                  </div>
-                </div>
-                <div className="shrink-0 flex items-center justify-end min-w-[110px]">
-                  {/* While Alex speaks, the halo around his avatar carries the level; the bars are the candidate's mic. */}
-                  {uiPhase === "candidate_turn" ? (
-                    <div className="w-[120px] h-[3px] rounded-full overflow-hidden" style={{ background: "rgb(var(--ob-ov)/0.1)" }} aria-hidden="true">
-                      <div className="h-full origin-left" style={{ background: "var(--ob-ok)", transform: `scaleX(${micOn ? Math.min(1, micVolume * 3.2) : 0})`, transition: "transform 140ms linear" }} />
-                    </div>
-                  ) : uiPhase === "thinking" ? (
-                    <span className="w-3.5 h-3.5 border-[1.5px] border-ob-ln2 border-t-ob-ac rounded-full animate-spin" aria-hidden="true" />
-                  ) : null}
-                </div>
-              </div>
+              {strip}
 
               {/* Announce each finished turn once, instead of every streamed word */}
               <div className="sr-only" aria-live="polite" role="log">
                 {lastCommitted ? `${lastCommitted.speaker === "Alex" ? "Alex" : "You"}: ${lastCommitted.text}` : ""}
               </div>
-
-              {/* The question stays visible while you answer it */}
-              {uiPhase === "candidate_turn" && lastAlexQuestion && (
-                <div className="px-5 py-3 border-b ob-bd shrink-0" style={{ background: "var(--ob-ac2)" }}>
-                  <div className="ob-lb mb-1">Alex asked</div>
-                  <p className="m-0 text-[14.5px] leading-snug ob-tx line-clamp-3">{lastAlexQuestion}</p>
-                </div>
-              )}
 
               {/* Transcript */}
               <div
@@ -1382,55 +1296,52 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   const el = e.currentTarget;
                   isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
                 }}
-                className="ob-scroll flex-1 overflow-y-auto px-5 sm:px-[22px] pt-1.5 pb-3.5"
+                className="ob-scroll flex-1 overflow-y-auto px-5 py-2"
               >
-                {rows.length === 0 && (
-                  <div className="py-10 text-center text-[13px] ob-tx3">
-                    Your conversation with Alex will appear here as you talk.
-                  </div>
-                )}
+                <div className="w-full">
+                  {rows.length === 0 && (
+                    <div className="py-10 text-center text-[13px] ob-tx3">
+                      Your conversation with Alex will appear here as you talk.
+                    </div>
+                  )}
 
-                {rows.map((turn, idx) => {
-                  const isAlex = turn.speaker === "Alex";
-                  const active = idx === activeIdx;
-                  return (
-                    <div key={idx} className="ob-tn" style={{ opacity: active ? 1 : 0.82, transition: "opacity .6s var(--ob-ease)" }}>
-                      <div className="ob-who" style={isAlex ? undefined : { color: "var(--ob-ac)" }}>
-                        <div className="inline-flex items-center gap-1.5">
+                  {rows.map((turn, idx) => {
+                    const isAlex = turn.speaker === "Alex";
+                    const active = idx === activeIdx;
+                    return (
+                      <div key={idx} className={`py-4 ${idx > 0 ? "border-t ob-bd" : ""}`} style={{ opacity: active ? 1 : 0.82, transition: "opacity .6s var(--ob-ease)" }}>
+                        <div className="ob-mo text-[11px] uppercase tracking-[0.08em] mb-1.5 flex items-center gap-2" style={{ color: isAlex ? "var(--ob-tx3)" : "var(--ob-ac)" }}>
                           {isAlex ? "Alex" : "You"}
-                          {active && isAlex && alexIsTalking && <i className="ob-rec" aria-hidden="true" style={{ width: 6, height: 6 }} />}
+                          <span className="normal-case tracking-normal ob-tx3">{turn.time}</span>
                         </div>
-                        <span>{turn.time}</span>
+                        <p
+                          className="m-0 whitespace-pre-wrap break-words"
+                          style={{
+                            fontSize: isAlex && active && isPrimary ? 18 : fontSize,
+                            lineHeight: 1.6,
+                            color: isAlex ? "var(--ob-tx)" : "var(--ob-tx2)",
+                          }}
+                        >
+                          {/* The live turn settles in word by word; earlier turns are plain text. */}
+                          {active
+                            ? turn.text.split(/(\s+)/).map((tok, i) => (/^\s*$/.test(tok) ? tok : <span key={i} className="st-word max-w-full">{tok}</span>))
+                            : turn.text}
+                          {active && isAlex && alexIsTalking && streamingNow && <span className="ob-cur" aria-hidden="true" />}
+                        </p>
                       </div>
-                      <p
-                        className="m-0 whitespace-pre-wrap break-words"
-                        style={{
-                          fontSize: isAlex && active && isPrimary ? 18 : fontSize,
-                          lineHeight: 1.6,
-                          color: isAlex ? "var(--ob-tx)" : "var(--ob-tx2)",
-                        }}
-                      >
-                        {/* The live turn settles in word by word; earlier turns are plain text. */}
-                        {active
-                          ? turn.text.split(/(\s+)/).map((tok, i) => (/^\s*$/.test(tok) ? tok : <span key={i} className="st-word max-w-full">{tok}</span>))
-                          : turn.text}
-                        {active && isAlex && alexIsTalking && streamingNow && <span className="ob-cur" aria-hidden="true" />}
+                    );
+                  })}
+
+                  {uiPhase === "thinking" && (
+                    <div className={`py-4 ${rows.length > 0 ? "border-t ob-bd" : ""}`}>
+                      <div className="ob-mo text-[11px] uppercase tracking-[0.08em] mb-1.5 ob-tx3">Alex</div>
+                      <p className="m-0 ob-tx3" style={{ fontSize, lineHeight: 1.6 }}>
+                        {thinkingStatusText}
+                        <span className="ob-cur" aria-hidden="true" style={{ marginLeft: 4 }} />
                       </p>
                     </div>
-                  );
-                })}
-
-                {uiPhase === "thinking" && (
-                  <div className="ob-tn">
-                    <div className="ob-who">
-                      Alex<span>thinking</span>
-                    </div>
-                    <p className="m-0 ob-tx3" style={{ fontSize, lineHeight: 1.6 }}>
-                      {thinkingStatusText}
-                      <span className="ob-cur" aria-hidden="true" style={{ marginLeft: 4 }} />
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div ref={transcriptBottomRef} />
               </div>
@@ -1442,27 +1353,17 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
 
         if (selectedTrack === "dsa") {
           if (!dsaProblemUnlocked) {
-            // State A: DSA track before problem is revealed
+            // Before the problem is revealed: just the conversation
             return (
-              <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 sm:p-6 gap-4">
-                <aside className="order-2 lg:order-1 w-full lg:w-[280px] shrink-0 flex flex-col gap-3.5 lg:overflow-y-auto ob-scroll">
-                  {renderFaceCamTile({ isCompact: true })}
-              </aside>
-
-                <section className="order-1 lg:order-2 flex-1 min-w-0 flex flex-col gap-3.5 lg:overflow-hidden min-h-[calc(100dvh-9rem)] lg:min-h-[480px]">
-                  <div className="flex items-center justify-between gap-3 px-1">
-                    <span className="text-[13.5px]">
-                      DSA &amp; problem solving <span className="ob-tx3">· algorithmic calibration</span>
-                    </span>
-                    <span className="ob-chip ob-warn">Problem briefing pending</span>
-                  </div>
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-4 sm:px-6 py-4 sm:py-5">
+                <section className="mx-auto w-full max-w-[880px] flex-1 min-h-0 flex flex-col">
                   {renderConversationPane({ isPrimary: true })}
                 </section>
               </div>
             );
           }
 
-          // State B: DSA track after problem is revealed
+          // Problem revealed: code workspace beside the conversation
           return (
             <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 sm:p-6 gap-4">
               <div className="w-full lg:w-[64%] flex flex-col min-h-[520px] lg:h-full overflow-hidden ob-pane">
@@ -1472,52 +1373,30 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   className="w-full h-full"
                 />
               </div>
-              <div className="w-full lg:w-[36%] flex flex-col lg:h-full overflow-hidden gap-3.5 min-h-[480px]">
-                {renderFaceCamTile({ isCompact: true })}
+              <div className="w-full lg:w-[36%] flex flex-col lg:h-full overflow-hidden min-h-[480px]">
                 {renderConversationPane({ isPrimary: false })}
               </div>
             </div>
           );
         }
 
-        // State C: non-coding tracks (System Design, Core CS, Behavioral, Resume Technical)
+        // Other tracks: the conversation, with a notes tab
         return (
-          <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 sm:p-6 gap-4">
-            {/* Left: camera, controls and the track agenda */}
-            <aside className="order-2 lg:order-1 w-full lg:w-[280px] shrink-0 flex flex-col gap-3.5 lg:overflow-y-auto ob-scroll">
-              {renderFaceCamTile({ isCompact: true })}
-              </aside>
-
-            {/* Right: dialogue + notes workspace */}
-            <section className="order-1 lg:order-2 flex-1 min-w-0 flex flex-col gap-3.5 lg:overflow-hidden min-h-[calc(100dvh-9rem)] lg:min-h-[480px]">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2" role="tablist" aria-label="Workspace">
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={workspaceTab === "briefing"}
-                    onClick={() => setWorkspaceTab("briefing")}
-                    className={`ob-chip cursor-pointer ${workspaceTab === "briefing" ? "ob-live" : ""}`}
-                    style={{ height: 30, padding: "0 14px" }}
-                  >
-                    Live dialogue
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={workspaceTab === "scratchpad"}
-                    onClick={() => setWorkspaceTab("scratchpad")}
-                    className={`ob-chip cursor-pointer ${workspaceTab === "scratchpad" ? "ob-live" : ""}`}
-                    style={{ height: 30, padding: "0 14px" }}
-                  >
-                    Notes &amp; scratchpad
-                  </button>
-                </div>
-                <span className="ob-mo text-[11.5px] ob-tx3">{trackInfo.title}</span>
-              </div>
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-4 sm:px-6 py-4 sm:py-5">
+            <section className="mx-auto w-full max-w-[880px] flex-1 min-h-0 flex flex-col gap-3.5">
+              <Segmented
+                label="Workspace"
+                quiet
+                value={workspaceTab}
+                onChange={(v) => setWorkspaceTab(v)}
+                options={[
+                  { id: "briefing", label: "Conversation" },
+                  { id: "scratchpad", label: "Notes" },
+                ]}
+              />
 
               {workspaceTab === "briefing" ? (
-                <div className="flex-1 flex flex-col gap-3.5 overflow-hidden min-h-0">
+                <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                   {renderConversationPane({ isPrimary: true })}
                 </div>
               ) : (() => {
