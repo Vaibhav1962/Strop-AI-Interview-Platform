@@ -214,17 +214,6 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
     ttsQuotaError,
   } = useElevenLabsTTS();
 
-  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-  const [customElevenKey, setCustomElevenKey] = useState(
-    () => (typeof window !== "undefined" && localStorage.getItem("iq_custom_elevenlabs_key")) || "",
-  );
-  const [customGeminiKey, setCustomGeminiKey] = useState(
-    () => localStorage.getItem("iq_custom_gemini_key") || "",
-  );
-  const [allowBrowserVoice, setAllowBrowserVoice] = useState(
-    () => localStorage.getItem("iq_allow_browser_voice") !== "false",
-  );
-
   // Dual-Engine STT (ElevenLabs + Gemini 3.5 Transcribe)
   const {
     startListening,
@@ -694,6 +683,21 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
     }
   }, [uiPhase, cancelTTS]);
 
+  // While the interview is live, warn before a refresh or tab close throws the session away.
+  useEffect(() => {
+    if (uiPhase === "splash" || uiPhase === "loading" || uiPhase === "completed") return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    (window as unknown as { __iqInterviewLive?: boolean }).__iqInterviewLive = true;
+    return () => {
+      window.removeEventListener("beforeunload", warn);
+      (window as unknown as { __iqInterviewLive?: boolean }).__iqInterviewLive = false;
+    };
+  }, [uiPhase]);
+
   // Keyboard shortcut: Ctrl+Enter / Cmd+Enter to submit answer
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -877,7 +881,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           <div className="w-full max-w-[1120px] grid gap-5 items-start grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
             {/* ── Left: camera and pre-flight ── */}
             <section className="ob-pane p-3 ob-rise" style={{ ["--i" as string]: 0 }}>
-              <div className="ob-cam" style={{ aspectRatio: "16 / 10" }}>
+              <div className="ob-cam w-full h-[280px] sm:h-auto sm:aspect-[16/10]">
                 {camOk ? (
                   <video ref={attachVideoNode} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover scale-x-[-1]" />
                 ) : (
@@ -894,12 +898,9 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                     )}
                   </div>
                 )}
-                <div className="ob-scan" aria-hidden="true" />
-                <i className="ob-cb a" /><i className="ob-cb b" /><i className="ob-cb c" /><i className="ob-cb d" />
 
                 {/* Overlays */}
                 <span className="ob-chip absolute left-3.5 top-3.5" style={{ background: "color-mix(in srgb, var(--ob-bg) 60%, transparent)", backdropFilter: "blur(6px)" }}>
-                  <span className="ob-rec" aria-hidden="true" />
                   Preview
                 </span>
                 <div
@@ -942,7 +943,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                         aria-hidden="true"
                       />
                       <span className="w-[92px] shrink-0">{c.label}</span>
-                      <span className="flex-1 min-w-0 truncate ob-tx3" style={c.state === "warn" ? { color: "var(--ob-wn)" } : undefined}>{c.detail}</span>
+                      <span className="flex-1 min-w-0 ob-tx3 leading-snug" style={c.state === "warn" ? { color: "var(--ob-wn)" } : undefined}>{c.detail}</span>
                       {c.action && (
                         <button type="button" onClick={c.action.onClick} className="ob-btn ob-sm" style={{ height: 28, padding: "0 11px" }}>
                           {c.action.label}
@@ -1003,10 +1004,15 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   </div>
                 ) : (
                   <>
-                    <button type="button" onClick={handleJoinInterview} className={`ob-btn ob-pr ob-btn-lg w-full group ${readyCount === checks.length ? "ob-ready" : ""}`} style={{ height: 56, fontSize: 15 }}>
+                    <button type="button" onClick={handleJoinInterview} disabled={serviceState === "down"} className={`ob-btn ob-pr ob-btn-lg w-full group ${readyCount === checks.length ? "ob-ready" : ""}`} style={{ height: 56, fontSize: 15 }}>
                       Join interview
                       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                     </button>
+                    {serviceState === "down" && (
+                      <p className="m-0 mt-3 px-1 text-[12.5px]" style={{ color: "var(--ob-wn)" }} role="status">
+                        The interviewer is unreachable, so you cannot join yet. Use Retry in the checklist once the server is back.
+                      </p>
+                    )}
                     <div className="flex items-center justify-between gap-3 mt-3 px-1 ob-mo text-[11px] ob-tx3">
                       <span>The clock starts when you join</span>
                       <span className="flex items-center gap-1.5">press <kbd className="px-1.5 py-0.5 rounded border border-ob-ln2 text-[11px] ob-tx2">Enter</kbd></span>
@@ -1103,7 +1109,17 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
         {/* Errors only: who is talking now lives in the conversation pane, next to the words */}
         <div className="flex items-center justify-center flex-1 min-w-[220px] min-h-[38px]">
           <div className="flex items-center gap-3 flex-wrap justify-center">
-            {uiPhase === "completed" && <span className="ob-chip ob-live">Interview complete</span>}
+            {uiPhase === "completed" ? (
+              <span className="ob-chip ob-live">Interview complete</span>
+            ) : (
+              <span className="ob-chip" aria-label="Interview progress">
+                {stage === "self_intro"
+                  ? "Introduction"
+                  : selectedTrack === "dsa"
+                  ? dsaProblemUnlocked ? "Coding discussion" : "Problem briefing"
+                  : `Question ${Math.min(mainQuestionsAsked + 1, interviewTopics.length)} of ${interviewTopics.length}`}
+              </span>
+            )}
 
             {inferenceError && (
               <span className="ob-chip ob-err" role="alert" style={{ height: "auto", minHeight: 24, whiteSpace: "normal", padding: "3px 10px" }}>
@@ -1169,7 +1185,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
       {(() => {
         const renderFaceCamTile = ({ isCompact = false }: { isCompact?: boolean } = {}) => (
           <div className="ob-pane p-2.5 shrink-0">
-            <div className="ob-cam" style={isCompact ? { height: 150 } : { aspectRatio: "4 / 3" }}>
+            <div className="ob-cam" style={isCompact ? { height: 132 } : { aspectRatio: "4 / 3" }}>
               {cameraOn && hasVideoTrack ? (
                 <video
                   ref={attachVideoNode}
@@ -1189,14 +1205,8 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   <div className="ob-mo text-[11px]">{cameraError ? "Camera unavailable" : "Camera off"}</div>
                 </div>
               )}
-              <div className="ob-scan" aria-hidden="true" />
-              <i className="ob-cb a" /><i className="ob-cb b" /><i className="ob-cb c" /><i className="ob-cb d" />
               <span className="ob-mo absolute left-3 bottom-8 text-[11px] ob-tx2 truncate max-w-[70%]" style={{ textShadow: "0 1px 6px #000" }}>
                 {userResume?.name || "You"}
-              </span>
-              <span className="ob-mo absolute right-3 top-7 text-[11px] flex items-center gap-1.5" style={{ color: "var(--ob-hot)" }}>
-                <span className="ob-rec" aria-hidden="true" />
-                LIVE
               </span>
             </div>
 
@@ -1268,6 +1278,8 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               : uiPhase === "thinking"
               ? thinkingStatusText
               : "Interview complete";
+          const lastCommitted = conversationHistory[conversationHistory.length - 1];
+          const lastAlexQuestion = [...conversationHistory].reverse().find((t) => t.speaker === "Alex")?.text ?? "";
           const wordsCaptured = candidateCurrentText.trim() ? candidateCurrentText.trim().split(/\s+/).length : 0;
 
           const composer = (
@@ -1283,6 +1295,9 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                     </span>
                     {isFollowUp && <span className="ob-chip ob-warn">Deep dive</span>}
                   </div>
+                  {uiPhase === "candidate_turn" && !isEditingInput && (
+                    <span className="ob-mo text-[11px] ob-tx3 hidden sm:inline">Ctrl + Enter to send</span>
+                  )}
                   {uiPhase === "alex_speaking" && (
                     <button type="button" onClick={handleSkipAlexSpeech} className="ob-btn ob-sm">
                       Skip to answer
@@ -1293,8 +1308,9 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                 <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                   <div className="flex-1 min-w-0 text-[13.5px]">
                     {isEditingInput ? (
-                      <input
-                        type="text"
+                      <>
+                      <textarea
+                        rows={3}
                         value={manualInput || liveTranscript}
                         onChange={(e) => setManualInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -1306,8 +1322,10 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                         placeholder="Type or refine your response here..."
                         aria-label="Your response"
                         autoFocus
-                        className="ob-input"
+                        className="ob-input resize-none leading-relaxed"
                       />
+                      <div className="ob-mo text-[11px] ob-tx3 mt-1.5">Enter to send. Shift + Enter for a new line.</div>
+                      </>
                     ) : candidateCurrentText ? (
                       <div className="flex items-center gap-2.5 ob-tx2">
                         <span className="ob-mo text-[12px]">{wordsCaptured} {wordsCaptured === 1 ? "word" : "words"} captured</span>
@@ -1398,6 +1416,19 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                 </div>
               </div>
 
+              {/* Announce each finished turn once, instead of every streamed word */}
+              <div className="sr-only" aria-live="polite" role="log">
+                {lastCommitted ? `${lastCommitted.speaker === "Alex" ? "Alex" : "You"}: ${lastCommitted.text}` : ""}
+              </div>
+
+              {/* The question stays visible while you answer it */}
+              {uiPhase === "candidate_turn" && lastAlexQuestion && (
+                <div className="px-5 py-3 border-b ob-bd shrink-0" style={{ background: "var(--ob-ac2)" }}>
+                  <div className="ob-lb mb-1">Alex asked</div>
+                  <p className="m-0 text-[14.5px] leading-snug ob-tx line-clamp-3">{lastAlexQuestion}</p>
+                </div>
+              )}
+
               {/* Transcript */}
               <div
                 onScroll={(e) => {
@@ -1405,7 +1436,6 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
                 }}
                 className="ob-scroll flex-1 overflow-y-auto px-5 sm:px-[22px] pt-1.5 pb-3.5"
-                aria-live="polite"
               >
                 {rows.length === 0 && (
                   <div className="py-10 text-center text-[13px] ob-tx3">
@@ -1417,7 +1447,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                   const isAlex = turn.speaker === "Alex";
                   const active = idx === activeIdx;
                   return (
-                    <div key={idx} className="ob-tn" style={{ opacity: active ? 1 : 0.62, transition: "opacity .6s var(--ob-ease)" }}>
+                    <div key={idx} className="ob-tn" style={{ opacity: active ? 1 : 0.82, transition: "opacity .6s var(--ob-ease)" }}>
                       <div className="ob-who" style={isAlex ? undefined : { color: "var(--ob-ac)" }}>
                         <div className="inline-flex items-center gap-1.5">
                           {isAlex ? "Alex" : "You"}
@@ -1428,7 +1458,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                       <p
                         className="m-0 whitespace-pre-wrap break-words"
                         style={{
-                          fontSize,
+                          fontSize: isAlex && active && isPrimary ? 18 : fontSize,
                           lineHeight: 1.6,
                           color: isAlex ? "var(--ob-tx)" : "var(--ob-tx2)",
                         }}
@@ -1466,8 +1496,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
         const renderSkillsPane = (fallback: string[], max: number) => (
           <div className="mt-4 pt-4 border-t ob-bd">
             <div className="flex items-center justify-between mb-2.5">
-              <span className="ob-lb">Verified tech profile</span>
-              <span className="ob-mo text-[11px]" style={{ color: "var(--ob-ok)" }}>grounded</span>
+              <span className="ob-lb">Skills from your resume</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {((userResume?.skills && userResume.skills.length > 0) ? userResume.skills : fallback)
@@ -1484,8 +1513,8 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
             // State A: DSA track before problem is revealed
             return (
               <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 sm:p-6 gap-4">
-                <aside className="w-full lg:w-[300px] shrink-0 flex flex-col gap-3.5 lg:overflow-y-auto ob-scroll">
-                  {renderFaceCamTile({ isCompact: false })}
+                <aside className="order-2 lg:order-1 w-full lg:w-[280px] shrink-0 flex flex-col gap-3.5 lg:overflow-y-auto ob-scroll">
+                  {renderFaceCamTile({ isCompact: true })}
                   <div className="ob-pane p-[18px]">
                     <div className="flex items-center justify-between gap-3">
                       <span className="ob-lb">Interview protocol</span>
@@ -1497,13 +1526,13 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                       <li className="ob-step"><span className="ob-dot">3</span>Move to code once you and Alex agree</li>
                     </ol>
                     <p className="text-[12px] ob-tx3 mt-3 mb-0">
-                      The coding workspace unlocks automatically once your approach is clear. Runs on Judge0; graded on BARS evidence.
+                      The coding workspace unlocks automatically once your approach is clear. Code runs in a sandbox, and your answers are scored against a rubric.
                     </p>
                     {renderSkillsPane(["Algorithms", "Data Structures", "Time Complexity", "Space Complexity"], 5)}
                   </div>
                 </aside>
 
-                <section className="flex-1 min-w-0 flex flex-col gap-3.5 lg:overflow-hidden min-h-[480px]">
+                <section className="order-1 lg:order-2 flex-1 min-w-0 flex flex-col gap-3.5 lg:overflow-hidden min-h-[calc(100dvh-9rem)] lg:min-h-[480px]">
                   <div className="flex items-center justify-between gap-3 px-1">
                     <span className="text-[13.5px]">
                       DSA &amp; problem solving <span className="ob-tx3">· algorithmic calibration</span>
@@ -1519,14 +1548,14 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           // State B: DSA track after problem is revealed
           return (
             <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 sm:p-6 gap-4">
-              <div className="w-full lg:w-[69%] flex flex-col min-h-[520px] lg:h-full overflow-hidden ob-pane">
+              <div className="w-full lg:w-[64%] flex flex-col min-h-[520px] lg:h-full overflow-hidden ob-pane">
                 <DsaCodingWorkspace
                   problem={dsaProblem}
                   onSolutionSubmitted={handleDsaCodeSubmitted}
                   className="w-full h-full"
                 />
               </div>
-              <div className="w-full lg:w-[31%] flex flex-col lg:h-full overflow-hidden gap-3.5 min-h-[480px]">
+              <div className="w-full lg:w-[36%] flex flex-col lg:h-full overflow-hidden gap-3.5 min-h-[480px]">
                 {renderFaceCamTile({ isCompact: true })}
                 {renderConversationPane({ isPrimary: false })}
               </div>
@@ -1538,8 +1567,8 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
         return (
           <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 sm:p-6 gap-4">
             {/* Left: camera, controls and the track agenda */}
-            <aside className="w-full lg:w-[300px] shrink-0 flex flex-col gap-3.5 lg:overflow-y-auto ob-scroll">
-              {renderFaceCamTile({ isCompact: false })}
+            <aside className="order-2 lg:order-1 w-full lg:w-[280px] shrink-0 flex flex-col gap-3.5 lg:overflow-y-auto ob-scroll">
+              {renderFaceCamTile({ isCompact: true })}
 
               <div className="ob-pane p-[18px]">
                 <div className="flex items-center justify-between gap-3">
@@ -1563,7 +1592,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
             </aside>
 
             {/* Right: dialogue + notes workspace */}
-            <section className="flex-1 min-w-0 flex flex-col gap-3.5 lg:overflow-hidden min-h-[480px]">
+            <section className="order-1 lg:order-2 flex-1 min-w-0 flex flex-col gap-3.5 lg:overflow-hidden min-h-[calc(100dvh-9rem)] lg:min-h-[480px]">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2" role="tablist" aria-label="Workspace">
                   <button
@@ -1650,115 +1679,6 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               </button>
               <button type="button" onClick={handleEndAndExitSession} className="ob-btn ob-pr flex-1">
                 End &amp; save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Voice & API Key Configuration Modal */}
-      {showApiKeyModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-ob-bg2 border border-ob-ov/10 rounded-2xl w-full max-w-md p-6 shadow-2xl shadow-black/30 relative">
-            <button
-              onClick={() => setShowApiKeyModal(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-ob-tx text-xs px-2 py-1 rounded-lg border border-ob-ov/10 hover:bg-ob-ov/5 transition-colors cursor-pointer"
-            >
-              ✕
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-sm">
-                AI
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-ob-tx">Neural Voice & API Key Settings</h3>
-                <p className="text-xs text-zinc-400">Configure your TTS voice provider</p>
-              </div>
-            </div>
-
-            {/* Quota Diagnostics Warning */}
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 mb-4 text-xs text-amber-300 flex flex-col gap-1.5">
-              <div className="font-semibold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500" />
-                Current Voice Status
-              </div>
-              <p className="text-[11px] text-amber-200/90 leading-relaxed">
-                ElevenLabs: <strong>0 credits remaining (401 Quota Exceeded)</strong>.<br />
-                Google Gemini TTS: <strong>10 requests/day limit reached (Free Tier 429)</strong>.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3.5">
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  ElevenLabs API Key (Brian HD Voice)
-                </label>
-                <input
-                  type="password"
-                  value={customElevenKey}
-                  onChange={(e) => setCustomElevenKey(e.target.value)}
-                  placeholder="sk_..."
-                  className="w-full bg-ob-bg border border-ob-ov/10 rounded-xl px-3.5 py-2 text-xs text-ob-tx placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Google Gemini API Key (Charon Voice / Billed Project)
-                </label>
-                <input
-                  type="password"
-                  value={customGeminiKey}
-                  onChange={(e) => setCustomGeminiKey(e.target.value)}
-                  placeholder="AIzaSy... or AQ..."
-                  className="w-full bg-ob-bg border border-ob-ov/10 rounded-xl px-3.5 py-2 text-xs text-ob-tx placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 font-mono"
-                />
-              </div>
-
-              {/* Emergency Browser Natural Voice Option */}
-              <div className="pt-2 border-t border-ob-ov/5 flex items-start gap-2.5">
-                <input
-                  type="checkbox"
-                  id="browser_voice_toggle"
-                  checked={allowBrowserVoice}
-                  onChange={(e) => setAllowBrowserVoice(e.target.checked)}
-                  className="mt-0.5 rounded border-ob-ov/20 text-indigo-600 focus:ring-indigo-500 bg-ob-bg cursor-pointer"
-                />
-                <label htmlFor="browser_voice_toggle" className="text-xs text-zinc-300 cursor-pointer leading-tight">
-                  <span className="font-semibold text-ob-tx">Emergency Browser Voice Fallback</span>
-                  <p className="text-[11px] text-zinc-400 mt-0.5">
-                    If cloud quotas are exhausted, speak aloud using your browser's online natural voice rather than staying silent.
-                  </p>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-ob-ov/10">
-              <button
-                onClick={() => setShowApiKeyModal(false)}
-                className="px-3.5 py-2 text-xs text-zinc-400 hover:text-ob-tx rounded-lg hover:bg-ob-ov/5 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (customElevenKey.trim()) {
-                    localStorage.setItem("iq_custom_elevenlabs_key", customElevenKey.trim());
-                  } else {
-                    localStorage.removeItem("iq_custom_elevenlabs_key");
-                  }
-                  if (customGeminiKey.trim()) {
-                    localStorage.setItem("iq_custom_gemini_key", customGeminiKey.trim());
-                  } else {
-                    localStorage.removeItem("iq_custom_gemini_key");
-                  }
-                  localStorage.setItem("iq_allow_browser_voice", allowBrowserVoice ? "true" : "false");
-                  setShowApiKeyModal(false);
-                }}
-                className="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-ob-onac rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer"
-              >
-                Save Settings
               </button>
             </div>
           </div>

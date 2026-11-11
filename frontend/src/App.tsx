@@ -1,5 +1,5 @@
 import { Suspense, lazy, useState, useEffect, useRef } from "react";
-import Navigation, { type Page, ProfileMenu } from "./components/Navigation";
+import Navigation, { type Page, ProfileMenu, pageTitle } from "./components/Navigation";
 import AppBackground from "./components/AppBackground";
 import { ToastContainer, useToast } from "./components/ui";
 import { type AuthUser, clearSession, getStoredUser, getToken } from "./lib/api";
@@ -80,7 +80,11 @@ export default function App() {
     });
   };
 
+  const pageRef = useRef(page);
+  pageRef.current = page;
+
   const navigate = (p: string) => {
+    pageRef.current = p as AnyPage;
     setPage(p as AnyPage);
     window.location.hash = p;
     window.scrollTo({ top: 0 });
@@ -97,7 +101,18 @@ export default function App() {
     };
     const handleHash = () => {
       const hash = window.location.hash.replace("#", "").replace(/^\//, "") as AnyPage;
-      if (hash) setPage(hash);
+      // Browser Back/Forward during a live interview would silently drop it: ask first.
+      const live = (window as unknown as { __iqInterviewLive?: boolean }).__iqInterviewLive;
+      if (hash && live && hash !== pageRef.current) {
+        if (!window.confirm("Leave the interview? The session in progress will be lost.")) {
+          window.location.hash = pageRef.current;
+          return;
+        }
+      }
+      if (hash) {
+        pageRef.current = hash;
+        setPage(hash);
+      }
     };
     window.addEventListener("interviewiq-navigate", handleNav);
     window.addEventListener("interviewiq-auth", handleAuth);
@@ -204,9 +219,12 @@ export default function App() {
         } pt-14 lg:pt-0`}
       >
         {/* Top bar: just the profile menu, no breadcrumb or divider */}
-        <div className="hidden sm:flex items-center justify-end gap-2.5 h-[44px] px-6 relative z-40">
+        <div className="hidden sm:flex items-center justify-between gap-2.5 h-[44px] px-6 relative z-40">
+          <span className="text-[13px] ob-tx3" aria-hidden="true">{pageTitle(page)}</span>
+          <span className="flex items-center gap-2.5">
           <ThemeToggle />
           <ProfileMenu user={user} onLogout={handleLogout} />
+          </span>
         </div>
 
         <main className="flex-1 min-w-0">
@@ -223,7 +241,6 @@ export default function App() {
             <span className="inline-block w-[7px] h-[7px] rounded-full bg-ob-ok" aria-hidden="true" />
             signed in as {user.email}
           </span>
-          <span>5 interview tracks</span>
         </div>
       </div>
       <ToastContainer toasts={toasts} onRemove={remove} />
