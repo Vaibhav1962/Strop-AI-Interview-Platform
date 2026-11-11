@@ -28,7 +28,6 @@ import {
   type DsaProblem,
 } from "../lib/dsaProblemBank";
 import LiquidMicWave from "../components/LiquidMicWave";
-import AudioVisualizer from "../components/AudioVisualizer";
 import PresenceRing from "../components/PresenceRing";
 import DsaCodingWorkspace from "../components/DsaCodingWorkspace";
 
@@ -1049,7 +1048,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-[13.5px]">
               <span>Alex</span>
-              <span className="ob-chip">Staff interviewer</span>
+              <span className="ob-chip hidden sm:inline-flex">Staff interviewer</span>
             </div>
             <div className="ob-mo text-[11px] ob-tx3 truncate">
               {trackInfo.title} · {userResume.name}
@@ -1134,67 +1133,63 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
 
       {/* Workspace Sub-renders for Modular, Persistent Layout */}
       {(() => {
-        const renderFaceCamTile = ({ isCompact = false }: { isCompact?: boolean } = {}) => (
-          <div className="ob-pane p-2.5 shrink-0">
-            <div className="ob-cam" style={isCompact ? { height: 132 } : { aspectRatio: "4 / 3" }}>
-              {cameraOn && hasVideoTrack ? (
-                <video
-                  ref={attachVideoNode}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
-                />
+        const renderFaceCamTile = ({ isCompact = false }: { isCompact?: boolean } = {}) => {
+          const camLive = cameraOn && hasVideoTrack;
+          return (
+            <div
+              className={`${camLive ? "ob-cam" : "relative overflow-hidden grid place-items-center border border-ob-ln bg-ob-bg2"} shrink-0 w-full`}
+              style={{ borderRadius: 14, ...(isCompact ? { height: 168 } : { aspectRatio: "4 / 3" }) }}
+            >
+              {camLive ? (
+                <video ref={attachVideoNode} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover scale-x-[-1]" />
               ) : (
-                <div className="text-center ob-tx3">
-                  <span
-                    className="w-11 h-11 rounded-full border grid place-items-center mx-auto mb-1.5 text-sm font-semibold ob-tx"
-                    style={{ borderColor: "var(--ob-ln2)", background: "var(--ob-bg3)" }}
-                  >
-                    {(userResume?.name || "Candidate").charAt(0).toUpperCase()}
-                  </span>
-                  <div className="ob-mo text-[11px]">{cameraError ? "Camera unavailable" : "Camera off"}</div>
-                </div>
+                <span
+                  className="w-12 h-12 -mt-6 rounded-full border grid place-items-center text-base font-medium ob-tx"
+                  style={{ borderColor: "var(--ob-ln2)", background: "var(--ob-bg3)" }}
+                  aria-hidden="true"
+                >
+                  {(userResume?.name || "Candidate").charAt(0).toUpperCase()}
+                </span>
               )}
-              <span className="ob-mo absolute left-3 bottom-8 text-[11px] ob-tx2 truncate max-w-[70%]" style={{ textShadow: "0 1px 6px #000" }}>
-                {userResume?.name || "You"}
-              </span>
-            </div>
 
-            <div className="flex items-center justify-center gap-3.5 pt-4 pb-2">
-              <button
-                type="button"
-                onClick={toggleMic}
-                className={`ob-cbtn ${micOn ? "" : "ob-off"}`}
-                aria-label={micOn ? "Mute microphone" : "Unmute microphone"}
-                aria-pressed={!micOn}
-              >
-                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
-                  <path d={micOn
-                    ? "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"
-                    : "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"} />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={toggleCamera}
-                className={`ob-cbtn ${cameraOn ? "" : "ob-off"}`}
-                aria-label={cameraOn ? "Turn camera off" : "Turn camera on"}
-                aria-pressed={!cameraOn}
-              >
-                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d={cameraOn ? "M3 7h12v10H3zM15 11l6-3v8l-6-3" : "M3 7h12v10H3zM15 11l6-3v8l-6-3M4 4l16 16"} />
-                </svg>
-              </button>
+              {/* Controls sit inside the tile, like a video call, so there is no second box under it */}
+              <div className="absolute left-0 right-0 bottom-3.5 flex items-center justify-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  className={`ob-cbtn ${micOn ? "" : "ob-off"}`}
+                  aria-label={micOn ? "Mute microphone" : "Unmute microphone"}
+                  aria-pressed={!micOn}
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+                    <path d={micOn
+                      ? "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"
+                      : "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"} />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleCamera}
+                  className={`ob-cbtn ${cameraOn ? "" : "ob-off"}`}
+                  aria-label={cameraOn ? "Turn camera off" : "Turn camera on"}
+                  aria-pressed={!cameraOn}
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d={cameraOn ? "M3 7h12v10H3zM15 11l6-3v8l-6-3" : "M3 7h12v10H3zM15 11l6-3v8l-6-3M4 4l16 16"} />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Mic level: one hairline that fills with your voice */}
+              <div className="absolute left-0 right-0 bottom-0 h-[3px]" style={{ background: "rgb(var(--ob-ov)/0.1)" }} aria-hidden="true">
+                <div
+                  className="h-full origin-left"
+                  style={{ background: "var(--ob-ok)", transform: `scaleX(${micOn ? Math.min(1, micVolume * 3.2) : 0})`, transition: "transform 140ms linear" }}
+                />
+              </div>
             </div>
-            <div className="ob-mo flex items-center justify-between px-2 pb-1.5 text-[11px] ob-tx3">
-              <span>{micOn ? "Microphone on" : "Microphone muted"}</span>
-              <span className={`ob-lv ${micOn && micVolume > 0.03 ? "" : "ob-mute"}`} aria-hidden="true">
-                <i /><i /><i /><i /><i />
-              </span>
-            </div>
-          </div>
-        );
+          );
+        };
 
         // One conversation pane: who is talking, the transcript, and where you answer.
         // Every turn is drawn the same way (same size, same colour per speaker). Only opacity changes as a line ages,
@@ -1257,7 +1252,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                  <div className="flex-1 min-w-0 text-[13.5px]">
+                  <div className="flex-1 min-w-0 basis-full sm:basis-0 text-[13.5px]">
                     {isEditingInput ? (
                       <>
                       <textarea
@@ -1360,7 +1355,9 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
                 <div className="shrink-0 flex items-center justify-end min-w-[110px]">
                   {/* While Alex speaks, the halo around his avatar carries the level; the bars are the candidate's mic. */}
                   {uiPhase === "candidate_turn" ? (
-                    <AudioVisualizer level={micVolume} getLevel={getLiveMicLevel} active={micOn && micVolume > 0.03} source="candidate" bars={20} height={30} />
+                    <div className="w-[120px] h-[3px] rounded-full overflow-hidden" style={{ background: "rgb(var(--ob-ov)/0.1)" }} aria-hidden="true">
+                      <div className="h-full origin-left" style={{ background: "var(--ob-ok)", transform: `scaleX(${micOn ? Math.min(1, micVolume * 3.2) : 0})`, transition: "transform 140ms linear" }} />
+                    </div>
                   ) : uiPhase === "thinking" ? (
                     <span className="w-3.5 h-3.5 border-[1.5px] border-ob-ln2 border-t-ob-ac rounded-full animate-spin" aria-hidden="true" />
                   ) : null}
@@ -1444,21 +1441,6 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           );
         };
 
-        const renderSkillsPane = (fallback: string[], max: number) => (
-          <div className="mt-4 pt-4 border-t ob-bd">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="ob-lb">Skills from your resume</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {((userResume?.skills && userResume.skills.length > 0) ? userResume.skills : fallback)
-                .slice(0, max)
-                .map((sk) => (
-                  <span key={sk} className="ob-chip">{sk}</span>
-                ))}
-            </div>
-          </div>
-        );
-
         if (selectedTrack === "dsa") {
           if (!dsaProblemUnlocked) {
             // State A: DSA track before problem is revealed
@@ -1466,22 +1448,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 sm:p-6 gap-4">
                 <aside className="order-2 lg:order-1 w-full lg:w-[280px] shrink-0 flex flex-col gap-3.5 lg:overflow-y-auto ob-scroll">
                   {renderFaceCamTile({ isCompact: true })}
-                  <div className="ob-pane p-[18px]">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="ob-lb">Interview protocol</span>
-                      <span className="ob-mo text-[11px] ob-txa text-right">{trackInfo.badge}</span>
-                    </div>
-                    <ol className="list-none m-0 mt-3 p-0 flex flex-col gap-1.5 text-[13px] ob-tx2">
-                      <li className="ob-step ob-now"><span className="ob-dot">1</span>Walk Alex through your background and approach</li>
-                      <li className="ob-step"><span className="ob-dot">2</span>Discuss constraints, edge cases and complexity</li>
-                      <li className="ob-step"><span className="ob-dot">3</span>Move to code once you and Alex agree</li>
-                    </ol>
-                    <p className="text-[12px] ob-tx3 mt-3 mb-0">
-                      The coding workspace unlocks automatically once your approach is clear. Code runs in a sandbox, and your answers are scored against a rubric.
-                    </p>
-                    {renderSkillsPane(["Algorithms", "Data Structures", "Time Complexity", "Space Complexity"], 5)}
-                  </div>
-                </aside>
+              </aside>
 
                 <section className="order-1 lg:order-2 flex-1 min-w-0 flex flex-col gap-3.5 lg:overflow-hidden min-h-[calc(100dvh-9rem)] lg:min-h-[480px]">
                   <div className="flex items-center justify-between gap-3 px-1">
@@ -1520,27 +1487,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
             {/* Left: camera, controls and the track agenda */}
             <aside className="order-2 lg:order-1 w-full lg:w-[280px] shrink-0 flex flex-col gap-3.5 lg:overflow-y-auto ob-scroll">
               {renderFaceCamTile({ isCompact: true })}
-
-              <div className="ob-pane p-[18px]">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="ob-lb">Track milestones</span>
-                  <span className="ob-mo text-[11px] ob-txa text-right">{trackInfo.badge}</span>
-                </div>
-                <ol className="list-none m-0 mt-3 p-0 flex flex-col gap-1">
-                  {getTrackAgenda(selectedTrack).map((topic, tidx) => {
-                    const isCurrent = tidx === mainQuestionsAsked;
-                    const isDone = tidx < mainQuestionsAsked;
-                    return (
-                      <li key={tidx} className={`ob-step ${isCurrent ? "ob-now" : isDone ? "ob-done" : ""}`} aria-current={isCurrent ? "step" : undefined}>
-                        <span className="ob-dot">{isDone ? "✓" : tidx + 1}</span>
-                        <span className="truncate flex-1">{topic}</span>
-                      </li>
-                    );
-                  })}
-                </ol>
-                {renderSkillsPane(["Algorithms", "Distributed Systems", "Database Design", "System Reliability"], 6)}
-              </div>
-            </aside>
+              </aside>
 
             {/* Right: dialogue + notes workspace */}
             <section className="order-1 lg:order-2 flex-1 min-w-0 flex flex-col gap-3.5 lg:overflow-hidden min-h-[calc(100dvh-9rem)] lg:min-h-[480px]">

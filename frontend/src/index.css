@@ -908,6 +908,9 @@ input[type="range"]::-moz-range-thumb {
   font: 11px 'JetBrains Mono', monospace; color: var(--ob-tx2); white-space: nowrap;
   background: transparent; transition: color 0.3s var(--ob-ease), border-color 0.3s var(--ob-ease), background-color 0.3s var(--ob-ease);
 }
+.ob-chip.hidden { display: none; }
+@media (min-width: 640px) { .ob-chip.sm\:inline-flex { display: inline-flex; } }
+@media (min-width: 768px) { .ob-chip.md\:inline-flex { display: inline-flex; } }
 .ob-chip.ob-live { color: var(--ob-ac); border-color: var(--ob-ac3); background: var(--ob-ac2); }
 .ob-chip.ob-warn { color: var(--ob-wn); border-color: color-mix(in srgb, var(--ob-wn) 35%, transparent); background: color-mix(in srgb, var(--ob-wn) 7%, transparent); }
 .ob-chip.ob-err { color: var(--ob-er); border-color: color-mix(in srgb, var(--ob-er) 35%, transparent); background: color-mix(in srgb, var(--ob-er) 7%, transparent); }
@@ -937,12 +940,12 @@ input[type="range"]::-moz-range-thumb {
 .ob-cb.c { left: 10px; bottom: 10px; border-right: 0; border-top: 0; }
 .ob-cb.d { right: 10px; bottom: 10px; border-left: 0; border-top: 0; }
 .ob-cbtn {
-  width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--ob-ln2);
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--ob-ln2);
   background: var(--ob-bg3); color: var(--ob-tx); display: grid; place-items: center;
   cursor: pointer; transition: transform 0.35s var(--ob-ease), border-color 0.35s var(--ob-ease), background-color 0.35s var(--ob-ease), color 0.35s var(--ob-ease);
 }
 .ob-cbtn:hover { transform: translateY(-2px); border-color: var(--ob-ln3); }
-.ob-cbtn.ob-off { background: var(--ob-hot); border-color: var(--ob-hot); color: var(--ob-onac); }
+.ob-cbtn.ob-off { background: color-mix(in srgb, var(--ob-hot) 12%, var(--ob-bg3)); border-color: color-mix(in srgb, var(--ob-hot) 55%, transparent); color: var(--ob-hot); }
 .ob-lv { display: inline-flex; align-items: flex-end; gap: 2px; height: 16px; }
 .ob-lv i {
   width: 2px; height: 100%; background: var(--ob-ok); border-radius: 1px;
