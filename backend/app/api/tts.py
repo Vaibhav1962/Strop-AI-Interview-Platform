@@ -221,6 +221,12 @@ def _groq_blocked_by_terms() -> bool:
     return bool(keys) and all(_cooling_down(k) and _cooldown_kind.get(k) == "terms" for k, _ in keys)
 
 
+def _failure_headers() -> dict[str, str]:
+    """Tells the page why Groq could not speak and when asking again can help."""
+    reason = "terms" if _groq_blocked_by_terms() else "busy"
+    return {"Retry-After": str(_retry_after_seconds()), "X-TTS-Reason": reason}
+
+
 def _retry_after_seconds() -> int:
     wait = _groq_all_cooling_wait()
     return max(1, min(60, math.ceil(wait))) if wait > 0 else 3
@@ -380,7 +386,7 @@ async def text_to_speech(
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Configured interviewer voice (Groq Orpheus) is temporarily unavailable.",
-                headers={"Retry-After": str(_retry_after_seconds())},
+                headers=_failure_headers(),
             )
 
         if engine == "elevenlabs":
@@ -449,10 +455,10 @@ async def text_to_speech(
             detail="Gemini speech synthesis is unavailable.",
         )
 
-    # Groq Orpheus is the interviewer's voice whenever an account is configured. A momentary failure (rate limit,
-    # network) is reported as "try again" rather than answered by a different engine, which would change the voice.
-    # Only a setup problem on every account (terms not accepted) falls through to the other engines below.
-    if groq_keys() and target_engine in (None, "groq") and not _groq_blocked_by_terms():
+    # Groq Orpheus is the interviewer's voice whenever an account is configured. Any failure (rate limit, network,
+    # terms not accepted) is reported as "unavailable" rather than answered by a different engine, which would change
+    # the voice mid-interview. The ElevenLabs / Gemini engines below only serve setups with no Groq account at all.
+    if groq_keys() and target_engine in (None, "groq"):
         audio = await _synthesize_groq_any(clean_text, GROQ_TTS_VOICE)
         if audio:
             if session_id:
@@ -464,8 +470,8 @@ async def text_to_speech(
             )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Interviewer voice is temporarily unavailable (rate limited). Try again shortly.",
-            headers={"Retry-After": str(_retry_after_seconds())},
+            detail="Interviewer voice is temporarily unavailable. Try again shortly.",
+            headers=_failure_headers(),
         )
 
     # ElevenLabs preference: Try ElevenLabs next

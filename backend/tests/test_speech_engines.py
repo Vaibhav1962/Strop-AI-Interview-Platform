@@ -316,3 +316,27 @@ async def test_a_short_rate_limit_is_waited_out_instead_of_failing_the_sentence(
 
 async def test_markdown_and_emoji_are_not_sent_to_the_voice():
     assert tts_mod._prepare_speech_text("**Great** answer \U0001F600 — use `HashMap`.") == "Great answer , use HashMap ."
+
+
+async def test_terms_not_accepted_says_so_and_does_not_fall_back_to_another_voice(monkeypatch):
+    dep = authed_tts(monkeypatch)
+    try:
+        hosts = []
+
+        async def handler(url, kwargs):
+            hosts.append(url.split("/")[2])
+            if "groq.com" in url:
+                return FakeResponse(400, text="The model requires terms acceptance.")
+            return FakeResponse(200, content=b"x" * 500)
+
+        monkeypatch.setattr(tts_mod, "shared_client", lambda: FakeClient(handler))
+        resp = await post_tts()
+        assert resp.status_code == 503
+        assert resp.headers["x-tts-reason"] == "terms"
+        assert set(hosts) == {"api.groq.com"}
+        # asked again while still blocked: answered at once, without another request to Groq
+        before = len(hosts)
+        assert (await post_tts()).status_code == 503
+        assert len(hosts) == before
+    finally:
+        app.dependency_overrides.pop(dep, None)

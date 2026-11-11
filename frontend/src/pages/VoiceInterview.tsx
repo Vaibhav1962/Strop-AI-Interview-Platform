@@ -1129,7 +1129,6 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               : "Interview complete";
           const lastCommitted = conversationHistory[conversationHistory.length - 1];
           const lastAlexQuestion = [...conversationHistory].reverse().find((t) => t.speaker === "Alex")?.text ?? "";
-          const voiceNote = ttsQuotaError && uiPhase !== "completed" ? " · voice unavailable, text only" : "";
           const wordsCaptured = candidateCurrentText.trim() ? candidateCurrentText.trim().split(/\s+/).length : 0;
 
           const composer = (
@@ -1244,7 +1243,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
               <div className="min-w-0 flex-1">
                 <div className="text-[13.5px] leading-tight">Alex</div>
                 <div key={uiPhase} className="anim-fade-in ob-mo text-[11.5px] ob-tx3 truncate mt-0.5" role="status">
-                  {stateLabel}{voiceNote}
+                  {stateLabel}
                 </div>
               </div>
               {uiPhase === "thinking" && (
@@ -1285,6 +1284,19 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           return (
             <div className="ob-pane flex-1 flex flex-col overflow-hidden min-h-[360px]">
               {strip}
+
+              {ttsQuotaError && uiPhase !== "completed" && (
+                <div
+                  className="flex items-center gap-2.5 px-5 py-2.5 border-b ob-bd text-[12.5px] shrink-0 anim-fade-in"
+                  style={{ color: "var(--ob-wn)", background: "color-mix(in srgb, var(--ob-wn) 7%, transparent)" }}
+                  role="status"
+                >
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                    <path d="M11 5L6 9H2v6h4l5 4V5zM22 9l-6 6M16 9l6 6" />
+                  </svg>
+                  <span>{ttsQuotaError} It will come back on its own when the service recovers.</span>
+                </div>
+              )}
 
               {/* Announce each finished turn once, instead of every streamed word */}
               <div className="sr-only" aria-live="polite" role="log">

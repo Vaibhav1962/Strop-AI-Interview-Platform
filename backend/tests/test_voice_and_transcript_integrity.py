@@ -36,6 +36,13 @@ from app.api.tts import (
 from app.models.user import User
 
 
+@pytest.fixture(autouse=True)
+def no_groq_account(monkeypatch):
+    """These scenarios cover the ElevenLabs / Gemini engines, which only serve when no Groq account is configured.
+    Without this the tests would call the real Groq API with whatever keys the local .env holds."""
+    monkeypatch.setattr("app.api.tts.groq_keys", lambda: [])
+
+
 @pytest.mark.asyncio
 async def test_scenario_1_same_voice_across_consecutive_turns(test_user: User):
     """Scenario 1: Verifies the interviewer retains the exact same voice persona across consecutive turns."""

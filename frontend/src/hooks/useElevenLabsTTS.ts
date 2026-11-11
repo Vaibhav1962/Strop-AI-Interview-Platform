@@ -11,40 +11,6 @@ export async function calibrateEngines(): Promise<{
   return { ttsEngine: "elevenlabs", sttEngine: "elevenlabs" };
 }
 
-function speakWithBrowserNaturalVoice(text: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) {
-      resolve(false);
-      return;
-    }
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices();
-      const bestVoice =
-        voices.find(
-          (v) =>
-            v.lang.startsWith("en") &&
-            (v.name.includes("Natural") || v.name.includes("Online")),
-        ) ||
-        voices.find((v) => v.lang === "en-US" && v.name.includes("Google")) ||
-        voices.find((v) => v.lang.startsWith("en-US")) ||
-        voices[0];
-
-      if (bestVoice) utterance.voice = bestVoice;
-      utterance.rate = 1.0;
-      utterance.pitch = 0.95;
-
-      utterance.onend = () => resolve(true);
-      utterance.onerror = () => resolve(false);
-
-      window.speechSynthesis.speak(utterance);
-    } catch {
-      resolve(false);
-    }
-  });
-}
-
 /**
  * Fetches neural TTS audio buffer from the authenticated backend proxy.
  * Transmits session_id to guarantee deterministic session-scoped interviewer voice locking.
@@ -52,7 +18,10 @@ function speakWithBrowserNaturalVoice(text: string): Promise<boolean> {
 async function fetchAudioBufferFromBackend(
   text: string,
   sessionId?: string,
-): Promise<{ buffer: ArrayBuffer; engine: "groq" | "elevenlabs" | "gemini"; voice: string } | null> {
+): Promise<
+  | { ok: true; buffer: ArrayBuffer; engine: "groq" | "elevenlabs" | "gemini"; voice: string }
+  | { ok: false; setupProblem: boolean }
+> {
   const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -65,6 +34,7 @@ async function fetchAudioBufferFromBackend(
   // accounts and tells us how long a rate limit lasts) instead of being handed to a different voice. The queue plays
   // sentences in order, so this wait is the cost of consistency; it is capped so a dead service cannot hang the page.
   const BUDGET_MS = 30000;
+  let setupProblem = false;
   const overallStart = Date.now();
   for (let attempt = 0; attempt < 4; attempt++) {
     let waitMs = 700;
@@ -91,11 +61,17 @@ async function fetchAudioBufferFromBackend(
           engineHeader === "gemini" ? "gemini" : engineHeader === "groq" ? "groq" : "elevenlabs";
         const buffer = await res.arrayBuffer();
         if (buffer.byteLength > 100) {
-          return { buffer, engine, voice: voiceHeader };
+          return { ok: true, buffer, engine, voice: voiceHeader };
         }
       } else {
         console.warn(`[NeuralTTS] Backend TTS returned status ${res.status}`);
         // 429 / 503 carry Retry-After: the voice is rate limited for that many seconds. Wait it out (briefly).
+        // "terms": the Groq voice model was never enabled for the account. Retrying cannot fix that.
+        if (res.headers.get("X-TTS-Reason") === "terms") {
+          setupProblem = true;
+          console.warn("[NeuralTTS] Groq Orpheus terms are not accepted on any configured account (console.groq.com).");
+          break;
+        }
         const retryAfter = Number(res.headers.get("Retry-After"));
         if (Number.isFinite(retryAfter) && retryAfter > 0) waitMs = Math.min(8000, Math.max(800, retryAfter * 1000));
         retryable = res.status === 429 || res.status >= 500;
@@ -106,7 +82,7 @@ async function fetchAudioBufferFromBackend(
     if (!retryable || Date.now() - overallStart + waitMs > BUDGET_MS) break;
     await new Promise((r) => setTimeout(r, waitMs));
   }
-  return null;
+  return { ok: false, setupProblem };
 }
 
 /** Splits a reply into speakable chunks (whole sentences, short ones merged) so each audio request stays small. */
@@ -168,12 +144,9 @@ export function useElevenLabsTTS() {
 
   const queueRef = useRef<QueuedSentenceItem[]>([]);
   const isDrainingRef = useRef(false);
-  // After a cloud voice failure, the next few seconds of speech use the browser voice directly, so a reply is not
-  // spoken half in one voice and half skipped.
-  const browserVoiceUntilRef = useRef(0);
-  // Consecutive replies where the cloud voice failed. Each failure costs the candidate a wait, so the browser voice is
-  // used for longer every time (20s, 60s, 3 min, 5 min) until a cloud voice works again.
-  const cloudFailStreakRef = useRef(0);
+  // When the voice service is down, stop asking for a while: every sentence would otherwise wait out its retries and
+  // the interview would crawl. Replies keep appearing as text, and the voice is tried again once this passes.
+  const voiceDownUntilRef = useRef(0);
   const drainResolverRef = useRef<(() => void) | null>(null);
 
   const getCtx = useCallback(() => {
@@ -264,16 +237,20 @@ export function useElevenLabsTTS() {
     const existing = audioCacheRef.current.get(cacheKey);
     if (existing) return existing;
 
+    if (Date.now() < voiceDownUntilRef.current) return Promise.resolve(null);
+
     const p = (async (): Promise<ArrayBuffer | null> => {
       const result = await fetchAudioBufferFromBackend(clean, voiceSession);
-      if (result) {
+      if (result.ok) {
+        voiceDownUntilRef.current = 0;
         setActiveEngine(result.engine);
         setActiveVoice(result.voice);
         setTtsQuotaError(null);
         return result.buffer;
       }
 
-      setTtsQuotaError("Speech synthesis service is temporarily unavailable.");
+      voiceDownUntilRef.current = Date.now() + (result.setupProblem ? 120000 : 40000);
+      setTtsQuotaError("Voice is not working right now, so Alex's replies appear as text only.");
       audioCacheRef.current.delete(cacheKey);
       return null;
     })();
@@ -387,33 +364,15 @@ export function useElevenLabsTTS() {
       }
 
       try {
-        // The browser voice is a different, robotic voice, so it only speaks when someone has switched it on.
-        const allowBrowser = typeof window !== "undefined" && localStorage.getItem("iq_allow_browser_voice") === "true";
-        const useBrowserNow = allowBrowser && Date.now() < browserVoiceUntilRef.current;
-        const rawBuffer = useBrowserNow ? null : await item.bufferPromise;
+        const rawBuffer = await item.bufferPromise;
         if (cancelTokenRef.current !== currentToken) break;
         if (item.turnId !== undefined && activeTurnIdRef.current !== null && item.turnId !== activeTurnIdRef.current) {
           break;
         }
 
-        if (rawBuffer) {
-          cloudFailStreakRef.current = 0;
-          await playBuffer(rawBuffer, currentToken, item.turnId);
-        } else {
-          // Cloud TTS failed for this sentence. Dropping it would leave Alex's reply with missing lines, so the
-          // browser voice speaks it (and the next stretch of speech) unless it has been switched off.
-          if (allowBrowser) {
-            if (!useBrowserNow) {
-              const streak = ++cloudFailStreakRef.current;
-              browserVoiceUntilRef.current = Date.now() + Math.min(300000, 20000 * 3 ** (streak - 1));
-            }
-            setSpeaking(true);
-            await speakWithBrowserNaturalVoice(item.text);
-            setSpeaking(false);
-          } else {
-            console.log("[NeuralTTS] Cloud TTS buffer unavailable and the browser voice is off; omitting this line.");
-          }
-        }
+        // No voice for this line: it stays in the transcript, and the page shows that the voice is unavailable.
+        // Never substitute another voice, so the interviewer always sounds like one person.
+        if (rawBuffer) await playBuffer(rawBuffer, currentToken, item.turnId);
       } catch (e) {
         console.warn("[NeuralTTS] Error playing queued item:", e);
       }
@@ -441,13 +400,7 @@ export function useElevenLabsTTS() {
         return;
       }
 
-      // While the browser voice is covering for a failing cloud voice, do not send a request that is known to be
-      // going to fail (each one used to also keep the server busy trying every provider).
-      const browserCovering =
-        typeof window !== "undefined" &&
-        localStorage.getItem("iq_allow_browser_voice") === "true" &&
-        Date.now() < browserVoiceUntilRef.current;
-      const p = browserCovering ? Promise.resolve<ArrayBuffer | null>(null) : getAudioBuffer(clean, sessionId);
+      const p = getAudioBuffer(clean, sessionId);
       queueRef.current.push({
         id: Date.now() + Math.random(),
         text: clean,
