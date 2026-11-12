@@ -3,7 +3,21 @@ import { createTheme } from "@uiw/codemirror-themes";
 
 // Matches Strop's "Smooth Tech" palette used across the rest of the
 // app (Landing.tsx, Badge variants, etc.) rather than a generic editor theme.
+// createTheme() mounts a new set of CSS rules every time it is called, and the old ones are never removed. Building a theme
+// per theme toggle therefore made the stylesheet grow with every switch, so each distinct (size, light/dark) pair is built once.
+const themeCache = new Map<string, ReturnType<typeof createTheme>>();
+
 export function buildEditorTheme(fontSize: number, isLight = false) {
+  const key = `${fontSize}:${isLight ? "light" : "dark"}`;
+  let theme = themeCache.get(key);
+  if (!theme) {
+    theme = createEditorTheme(fontSize, isLight);
+    themeCache.set(key, theme);
+  }
+  return theme;
+}
+
+function createEditorTheme(fontSize: number, isLight: boolean) {
   if (isLight) {
     return createTheme({
       theme: "light",

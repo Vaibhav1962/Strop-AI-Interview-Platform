@@ -45,7 +45,7 @@ function subscribe(cb: () => void) {
  * A liquid front: a circle whose edge is gently displaced by two slow, wide sine swells, so it
  * reads as a surface of water rolling outward rather than a jagged shape.
  */
-function waveFrame(cx: number, cy: number, r: number, amp: number, phase: number, points = 56): string {
+function waveFrame(cx: number, cy: number, r: number, amp: number, phase: number, points = 96): string {
   const pts: string[] = [];
   for (let i = 0; i < points; i++) {
     const a = (i / points) * Math.PI * 2;
@@ -55,6 +55,9 @@ function waveFrame(cx: number, cy: number, r: number, amp: number, phase: number
   }
   return `polygon(${pts.join(",")})`;
 }
+
+// Read once: calling matchMedia() on every toggle created a new MediaQueryList each time.
+const reduceMotion = typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 
 type VTDocument = Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void>; finished: Promise<void> } };
 
@@ -83,7 +86,7 @@ export function setTheme(next: Theme, origin?: { x: number; y: number }): void {
   if (next === target) return;
   target = next;
   const doc = document as VTDocument;
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduce = reduceMotion?.matches ?? false;
   if (!origin || reduce || typeof doc.startViewTransition !== "function") {
     beginSwitch();
     applyTheme(next);
@@ -102,7 +105,7 @@ export function setTheme(next: Theme, origin?: { x: number; y: number }): void {
   transition.finished.then(endSwitch, endSwitch);
   transition.ready
     .then(() => {
-      const steps = 40;
+      const steps = 60;
       const frames: Keyframe[] = [];
       for (let i = 0; i <= steps; i++) {
         const t = i / steps;
@@ -113,12 +116,14 @@ export function setTheme(next: Theme, origin?: { x: number; y: number }): void {
         const swell = 0.25 + 0.75 * Math.pow(Math.sin(t * Math.PI), 0.8);
         frames.push({ clipPath: waveFrame(x, y, eased * endR, amp * swell, t * Math.PI * 2.4), offset: t });
       }
-      doc.documentElement.animate(frames, {
+      const reveal = doc.documentElement.animate(frames, {
         duration: 1100,
         easing: "linear",
         fill: "forwards",
         pseudoElement: "::view-transition-new(root)",
       });
+      // `forwards` keeps the finished animation attached to <html>; clear it once the transition is over so toggles do not pile up.
+      transition.finished.then(() => reveal.cancel(), () => reveal.cancel());
     })
     .catch(() => {});
 }
