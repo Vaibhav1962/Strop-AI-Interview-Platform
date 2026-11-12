@@ -19,6 +19,7 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
   const [interviewTopics, setInterviewTopics] = useState<string[]>(() => currentResume?.interviewTopics || []);
   const [activeTab, setActiveTab] = useState<"overview" | "projects" | "roadmap">("overview");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewInputRef = useRef<HTMLInputElement>(null);
 
   // Restore persistent PDF preview and parsed profile from storage on mount
   useEffect(() => {
@@ -38,6 +39,12 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
     });
 
     const handleSync = () => {
+      getStoredPdf().then((stored) => {
+        if (stored?.blob && !activeUrl) {
+          activeUrl = URL.createObjectURL(stored.blob);
+          setPdfPreviewUrl(activeUrl);
+        }
+      });
       const savedResume = getUserResume();
       setCurrentResume(savedResume);
       setPastStruggles(savedResume?.pastStruggles || []);
@@ -58,6 +65,12 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
     setAnalysisNote(`Analyzing resume ${file.name}...`);
 
     await saveStoredPdf(file);
+    // Ask the browser not to evict the saved PDF when storage runs low (best effort, ignored where unsupported).
+    try {
+      await navigator.storage?.persist?.();
+    } catch {
+      /* optional */
+    }
 
     try {
       // 1. Instantaneous RAG indexing (< 100ms)
@@ -107,6 +120,22 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
       console.warn("[Resume] Analyzing resume error:", err);
       setAnalyzing(false);
     }
+  };
+
+  // The parsed resume is saved with the account, but the PDF file itself only lives in the browser that uploaded it.
+  // On another browser or device there is nothing to preview, so the user can add the file back here without
+  // re-analysing anything.
+  const handleRestorePreview = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.type && file.type !== "application/pdf") {
+      setAnalysisNote("Please choose a PDF file.");
+      return;
+    }
+    await saveStoredPdf(file);
+    setPdfPreviewUrl((old) => {
+      if (old) URL.revokeObjectURL(old);
+      return URL.createObjectURL(file);
+    });
   };
 
   const handleClearResume = async () => {
@@ -312,8 +341,29 @@ export default function Resume({ onNavigate }: { onNavigate: (p: string) => void
             </div>
             )}
             {!pdfPreviewUrl && currentResume && (
-              <div className="flex justify-end">
-                <button type="button" className="ob-btn ob-dg ob-sm" onClick={handleClearResume}>Remove</button>
+              <div className="rounded-xl border border-ob-ln bg-ob-card overflow-hidden">
+                <div className="flex items-center justify-between px-4 h-11 border-b border-ob-ln">
+                  <span className="ob-lb">Document</span>
+                  <button type="button" onClick={handleClearResume} className="ob-btn ob-dg ob-sm" style={{ height: 28, padding: "0 10px" }}>Remove</button>
+                </div>
+                <div className="p-6 grid gap-3 justify-items-start">
+                  <p className="m-0 ob-tx text-[14px]">Preview not available in this browser</p>
+                  <p className="m-0 ob-tx3 text-[12.5px] leading-[1.6]">
+                    Your parsed resume is saved to your account, but the PDF file itself is stored only in the browser you uploaded it from.
+                    Add the file here to see it next to your profile. Nothing is re-analysed.
+                  </p>
+                  <button type="button" className="ob-btn ob-sm" onClick={() => previewInputRef.current?.click()}>Add PDF to preview</button>
+                  <input
+                    ref={previewInputRef}
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      void handleRestorePreview(e.target.files?.[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
               </div>
             )}
           </aside>
