@@ -4,7 +4,6 @@ import AppBackground from "./components/AppBackground";
 import { ToastContainer, useToast } from "./components/ui";
 import { type AuthUser, clearSession, getStoredUser, getToken } from "./lib/api";
 import { syncUserProfileFromBackend } from "./lib/userDocuments";
-import { useTheme } from "./lib/theme";
 import ThemeToggle from "./components/ThemeToggle";
 
 import Landing from "./pages/Landing";
@@ -60,7 +59,8 @@ export default function App() {
     }
   });
   const { toasts, add, remove } = useToast();
-  useTheme(); // Subscribes the app to theme changes
+  // No useTheme() here: it would re-render the whole page tree on every theme flip. Components that need the
+  // theme (editors, the toggle) subscribe themselves; everything else follows the CSS variables.
 
   // The staggered rise plays on a page's first visit only; after that it is a quick cross-fade.
   const visited = useRef(new Set<string>());

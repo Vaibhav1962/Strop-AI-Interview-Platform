@@ -477,6 +477,8 @@
   animation: none;
   mix-blend-mode: normal;
 }
+/* No colour fades while the theme flips (set by theme.ts): the wave alone is the animation. */
+.theme-switching *, .theme-switching *::before, .theme-switching *::after { transition: none !important; }
 /* Let clicks pass through to the live page, so the toggle works at any moment mid-animation. */
 ::view-transition { pointer-events: none; }
 ::view-transition-group(root), ::view-transition-image-pair(root) { pointer-events: none; }

@@ -45,7 +45,7 @@ function subscribe(cb: () => void) {
  * A liquid front: a circle whose edge is gently displaced by two slow, wide sine swells, so it
  * reads as a surface of water rolling outward rather than a jagged shape.
  */
-function waveFrame(cx: number, cy: number, r: number, amp: number, phase: number, points = 96): string {
+function waveFrame(cx: number, cy: number, r: number, amp: number, phase: number, points = 56): string {
   const pts: string[] = [];
   for (let i = 0; i < points; i++) {
     const a = (i / points) * Math.PI * 2;
@@ -58,6 +58,23 @@ function waveFrame(cx: number, cy: number, r: number, amp: number, phase: number
 
 type VTDocument = Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void>; finished: Promise<void> } };
 
+/**
+ * While the theme flips, every CSS colour transition in the app is switched off (see index.css). Otherwise hundreds of
+ * buttons, cards and rows each start their own 0.3-0.5s fade on top of the wave, which both costs a lot of frames and
+ * makes the page seem to animate a second time after the wave has passed.
+ */
+const SWITCHING = "theme-switching";
+let switchTimer: number | undefined;
+function beginSwitch(): void {
+  window.clearTimeout(switchTimer);
+  document.documentElement.classList.add(SWITCHING);
+}
+function endSwitch(): void {
+  window.clearTimeout(switchTimer);
+  // two frames later, so the style change itself has already been applied without transitions
+  switchTimer = window.setTimeout(() => requestAnimationFrame(() => document.documentElement.classList.remove(SWITCHING)), 60);
+}
+
 // The theme the user last asked for. Updated synchronously so rapid clicks always flip from the latest request.
 let target: Theme = current;
 
@@ -68,7 +85,9 @@ export function setTheme(next: Theme, origin?: { x: number; y: number }): void {
   const doc = document as VTDocument;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!origin || reduce || typeof doc.startViewTransition !== "function") {
+    beginSwitch();
     applyTheme(next);
+    endSwitch();
     return;
   }
 
@@ -78,10 +97,12 @@ export function setTheme(next: Theme, origin?: { x: number; y: number }): void {
   const endR = far + amp * 1.6;
 
   // Starting a new transition skips any one still running, so toggling mid-flight just restarts from here.
+  beginSwitch();
   const transition = doc.startViewTransition(() => applyTheme(next));
+  transition.finished.then(endSwitch, endSwitch);
   transition.ready
     .then(() => {
-      const steps = 60;
+      const steps = 40;
       const frames: Keyframe[] = [];
       for (let i = 0; i <= steps; i++) {
         const t = i / steps;
