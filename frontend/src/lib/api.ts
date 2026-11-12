@@ -98,23 +98,6 @@ export function clearSession() {
   localStorage.removeItem(USER_KEY);
 }
 
-export type ExecuteLanguage = "Python" | "JavaScript" | "Java" | "C++";
-
-export interface ExecuteResult {
-  stdout: string | null;
-  stderr: string | null;
-  compile_output: string | null;
-  message: string | null;
-  status: string | null;
-  time: string | null;
-  memory: number | null;
-}
-
-export function executeCode(input: { language: ExecuteLanguage; source_code: string; stdin: string }) {
-  const token = getToken();
-  return request<ExecuteResult>("/execute", input, token ? { Authorization: `Bearer ${token}` } : {});
-}
-
 export interface TranscriptLine {
   speaker: "AI" | "You" | "Candidate" | "Alex";
   text: string;

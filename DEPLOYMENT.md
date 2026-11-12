@@ -31,18 +31,18 @@ This runbook specifies the production topology, environment variable contract, d
 |  - Non-blocking Lifespan: Durable Evaluation Worker & Startup Recovery       |
 |  - SSE Dialogue Streaming + Token Bucket Fenced Commits                      |
 |  - BARS Competency Evaluator & PDF Engine (ReportLab)                        |
-|  - Protected Execution & Audio Proxy                                         |
-+───────────────────┬─────────────────────┬───────────────────┬────────────────+
-                    │                     │                   │
-         SQL Queries (asyncpg)      Code Execution      LLM & Speech APIs
-                    │                     │                   │
-                    v                     v                   v
-      +──────────────────────+  +─────────────────+  +─────────────────────────+
-      |         NEON         |  |     JUDGE0      |  | THIRD-PARTY PROVIDERS   |
-      | Serverless Postgres  |  | Self-Hosted / CE|  | - OpenRouter / Qwen     |
-      | - Async Connection   |  | Code Execution  |  | - Google Gemini 2.5/Flash|
-      |   Pooling (NullPool) |  | Sandbox Engine  |  | - ElevenLabs TTS        |
-      | - SSL Required       |  +─────────────────+  +─────────────────────────+
+|  - Audio Proxy (TTS / STT)                                                   |
++───────────────────┬──────────────────────────────────────┬───────────────────+
+                    │                                      │
+         SQL Queries (asyncpg)                      LLM & Speech APIs
+                    │                                      │
+                    v                                      v
+      +──────────────────────+                         +─────────────────────────+
+      |         NEON         |                         | THIRD-PARTY PROVIDERS   |
+      | Serverless Postgres  |                         | - Groq / OpenRouter     |
+      | - Async Connection   |                         | - Google Gemini         |
+      |   Pooling (NullPool) |                         | - ElevenLabs TTS        |
+      | - SSL Required       |                         +─────────────────────────+
       +──────────────────────+
 ```
 
@@ -67,8 +67,6 @@ Set in **Render Dashboard -> Environment Variables**:
 | `DATABASE_URL` | **Secret** | Neon PostgreSQL async connection string: `postgresql+asyncpg://<user>:<password>@<neon-host>/<dbname>?ssl=require` |
 | `SECRET_KEY` | **Secret** | 64-character random hex string for JWT signing (`openssl rand -hex 32`) |
 | `CORS_ORIGINS` | Configuration | JSON array of permitted origins, e.g. `["https://interviewiq.vercel.app"]` |
-| `JUDGE0_URL` | URL | URL of self-hosted or cloud Judge0 instance (e.g. `https://judge0-ce.p.rapidapi.com` or internal URL) |
-| `JUDGE0_AUTH_TOKEN` | **Secret** | Auth token / X-RapidAPI-Key for Judge0 code execution engine |
 | `GEMINI_API_KEY` | **Secret** | Google AI Studio API key for Gemini models |
 | `QWEN_API_KEY` | **Secret** | OpenRouter / DashScope API key for Qwen 2.5 72B Instruct evaluator |
 | `ELEVENLABS_API_KEY`| **Secret** | ElevenLabs API key for high-fidelity interviewer voice synthesis |
@@ -139,3 +137,35 @@ The repository contains `vercel.json`:
    - The FastAPI `lifespan` manager automatically identifies any evaluations interrupted mid-flight during deployment restarts and reverts them to `queued` for reprocessing.
    - Workers claim jobs race-free using `SELECT ... FOR UPDATE SKIP LOCKED` and release database locks before invoking AI evaluation APIs.
 
+---
+
+## 7. Code Execution, Security Headers and Rate Limits
+
+**Code runs in the candidate's browser, never on our servers.** Python (Pyodide, loaded from `cdn.jsdelivr.net`)
+and JavaScript (`frontend/public/sandbox/js-runner.js`) each run in a Web Worker with no DOM, storage or network.
+There is no execution service to deploy.
+
+- The JavaScript runner has to `eval` candidate code, so it is served with its **own** CSP
+  (`default-src 'none'; script-src 'unsafe-eval'`), set for `/sandbox/*` in `vercel.json`
+  (and `frontend/sandbox-headers.inc` for nginx). The rest of the site keeps the stricter CSP with no `unsafe-eval`.
+  After the first deploy, check both headers:
+  ```bash
+  curl -sI https://<your-site>/sandbox/js-runner.js | grep -i content-security-policy   # default-src 'none'; script-src 'unsafe-eval'; ...
+  curl -sI https://<your-site>/ | grep -i content-security-policy                         # no 'unsafe-eval' here
+  ```
+  If the first header is missing, the Compiler shows "The JavaScript runner is blocked by this site's security policy".
+- Tighten `connect-src 'self' https:` in the site CSP to your API origin once it is fixed.
+- Python needs the visitor to reach `cdn.jsdelivr.net` (about 10 MB, cached by the browser after the first run).
+  To remove that dependency, self-host the `pyodide` package files and change `PYODIDE_BASE` in
+  `frontend/src/lib/pythonWorker.ts`.
+
+**Rate limits** (`backend/app/api/rate_limiter.py`, per user unless noted): login 20 per 5 min per IP and 8 per 5 min
+per account, signup 6 per hour per IP, interviewer turns 30/min, session creation 20 per 10 min, evaluation
+10 per 10 min, TTS 45/min, STT 75/min, résumé/JD analysis 6-10/min, writes 60/min, `/health/db` 30/min per IP.
+They live in process memory: **run a single API instance, or move them to Redis before scaling out.**
+Set `TRUST_PROXY_HEADERS=true` only when the API sits behind a proxy you control, otherwise every visitor shares
+the proxy's IP in the per-IP limits.
+
+**Secrets**: provider keys (Groq, Gemini, ElevenLabs, OpenRouter) exist only in the backend environment. Gemini keys
+are sent in a request header, never in a URL, so they cannot appear in error messages or logs. API errors returned to
+the browser are generic; details go to the server log.

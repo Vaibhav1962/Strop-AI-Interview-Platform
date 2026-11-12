@@ -1,19 +1,11 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import CodeMirror, { type Extension } from "@uiw/react-codemirror";
-import { cpp } from "@codemirror/lang-cpp";
-import { java } from "@codemirror/lang-java";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { buildEditorTheme } from "../lib/editorTheme";
-import { type ExecuteLanguage } from "../lib/api";
-import { executeCode, warmUpPython } from "../lib/codeExecution";
-import {
-  DSA_PROBLEMS,
-  getDefaultDsaProblem,
-  normalizeDsaTestCases,
-  type DsaProblem,
-  type DsaTestCase,
-} from "../lib/dsaProblemBank";
+import { EXECUTE_LANGUAGES, warmUpRuntimes, type ExecuteLanguage } from "../lib/codeExecution";
+import { normalizeDsaTestCases, type DsaProblem, type DsaTestCase } from "../lib/dsaProblemBank";
+import { isRunnable, runDsaTests, starterCode, type DsaTestResult } from "../lib/dsaRunner";
 import { useTheme } from "../lib/theme";
 
 interface DsaCodingWorkspaceProps {
@@ -28,860 +20,23 @@ interface DsaCodingWorkspaceProps {
   className?: string;
 }
 
-const LANGUAGES: { id: ExecuteLanguage; label: string }[] = [
-  { id: "Python", label: "Python3" },
-  { id: "JavaScript", label: "JavaScript" },
-  { id: "C++", label: "C++" },
-  { id: "Java", label: "Java" },
-];
+const LANGUAGE_LABELS: Record<ExecuteLanguage, string> = { Python: "Python 3", JavaScript: "JavaScript" };
 
-const LANGUAGE_EXTENSIONS: Record<ExecuteLanguage, Extension> = {
-  Python: python(),
-  JavaScript: javascript(),
-  Java: java(),
-  "C++": cpp(),
+// Built once: handing CodeMirror a new extensions array on every keystroke makes it rebuild the editor state.
+const LANGUAGE_EXTENSIONS: Record<ExecuteLanguage, Extension[]> = {
+  Python: [python()],
+  JavaScript: [javascript()],
 };
 
-interface TestResult {
-  testCase: DsaTestCase;
-  passed: boolean;
-  actualOutput: string;
-  executionTime?: string;
-  error?: string;
-}
+const EDITOR_SETUP = {
+  lineNumbers: true,
+  foldGutter: true,
+  autocompletion: true,
+  bracketMatching: true,
+  indentOnInput: true,
+} as const;
 
-function compareOutputs(actual: unknown, expected: unknown): boolean {
-  const normActual = String(actual ?? "").trim();
-  const normExpected = String(expected ?? "").trim();
-  if (normActual === normExpected) return true;
-
-  try {
-    const actJson = JSON.parse(normActual);
-    const expJson = JSON.parse(normExpected);
-
-    const normalize = (v: any): any => {
-      if (Array.isArray(v)) {
-        const items = v.map((item) => normalize(item));
-        return items.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
-      }
-      return v;
-    };
-
-    return JSON.stringify(normalize(actJson)) === JSON.stringify(normalize(expJson));
-  } catch {
-    return false;
-  }
-}
-
-function wrapCodeForExecution(
-  studentCode: string,
-  lang: ExecuteLanguage,
-  problem?: DsaProblem
-): string {
-  const prob = problem || getDefaultDsaProblem();
-  const entryPoint = prob.entryPoint || "lengthOfLongestSubstring";
-
-  if (lang === "C++") {
-    let cppBody = "";
-    if (prob.id === "longest-substring") {
-      cppBody = `string s;
-    if (getline(cin, s)) {
-        Solution sol;
-        cout << sol.lengthOfLongestSubstring(s) << "\\n";
-    } else {
-        cout << 0 << "\\n";
-    }`;
-    } else if (prob.id === "subarray-sum-k") {
-      cppBody = `string l1, l2;
-    if (getline(cin, l1) && getline(cin, l2)) {
-        vector<int> nums = parseVectorInt(l1);
-        int k = stoi(l2);
-        Solution sol;
-        cout << sol.subarraySum(nums, k) << "\\n";
-    }`;
-    } else if (prob.id === "coin-change") {
-      cppBody = `string l1, l2;
-    if (getline(cin, l1) && getline(cin, l2)) {
-        vector<int> coins = parseVectorInt(l1);
-        int amount = stoi(l2);
-        Solution sol;
-        cout << sol.coinChange(coins, amount) << "\\n";
-    }`;
-    } else if (prob.id === "ship-packages") {
-      cppBody = `string l1, l2;
-    if (getline(cin, l1) && getline(cin, l2)) {
-        vector<int> weights = parseVectorInt(l1);
-        int days = stoi(l2);
-        Solution sol;
-        cout << sol.shipWithinDays(weights, days) << "\\n";
-    }`;
-    } else if (prob.id === "course-schedule") {
-      cppBody = `string l1, l2;
-    if (getline(cin, l1) && getline(cin, l2)) {
-        int numCourses = stoi(l1);
-        vector<vector<int>> prereqs = parseVector2DInt(l2);
-        Solution sol;
-        cout << (sol.canFinish(numCourses, prereqs) ? "true" : "false") << "\\n";
-    }`;
-    } else if (prob.id === "trapping-rain-water") {
-      cppBody = `string l1;
-    if (getline(cin, l1)) {
-        vector<int> height = parseVectorInt(l1);
-        Solution sol;
-        cout << sol.trap(height) << "\\n";
-    }`;
-    } else if (prob.id === "non-overlapping-intervals") {
-      cppBody = `string l1;
-    if (getline(cin, l1)) {
-        vector<vector<int>> intervals = parseVector2DInt(l1);
-        Solution sol;
-        cout << sol.eraseOverlapIntervals(intervals) << "\\n";
-    }`;
-    } else if (prob.id === "three-sum") {
-      cppBody = `string l1;
-    if (getline(cin, l1)) {
-        vector<int> nums = parseVectorInt(l1);
-        Solution sol;
-        vector<vector<int>> res = sol.threeSum(nums);
-        print2D(res);
-    }`;
-    } else if (prob.id === "binary-tree-max-path") {
-      cppBody = `string l1;
-    if (getline(cin, l1)) {
-        TreeNode* root = buildTree(l1);
-        Solution sol;
-        cout << sol.maxPathSum(root) << "\\n";
-    }`;
-    } else if (prob.id === "merge-k-sorted-lists") {
-      cppBody = `string l1;
-    if (getline(cin, l1)) {
-        vector<vector<int>> raw = parseVector2DInt(l1);
-        vector<ListNode*> lists;
-        for (const auto& v : raw) lists.push_back(buildList(v));
-        Solution sol;
-        ListNode* res = sol.mergeKLists(lists);
-        cout << "[";
-        bool first = true;
-        while (res) {
-            if (!first) cout << ",";
-            cout << res->val;
-            first = false;
-            res = res->next;
-        }
-        cout << "]\\n";
-    }`;
-    } else if (prob.id === "min-stack") {
-      cppBody = `string l1, l2;
-    if (getline(cin, l1) && getline(cin, l2)) {
-        vector<string> ops;
-        size_t pos = 0;
-        while ((pos = l1.find('"', pos)) != string::npos) {
-            size_t end = l1.find('"', pos + 1);
-            if (end == string::npos) break;
-            ops.push_back(l1.substr(pos + 1, end - pos - 1));
-            pos = end + 1;
-        }
-        vector<vector<int>> args = parseVector2DInt(l2);
-        MinStack st;
-        cout << "[";
-        for (size_t i = 0; i < ops.size(); ++i) {
-            if (i > 0) cout << ",";
-            if (ops[i] == "MinStack") cout << "null";
-            else if (ops[i] == "push") { if (i < args.size() && !args[i].empty()) st.push(args[i][0]); cout << "null"; }
-            else if (ops[i] == "pop") { st.pop(); cout << "null"; }
-            else if (ops[i] == "top") cout << st.top();
-            else if (ops[i] == "getMin") cout << st.getMin();
-        }
-        cout << "]\\n";
-    }`;
-    } else if (prob.id === "lru-cache") {
-      cppBody = `string l1, l2;
-    if (getline(cin, l1) && getline(cin, l2)) {
-        vector<string> ops;
-        size_t pos = 0;
-        while ((pos = l1.find('"', pos)) != string::npos) {
-            size_t end = l1.find('"', pos + 1);
-            if (end == string::npos) break;
-            ops.push_back(l1.substr(pos + 1, end - pos - 1));
-            pos = end + 1;
-        }
-        vector<vector<int>> args = parseVector2DInt(l2);
-        LRUCache* cache = nullptr;
-        cout << "[";
-        for (size_t i = 0; i < ops.size(); ++i) {
-            if (i > 0) cout << ",";
-            if (ops[i] == "LRUCache") {
-                int cap = (i < args.size() && !args[i].empty()) ? args[i][0] : 1;
-                cache = new LRUCache(cap);
-                cout << "null";
-            } else if (ops[i] == "put") {
-                if (cache && i < args.size() && args[i].size() >= 2) cache->put(args[i][0], args[i][1]);
-                cout << "null";
-            } else if (ops[i] == "get") {
-                int k = (i < args.size() && !args[i].empty()) ? args[i][0] : 0;
-                cout << (cache ? cache->get(k) : -1);
-            }
-        }
-        cout << "]\\n";
-    }`;
-    }
-
-    return `#include <bits/stdc++.h>
-using namespace std;
-
-struct TreeNode {
-    int val;
-    TreeNode *left;
-    TreeNode *right;
-    TreeNode() : val(0), left(nullptr), right(nullptr) {}
-    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
-    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
-};
-
-struct ListNode {
-    int val;
-    ListNode *next;
-    ListNode() : val(0), next(nullptr) {}
-    ListNode(int x) : val(x), next(nullptr) {}
-    ListNode(int x, ListNode *next) : val(x), next(next) {}
-};
-
-${studentCode}
-
-static vector<int> parseVectorInt(const string& s) {
-    vector<int> res;
-    stringstream ss(s);
-    char ch;
-    while (ss >> ch) {
-        if (ch == '-' || isdigit(ch)) {
-            ss.unget();
-            int val;
-            ss >> val;
-            res.push_back(val);
-        }
-    }
-    return res;
-}
-
-static vector<vector<int>> parseVector2DInt(const string& s) {
-    vector<vector<int>> res;
-    int depth = 0;
-    int start = -1;
-    for (int i = 0; i < (int)s.size(); ++i) {
-        if (s[i] == '[') {
-            depth++;
-            if (depth == 2) start = i;
-        } else if (s[i] == ']') {
-            if (depth == 2 && start != -1) {
-                res.push_back(parseVectorInt(s.substr(start, i - start + 1)));
-                start = -1;
-            }
-            depth--;
-        }
-    }
-    return res;
-}
-
-static TreeNode* buildTree(const string& s) {
-    string clean;
-    for (char c : s) if (c != '[' && c != ']' && c != ' ') clean += c;
-    if (clean.empty()) return nullptr;
-    stringstream ss(clean);
-    string token;
-    vector<string> tokens;
-    while (getline(ss, token, ',')) {
-        if (!token.empty()) tokens.push_back(token);
-    }
-    if (tokens.empty() || tokens[0] == "null") return nullptr;
-    TreeNode* root = new TreeNode(stoi(tokens[0]));
-    queue<TreeNode*> q;
-    q.push(root);
-    size_t i = 1;
-    while (!q.empty() && i < tokens.size()) {
-        TreeNode* curr = q.front(); q.pop();
-        if (i < tokens.size()) {
-            if (tokens[i] != "null") {
-                curr->left = new TreeNode(stoi(tokens[i]));
-                q.push(curr->left);
-            }
-            i++;
-        }
-        if (i < tokens.size()) {
-            if (tokens[i] != "null") {
-                curr->right = new TreeNode(stoi(tokens[i]));
-                q.push(curr->right);
-            }
-            i++;
-        }
-    }
-    return root;
-}
-
-static ListNode* buildList(const vector<int>& nums) {
-    if (nums.empty()) return nullptr;
-    ListNode* head = new ListNode(nums[0]);
-    ListNode* curr = head;
-    for (size_t i = 1; i < nums.size(); ++i) {
-        curr->next = new ListNode(nums[i]);
-        curr = curr->next;
-    }
-    return head;
-}
-
-static void print2D(const vector<vector<int>>& res) {
-    cout << "[";
-    for (size_t i = 0; i < res.size(); ++i) {
-        if (i > 0) cout << ",";
-        cout << "[";
-        for (size_t j = 0; j < res[i].size(); ++j) {
-            if (j > 0) cout << ",";
-            cout << res[i][j];
-        }
-        cout << "]";
-    }
-    cout << "]\\n";
-}
-
-int main() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-    ${cppBody}
-    return 0;
-}
-`;
-  }
-
-  if (lang === "Python") {
-    return `import sys, json
-
-if 'TreeNode' not in globals():
-    class TreeNode:
-        def __init__(self, val=0, left=None, right=None):
-            self.val = val
-            self.left = left
-            self.right = right
-
-if 'ListNode' not in globals():
-    class ListNode:
-        def __init__(self, val=0, next=None):
-            self.val = val
-            self.next = next
-
-def _build_tree(vals):
-    if not vals:
-        return None
-    root = TreeNode(vals[0])
-    queue = [root]
-    i = 1
-    while queue and i < len(vals):
-        node = queue.pop(0)
-        if i < len(vals):
-            if vals[i] is not None:
-                node.left = TreeNode(vals[i])
-                queue.append(node.left)
-            i += 1
-        if i < len(vals):
-            if vals[i] is not None:
-                node.right = TreeNode(vals[i])
-                queue.append(node.right)
-            i += 1
-    return root
-
-def _build_list(arr):
-    if not arr:
-        return None
-    head = ListNode(arr[0])
-    curr = head
-    for v in arr[1:]:
-        curr.next = ListNode(v)
-        curr = curr.next
-    return head
-
-def _list_to_arr(head):
-    if head is None:
-        return []
-    if isinstance(head, list):
-        return head
-    res = []
-    curr = head
-    while curr:
-        res.append(curr.val)
-        curr = curr.next
-    return res
-
-${studentCode}
-
-if __name__ == "__main__":
-    raw = sys.stdin.read()
-    if not raw.strip():
-        if "${prob.id}" == "longest-substring":
-            print(0)
-        elif "${prob.returnType}" == "boolean":
-            print("false")
-        elif "${prob.returnType}".endswith("[]"):
-            print("[]")
-        else:
-            print(0)
-        sys.exit(0)
-
-    lines = [l.strip() for l in raw.splitlines() if l.strip()]
-
-    if "${prob.entryPoint}" in ["MinStack", "LRUCache", "TimeMap"]:
-        ops = json.loads(lines[0])
-        args = json.loads(lines[1])
-        out = []
-        cls = globals().get("${prob.entryPoint}") or (getattr(globals().get("Solution"), "${prob.entryPoint}") if "Solution" in globals() else None)
-        obj = None
-        for op, a in zip(ops, args):
-            if op == "${prob.entryPoint}":
-                obj = cls(*a)
-                out.append(None)
-            else:
-                method = getattr(obj, op)
-                res = method(*a)
-                out.append(res)
-        print(json.dumps(out, separators=(',', ':')))
-        sys.exit(0)
-
-    sol = Solution() if 'Solution' in globals() else None
-    fn = getattr(sol, "${entryPoint}", None) if sol else globals().get("${entryPoint}")
-
-    if "${prob.id}" == "longest-substring":
-        s = raw.splitlines()[0] if raw.splitlines() else ""
-        if fn:
-            print(fn(s))
-        else:
-            print(0)
-        sys.exit(0)
-
-    parsed_args = []
-    for line in lines:
-        try:
-            parsed_args.append(json.loads(line))
-        except Exception:
-            parsed_args.append(line)
-
-    if "${prob.id}" == "binary-tree-max-path" and parsed_args:
-        parsed_args = [_build_tree(parsed_args[0])]
-
-    if "${prob.id}" == "merge-k-sorted-lists" and parsed_args:
-        k_lists = [_build_list(sub) for sub in (parsed_args[0] or [])]
-        parsed_args = [k_lists]
-
-    if fn:
-        result = fn(*parsed_args)
-        if "${prob.id}" == "merge-k-sorted-lists":
-            print(json.dumps(_list_to_arr(result), separators=(',', ':')))
-        elif isinstance(result, bool):
-            print("true" if result else "false")
-        elif isinstance(result, (list, dict)):
-            print(json.dumps(result, separators=(',', ':')))
-        elif result is None:
-            print("[]")
-        else:
-            print(result)
-    else:
-        print(0)
-`;
-  }
-
-  if (lang === "JavaScript") {
-    return `const fs = require('fs');
-
-function TreeNode(val, left, right) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-}
-
-function ListNode(val, next) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-}
-
-function _buildTree(vals) {
-    if (!vals || !vals.length || vals[0] === null) return null;
-    const root = new TreeNode(vals[0]);
-    const queue = [root];
-    let i = 1;
-    while (queue.length > 0 && i < vals.length) {
-        const curr = queue.shift();
-        if (i < vals.length) {
-            if (vals[i] !== null && vals[i] !== undefined) {
-                curr.left = new TreeNode(vals[i]);
-                queue.push(curr.left);
-            }
-            i++;
-        }
-        if (i < vals.length) {
-            if (vals[i] !== null && vals[i] !== undefined) {
-                curr.right = new TreeNode(vals[i]);
-                queue.push(curr.right);
-            }
-            i++;
-        }
-    }
-    return root;
-}
-
-function _buildList(arr) {
-    if (!arr || !arr.length) return null;
-    const head = new ListNode(arr[0]);
-    let curr = head;
-    for (let i = 1; i < arr.length; i++) {
-        curr.next = new ListNode(arr[i]);
-        curr = curr.next;
-    }
-    return head;
-}
-
-function _listToArr(head) {
-    if (!head) return [];
-    if (Array.isArray(head)) return head;
-    const res = [];
-    let curr = head;
-    while (curr) {
-        res.push(curr.val);
-        curr = curr.next;
-    }
-    return res;
-}
-
-${studentCode}
-
-const raw = fs.readFileSync(0, 'utf-8');
-if (!raw.trim()) {
-    if ("${prob.id}" === "longest-substring") console.log(0);
-    else if ("${prob.returnType}" === "boolean") console.log("false");
-    else if ("${prob.returnType}".endsWith("[]")) console.log("[]");
-    else console.log(0);
-    process.exit(0);
-}
-
-if ("${prob.id}" === "longest-substring") {
-    const s = raw.split(/\\r?\\n/)[0] || '';
-    if (typeof Solution !== 'undefined') {
-        const sol = new Solution();
-        console.log(sol.lengthOfLongestSubstring(s));
-    } else if (typeof lengthOfLongestSubstring === 'function') {
-        console.log(lengthOfLongestSubstring(s));
-    } else {
-        console.log(0);
-    }
-    process.exit(0);
-}
-
-const lines = raw.split(/\\r?\\n/).map(l => l.trim()).filter(Boolean);
-
-if (["MinStack", "LRUCache", "TimeMap"].includes("${prob.entryPoint}")) {
-    const ops = JSON.parse(lines[0]);
-    const args = JSON.parse(lines[1]);
-    const out = [];
-    let obj = null;
-    const Cls = typeof ${prob.entryPoint} !== 'undefined' ? ${prob.entryPoint} : (typeof Solution !== 'undefined' && Solution.${prob.entryPoint});
-    for (let i = 0; i < ops.length; i++) {
-        const op = ops[i];
-        const a = args[i];
-        if (op === "${prob.entryPoint}") {
-            obj = new Cls(...a);
-            out.push(null);
-        } else {
-            const res = obj[op](...a);
-            out.push(res !== undefined ? res : null);
-        }
-    }
-    console.log(JSON.stringify(out));
-    process.exit(0);
-}
-
-let parsedArgs = lines.map(line => {
-    try {
-        return JSON.parse(line);
-    } catch (e) {
-        return line;
-    }
-});
-
-if ("${prob.id}" === "binary-tree-max-path" && parsedArgs.length > 0) {
-    parsedArgs = [_buildTree(parsedArgs[0])];
-}
-
-if ("${prob.id}" === "merge-k-sorted-lists" && parsedArgs.length > 0) {
-    parsedArgs = [(parsedArgs[0] || []).map(_buildList)];
-}
-
-let fn = null;
-if (typeof Solution !== 'undefined') {
-    const sol = new Solution();
-    if (typeof sol["${entryPoint}"] === 'function') {
-        fn = sol["${entryPoint}"].bind(sol);
-    }
-}
-if (!fn && typeof global["${entryPoint}"] === 'function') {
-    fn = global["${entryPoint}"];
-}
-if (!fn && typeof ${entryPoint} === 'function') {
-    fn = ${entryPoint};
-}
-
-if (fn) {
-    const res = fn(...parsedArgs);
-    if ("${prob.id}" === "merge-k-sorted-lists") {
-        console.log(JSON.stringify(_listToArr(res)));
-    } else if (typeof res === 'boolean') {
-        console.log(res ? "true" : "false");
-    } else if (typeof res === 'object' && res !== null) {
-        console.log(JSON.stringify(res));
-    } else if (res === null || res === undefined) {
-        console.log("[]");
-    } else {
-        console.log(res);
-    }
-} else {
-    console.log(0);
-}
-`;
-  }
-
-  if (lang === "Java") {
-    let javaBody = "";
-    if (prob.id === "longest-substring") {
-      javaBody = `String line = reader.readLine();
-        if (line == null) line = "";
-        Solution sol = new Solution();
-        System.out.println(sol.lengthOfLongestSubstring(line));`;
-    } else if (prob.id === "subarray-sum-k") {
-      javaBody = `int[] nums = parseArray(reader.readLine());
-        int k = Integer.parseInt(reader.readLine().trim());
-        Solution sol = new Solution();
-        System.out.println(sol.subarraySum(nums, k));`;
-    } else if (prob.id === "coin-change") {
-      javaBody = `int[] coins = parseArray(reader.readLine());
-        int amount = Integer.parseInt(reader.readLine().trim());
-        Solution sol = new Solution();
-        System.out.println(sol.coinChange(coins, amount));`;
-    } else if (prob.id === "ship-packages") {
-      javaBody = `int[] weights = parseArray(reader.readLine());
-        int days = Integer.parseInt(reader.readLine().trim());
-        Solution sol = new Solution();
-        System.out.println(sol.shipWithinDays(weights, days));`;
-    } else if (prob.id === "course-schedule") {
-      javaBody = `int numCourses = Integer.parseInt(reader.readLine().trim());
-        int[][] prereqs = parse2DArray(reader.readLine());
-        Solution sol = new Solution();
-        System.out.println(sol.canFinish(numCourses, prereqs));`;
-    } else if (prob.id === "trapping-rain-water") {
-      javaBody = `int[] height = parseArray(reader.readLine());
-        Solution sol = new Solution();
-        System.out.println(sol.trap(height));`;
-    } else if (prob.id === "non-overlapping-intervals") {
-      javaBody = `int[][] intervals = parse2DArray(reader.readLine());
-        Solution sol = new Solution();
-        System.out.println(sol.eraseOverlapIntervals(intervals));`;
-    } else if (prob.id === "three-sum") {
-      javaBody = `int[] nums = parseArray(reader.readLine());
-        Solution sol = new Solution();
-        List<List<Integer>> res = sol.threeSum(nums);
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < res.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append("[");
-            List<Integer> sub = res.get(i);
-            for (int j = 0; j < sub.size(); j++) {
-                if (j > 0) sb.append(",");
-                sb.append(sub.get(j));
-            }
-            sb.append("]");
-        }
-        sb.append("]");
-        System.out.println(sb.toString());`;
-    } else if (prob.id === "binary-tree-max-path") {
-      javaBody = `TreeNode root = buildTree(reader.readLine());
-        Solution sol = new Solution();
-        System.out.println(sol.maxPathSum(root));`;
-    } else if (prob.id === "merge-k-sorted-lists") {
-      javaBody = `int[][] raw = parse2DArray(reader.readLine());
-        ListNode[] lists = new ListNode[raw.length];
-        for (int i = 0; i < raw.length; i++) lists[i] = buildList(raw[i]);
-        Solution sol = new Solution();
-        ListNode res = sol.mergeKLists(lists);
-        StringBuilder sb = new StringBuilder("[");
-        boolean first = true;
-        while (res != null) {
-            if (!first) sb.append(",");
-            sb.append(res.val);
-            first = false;
-            res = res.next;
-        }
-        sb.append("]");
-        System.out.println(sb.toString());`;
-    } else if (prob.id === "min-stack") {
-      javaBody = `String l1 = reader.readLine();
-        String l2 = reader.readLine();
-        List<String> ops = new ArrayList<>();
-        int pos = 0;
-        while ((pos = l1.indexOf("\"", pos)) != -1) {
-            int end = l1.indexOf("\"", pos + 1);
-            if (end == -1) break;
-            ops.add(l1.substring(pos + 1, end));
-            pos = end + 1;
-        }
-        int[][] argsList = parse2DArray(l2);
-        MinStack st = new MinStack();
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < ops.size(); i++) {
-            if (i > 0) sb.append(",");
-            String op = ops.get(i);
-            if (op.equals("MinStack")) sb.append("null");
-            else if (op.equals("push")) { if (i < argsList.length && argsList[i].length > 0) st.push(argsList[i][0]); sb.append("null"); }
-            else if (op.equals("pop")) { st.pop(); sb.append("null"); }
-            else if (op.equals("top")) sb.append(st.top());
-            else if (op.equals("getMin")) sb.append(st.getMin());
-        }
-        sb.append("]");
-        System.out.println(sb.toString());`;
-    } else if (prob.id === "lru-cache") {
-      javaBody = `String l1 = reader.readLine();
-        String l2 = reader.readLine();
-        List<String> ops = new ArrayList<>();
-        int pos = 0;
-        while ((pos = l1.indexOf("\"", pos)) != -1) {
-            int end = l1.indexOf("\"", pos + 1);
-            if (end == -1) break;
-            ops.add(l1.substring(pos + 1, end));
-            pos = end + 1;
-        }
-        int[][] argsList = parse2DArray(l2);
-        LRUCache cache = null;
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < ops.size(); i++) {
-            if (i > 0) sb.append(",");
-            String op = ops.get(i);
-            if (op.equals("LRUCache")) {
-                int cap = (i < argsList.length && argsList[i].length > 0) ? argsList[i][0] : 1;
-                cache = new LRUCache(cap);
-                sb.append("null");
-            } else if (op.equals("put")) {
-                if (cache != null && i < argsList.length && argsList[i].length >= 2) cache.put(argsList[i][0], argsList[i][1]);
-                sb.append("null");
-            } else if (op.equals("get")) {
-                int k = (i < argsList.length && argsList[i].length > 0) ? argsList[i][0] : 0;
-                sb.append(cache != null ? cache.get(k) : -1);
-            }
-        }
-        sb.append("]");
-        System.out.println(sb.toString());`;
-    }
-
-    return `import java.util.*;
-import java.io.*;
-
-class TreeNode {
-    public int val;
-    public TreeNode left;
-    public TreeNode right;
-    public TreeNode() {}
-    public TreeNode(int val) { this.val = val; }
-    public TreeNode(int val, TreeNode left, TreeNode right) {
-        this.val = val;
-        this.left = left;
-        this.right = right;
-    }
-}
-
-class ListNode {
-    public int val;
-    public ListNode next;
-    public ListNode() {}
-    public ListNode(int val) { this.val = val; }
-    public ListNode(int val, ListNode next) { this.val = val; this.next = next; }
-}
-
-${studentCode}
-
-public class Main {
-    static int[] parseArray(String s) {
-        if (s == null) return new int[0];
-        String c = s.replaceAll("[\\[\\]\\s]", "");
-        if (c.isEmpty()) return new int[0];
-        String[] parts = c.split(",");
-        int[] res = new int[parts.length];
-        for (int i = 0; i < parts.length; i++) res[i] = Integer.parseInt(parts[i]);
-        return res;
-    }
-
-    static int[][] parse2DArray(String s) {
-        if (s == null) return new int[0][0];
-        List<int[]> list = new ArrayList<>();
-        int depth = 0;
-        int start = -1;
-        for (int i = 0; i < s.length(); i++) {
-            char ch = s.charAt(i);
-            if (ch == '[') {
-                depth++;
-                if (depth == 2) start = i;
-            } else if (ch == ']') {
-                if (depth == 2 && start != -1) {
-                    list.add(parseArray(s.substring(start, i + 1)));
-                    start = -1;
-                }
-                depth--;
-            }
-        }
-        return list.toArray(new int[list.size()][]);
-    }
-
-    static TreeNode buildTree(String s) {
-        if (s == null) return null;
-        String c = s.replaceAll("[\\[\\]\\s]", "");
-        if (c.isEmpty()) return null;
-        String[] tokens = c.split(",");
-        if (tokens.length == 0 || tokens[0].equals("null")) return null;
-        TreeNode root = new TreeNode(Integer.parseInt(tokens[0]));
-        Queue<TreeNode> q = new LinkedList<>();
-        q.add(root);
-        int i = 1;
-        while (!q.isEmpty() && i < tokens.length) {
-            TreeNode curr = q.poll();
-            if (i < tokens.length) {
-                if (!tokens[i].equals("null")) {
-                    curr.left = new TreeNode(Integer.parseInt(tokens[i]));
-                    q.add(curr.left);
-                }
-                i++;
-            }
-            if (i < tokens.length) {
-                if (!tokens[i].equals("null")) {
-                    curr.right = new TreeNode(Integer.parseInt(tokens[i]));
-                    q.add(curr.right);
-                }
-                i++;
-            }
-        }
-        return root;
-    }
-
-    static ListNode buildList(int[] nums) {
-        if (nums == null || nums.length == 0) return null;
-        ListNode head = new ListNode(nums[0]);
-        ListNode curr = head;
-        for (int i = 1; i < nums.length; i++) {
-            curr.next = new ListNode(nums[i]);
-            curr = curr.next;
-        }
-        return head;
-    }
-
-    public static void main(String[] args) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        ${javaBody}
-    }
-}
-`;
-  }
-
-  return studentCode;
-}
+type TestResult = DsaTestResult;
 
 export default function DsaCodingWorkspace({
   problem: rawProblem,
@@ -892,17 +47,27 @@ export default function DsaCodingWorkspace({
     () => ({ ...rawProblem, testCases: normalizeDsaTestCases(rawProblem.testCases) }),
     [rawProblem],
   );
+  const runnable = isRunnable(problem);
   const [selectedLanguage, setSelectedLanguage] = useState<ExecuteLanguage>("Python");
-  const [code, setCode] = useState(() => problem.templates.Python);
 
-  // Synchronize starter code if problem changes
+  // One draft per problem and language, so switching language (or problem) never throws work away.
+  const drafts = useRef<Record<string, string>>({});
+  const draftKey = (p: string, l: ExecuteLanguage) => `${p}::${l}`;
+  const [code, setCode] = useState(() => starterCode(problem, "Python"));
+  const [loadedProblemId, setLoadedProblemId] = useState(problem.id);
+
+  // A different problem arrived (props): keep the old draft and load the new one in the same render, so the
+  // editor never shows the previous problem's code under the new title.
+  if (loadedProblemId !== problem.id) {
+    drafts.current[draftKey(loadedProblemId, selectedLanguage)] = code;
+    setLoadedProblemId(problem.id);
+    setCode(drafts.current[draftKey(problem.id, selectedLanguage)] ?? starterCode(problem, selectedLanguage));
+  }
+
+  // Start downloading the runtimes in the background so the first Run is quick
   useEffect(() => {
-    warmUpPython();
+    warmUpRuntimes();
   }, []);
-
-  useEffect(() => {
-    setCode(problem.templates[selectedLanguage] || "");
-  }, [problem.id, selectedLanguage]);
 
   // Left panel tabs (Editorial removed during live interview)
   const [leftTab, setLeftTab] = useState<"description" | "submissions">("description");
@@ -919,6 +84,11 @@ export default function DsaCodingWorkspace({
     return init;
   });
 
+  const [isRunning, setIsRunning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+
   // Keep customInputs and results in sync if problem changes
   useEffect(() => {
     const init: Record<number, string> = {};
@@ -930,11 +100,6 @@ export default function DsaCodingWorkspace({
     setSelectedCaseIdx(0);
   }, [problem.id]);
 
-  const [isRunning, setIsRunning] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [testResults, setTestResults] = useState<TestResult[]>([]);
-  const [, setLastRunType] = useState<"run" | "submit" | null>(null);
-
   const { theme } = useTheme();
   const editorTheme = useMemo(() => buildEditorTheme(13, theme === "light"), [theme]);
 
@@ -945,106 +110,67 @@ export default function DsaCodingWorkspace({
   const activeVisibleCase = visibleTests[selectedCaseIdx] || visibleTests[0];
 
   const handleLanguageChange = (lang: ExecuteLanguage) => {
+    if (lang === selectedLanguage) return;
+    drafts.current[draftKey(problem.id, selectedLanguage)] = code;
     setSelectedLanguage(lang);
-    setCode(problem.templates[lang] || "");
+    setCode(drafts.current[draftKey(problem.id, lang)] ?? starterCode(problem, lang));
   };
 
+  // Bumped when the code is replaced from outside (Reset): see the note on the editor's key below.
+  const [resetCount, setResetCount] = useState(0);
   const handleResetCode = () => {
-    setCode(problem.templates[selectedLanguage] || "");
+    setCode(starterCode(problem, selectedLanguage));
+    setResetCount((n) => n + 1);
   };
+
+  const handleCodeChange = useCallback((value: string) => setCode(value), []);
 
   const runVisibleTests = async () => {
-    if (isRunning || isSubmitting) return;
+    if (isRunning || isSubmitting || !runnable) return;
     setIsRunning(true);
     setConsoleTab("result");
-    setLastRunType("run");
+    setProgress({ done: 0, total: visibleTests.length });
 
-    const results: TestResult[] = [];
-    const executableSource = wrapCodeForExecution(code, selectedLanguage, problem);
-
-    for (const tc of visibleTests) {
-      const runInput = customInputs[tc.id] !== undefined ? customInputs[tc.id] : tc.input;
-
-      try {
-        const res = await executeCode(
-          { language: selectedLanguage, source_code: executableSource, stdin: runInput },
-          { candidateCode: code, label: "dsa-visible-test" },
-        );
-
-        const rawOutput = (res.stdout || "").trim();
-        const expected = String(tc.expectedOutput ?? "").trim();
-        const passed = compareOutputs(rawOutput, expected);
-
-        results.push({
-          testCase: { ...tc, input: runInput },
-          passed,
-          actualOutput: rawOutput || (res.stderr ? `Error: ${res.stderr}` : "(empty output)"),
-          executionTime: res.time ? `${res.time}s` : "0.04s",
-          error: res.stderr || res.compile_output || undefined,
-        });
-      } catch (err: any) {
-        results.push({
-          testCase: { ...tc, input: runInput },
-          passed: false,
-          actualOutput: "Execution error",
-          error: err.message || "Failed to execute",
-        });
-      }
+    const cases: DsaTestCase[] = visibleTests.map((tc) => ({
+      ...tc,
+      input: customInputs[tc.id] !== undefined ? customInputs[tc.id] : tc.input,
+    }));
+    try {
+      const results = await runDsaTests(problem, selectedLanguage, code, cases, "dsa-visible-test", (done, total) =>
+        setProgress({ done, total }),
+      );
+      setTestResults(results);
+      setSelectedCaseIdx(0);
+    } finally {
+      setProgress(null);
+      setIsRunning(false);
     }
-
-    setTestResults(results);
-    setSelectedCaseIdx(0);
-    setIsRunning(false);
   };
 
   const submitFullSolution = async () => {
-    if (isRunning || isSubmitting) return;
+    if (isRunning || isSubmitting || !runnable) return;
     setIsSubmitting(true);
     setConsoleTab("result");
-    setLastRunType("submit");
-
     const allTests = problem.testCases;
-    const results: TestResult[] = [];
-    const executableSource = wrapCodeForExecution(code, selectedLanguage, problem);
+    setProgress({ done: 0, total: allTests.length });
 
-    for (const tc of allTests) {
-      try {
-        const res = await executeCode(
-          { language: selectedLanguage, source_code: executableSource, stdin: tc.input },
-          { candidateCode: code, label: "dsa-submit" },
-        );
-
-        const rawOutput = (res.stdout || "").trim();
-        const expected = String(tc.expectedOutput ?? "").trim();
-        const passed = compareOutputs(rawOutput, expected);
-
-        results.push({
-          testCase: tc,
-          passed,
-          actualOutput: rawOutput || (res.stderr ? `Error: ${res.stderr}` : "(empty output)"),
-          executionTime: res.time ? `${res.time}s` : "0.03s",
-          error: res.stderr || res.compile_output || undefined,
-        });
-      } catch (err: any) {
-        results.push({
-          testCase: tc,
-          passed: false,
-          actualOutput: "Execution error",
-          error: err.message || "Failed to execute",
-        });
-      }
+    let results: TestResult[] = [];
+    try {
+      results = await runDsaTests(problem, selectedLanguage, code, allTests, "dsa-submit", (done, total) =>
+        setProgress({ done, total }),
+      );
+    } finally {
+      setProgress(null);
+      setIsSubmitting(false);
     }
 
     const passedCount = results.filter((r) => r.passed).length;
-    const allPassed = passedCount === allTests.length;
-
     setTestResults(results);
     setSelectedCaseIdx(0);
-    setIsSubmitting(false);
 
     if (onSolutionSubmitted) {
       onSolutionSubmitted({
-        passed: allPassed,
+        passed: allTests.length > 0 && passedCount === allTests.length,
         totalPassed: passedCount,
         totalTests: allTests.length,
         code,
@@ -1053,28 +179,8 @@ export default function DsaCodingWorkspace({
     }
   };
 
-  const stateRef = useRef({
-    code,
-    selectedLanguage,
-    problem,
-    visibleTests,
-    customInputs,
-    isRunning,
-    isSubmitting,
-    runVisibleTests,
-    submitFullSolution,
-  });
-  stateRef.current = {
-    code,
-    selectedLanguage,
-    problem,
-    visibleTests,
-    customInputs,
-    isRunning,
-    isSubmitting,
-    runVisibleTests,
-    submitFullSolution,
-  };
+  const stateRef = useRef({ isRunning, isSubmitting, runVisibleTests, submitFullSolution });
+  stateRef.current = { isRunning, isSubmitting, runVisibleTests, submitFullSolution };
 
   // Keyboard shortcuts: Ctrl+' to Run, Ctrl+Enter to Submit
   // Registered in capture phase so CodeMirror or inner inputs cannot swallow them.
@@ -1100,8 +206,14 @@ export default function DsaCodingWorkspace({
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, []);
 
+  const extensions = LANGUAGE_EXTENSIONS[selectedLanguage];
   const activeResult = testResults[selectedCaseIdx];
   const allTestsPassed = testResults.length > 0 && testResults.every((r) => r.passed);
+  const crashed =
+    testResults.length > 0 &&
+    testResults.every((r) => !r.passed && (r.actualOutput === "Error" || r.actualOutput === "(no result)" || r.actualOutput === "Not run"));
+  const verdict = allTestsPassed ? "Accepted" : crashed ? "Runtime Error" : "Wrong Answer";
+  const runTime = activeResult?.executionTime ?? "—";
 
   return (
     <div className={`flex flex-col h-full text-ob-tx overflow-hidden ${className}`}>
@@ -1219,10 +331,12 @@ export default function DsaCodingWorkspace({
                           <strong className="text-ob-tx2 font-sans">Input: </strong>
                           <span className="text-ob-soft">{ex.input}</span>
                         </div>
-                        <div>
-                          <strong className="text-ob-tx2 font-sans">Output: </strong>
-                          <span className="text-ob-soft">{ex.output}</span>
-                        </div>
+                        {ex.output ? (
+                          <div>
+                            <strong className="text-ob-tx2 font-sans">Output: </strong>
+                            <span className="text-ob-soft">{ex.output}</span>
+                          </div>
+                        ) : null}
                         {ex.explanation && (
                           <div className="pt-1 font-sans text-ob-tx2 text-[11px]">
                             <strong className="text-ob-soft">Explanation: </strong>
@@ -1290,12 +404,13 @@ export default function DsaCodingWorkspace({
             <div className="flex items-center gap-2">
               <select
                 value={selectedLanguage}
+                aria-label="Language"
                 onChange={(e) => handleLanguageChange(e.target.value as ExecuteLanguage)}
                 className="bg-ob-bg3 hover:bg-ob-ov/10 border border-ob-ov/15 text-xs text-ob-tx rounded px-2.5 py-1 focus:outline-none cursor-pointer font-medium"
               >
-                {LANGUAGES.map((l) => (
-                  <option key={l.id} value={l.id} className="bg-ob-bg3 text-ob-tx">
-                    {l.label}
+                {EXECUTE_LANGUAGES.map((l) => (
+                  <option key={l} value={l} className="bg-ob-bg3 text-ob-tx">
+                    {LANGUAGE_LABELS[l]}
                   </option>
                 ))}
               </select>
@@ -1310,25 +425,23 @@ export default function DsaCodingWorkspace({
             </div>
 
             <div className="text-[11px] text-ob-tx3 font-mono">
-              Auto-saved
+              Draft kept per language · runs in your browser
             </div>
           </div>
 
           {/* Top 60%: CodeMirror Editor */}
           <div className="flex-[6] overflow-auto">
+            {/* The key remounts the editor whenever the document is swapped from outside (another language,
+                problem, or Reset). Otherwise the editor library holds back an outside change for ~0.7s after the
+                last keystroke, and the old code stays on screen under the new language. */}
             <CodeMirror
+              key={`${problem.id}:${selectedLanguage}:${resetCount}`}
               value={code}
               height="100%"
-              extensions={[LANGUAGE_EXTENSIONS[selectedLanguage], editorTheme]}
-              onChange={(value) => setCode(value)}
-              theme={theme === "light" ? "light" : "dark"}
-              basicSetup={{
-                lineNumbers: true,
-                foldGutter: true,
-                autocompletion: true,
-                bracketMatching: true,
-                indentOnInput: true,
-              }}
+              extensions={extensions}
+              onChange={handleCodeChange}
+              theme={editorTheme}
+              basicSetup={EDITOR_SETUP}
             />
           </div>
 
@@ -1375,7 +488,7 @@ export default function DsaCodingWorkspace({
               {(isRunning || isSubmitting) && (
                 <div className="flex items-center gap-1.5 text-xs text-cyan-400 font-mono">
                   <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                  <span>Running...</span>
+                  <span>{progress ? `Running ${Math.min(progress.done + 1, progress.total)}/${progress.total}` : "Running..."}</span>
                 </div>
               )}
             </div>
@@ -1427,7 +540,7 @@ export default function DsaCodingWorkspace({
                 <div className="space-y-3">
                   {testResults.length === 0 && !isRunning && !isSubmitting && (
                     <div className="text-center py-6 text-ob-tx3 italic text-xs">
-                      Run your code to evaluate against testcases.
+                      {runnable ? "Run your code to evaluate against testcases." : "This problem has no automated tests, so it is discussed rather than run."}
                     </div>
                   )}
 
@@ -1441,10 +554,10 @@ export default function DsaCodingWorkspace({
                               allTestsPassed ? "text-emerald-400" : "text-rose-400"
                             }`}
                           >
-                            {allTestsPassed ? "Accepted" : "Wrong Answer"}
+                            {verdict}
                           </span>
                           <span className="text-ob-tx2 font-mono text-xs">
-                            Runtime: {activeResult?.executionTime || "0.04s"}
+                            Runtime: {runTime}
                           </span>
                         </div>
 
@@ -1495,6 +608,15 @@ export default function DsaCodingWorkspace({
                             <span className="text-emerald-400">{activeResult.testCase.expectedOutput}</span>
                           </div>
 
+                          {activeResult.printed && (
+                            <div>
+                              <span className="text-ob-tx2">Stdout: </span>
+                              <div className="mt-1 p-2 rounded bg-ob-bg text-ob-soft whitespace-pre-wrap border border-ob-ov/5">
+                                {activeResult.printed}
+                              </div>
+                            </div>
+                          )}
+
                           {activeResult.error && (
                             <div className="mt-2 p-2 bg-rose-950/30 text-rose-300 rounded border border-rose-500/20 whitespace-pre-wrap font-mono text-[11px]">
                               {activeResult.error}
@@ -1525,7 +647,7 @@ export default function DsaCodingWorkspace({
               <div className="flex items-center gap-2">
                 <button
                   onClick={runVisibleTests}
-                  disabled={isRunning || isSubmitting}
+                  disabled={isRunning || isSubmitting || !runnable}
                   className="px-3 py-1.5 rounded-lg bg-ob-bg3 hover:bg-ob-ov/10 text-ob-soft border border-ob-ov/15 text-xs font-medium transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                   title="Run tests (Ctrl+')"
                 >
@@ -1538,7 +660,7 @@ export default function DsaCodingWorkspace({
 
                 <button
                   onClick={submitFullSolution}
-                  disabled={isRunning || isSubmitting}
+                  disabled={isRunning || isSubmitting || !runnable}
                   className="px-3.5 py-1.5 rounded-lg bg-[#2cbb5d] hover:bg-[#28a752] text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-950/40"
                   title="Submit full solution (Ctrl+Enter)"
                 >

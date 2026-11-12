@@ -23,9 +23,6 @@ class Settings(BaseSettings):
     # Access tokens are bearer tokens kept in the browser, so keep their lifetime short.
     access_token_expire_minutes: int = 60 * 24  # 24 hours
 
-    judge0_url: str = "http://localhost:2358"
-    judge0_auth_token: str
-
     elevenlabs_api_key: str = ""
     gemini_api_key: str = ""
     qwen_api_key: str = ""
@@ -57,8 +54,6 @@ class Settings(BaseSettings):
             low = self.secret_key.lower()
             if any(m in low for m in _WEAK_SECRET_MARKERS):
                 raise ValueError("SECRET_KEY looks like a placeholder; use a random value in production")
-            if len(self.judge0_auth_token) < 16:
-                raise ValueError("JUDGE0_AUTH_TOKEN must be at least 16 characters in production")
             if any(o.startswith("http://") and "localhost" not in o and "127.0.0.1" not in o for o in self.cors_origins):
                 raise ValueError("CORS_ORIGINS must use https in production")
         return self

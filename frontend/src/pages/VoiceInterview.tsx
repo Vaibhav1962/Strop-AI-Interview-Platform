@@ -70,12 +70,6 @@ function syncDsaProblemFromBackend(wmDsa: any, setter: (p: DsaProblem) => void) 
       edgeCasesToProbe: [],
       traps: [],
       hints: { tier1_conceptual: "", tier2_structural: "", tier3_concrete: "" },
-      templates: wmDsa.templates || {
-        Python: `class Solution:\n    def ${wmDsa.entry_point || "solution"}(self, input_val):\n        pass\n`,
-        JavaScript: `function ${wmDsa.entry_point || "solution"}(input_val) {\n}\n`,
-        "C++": `class Solution {\npublic:\n    void ${wmDsa.entry_point || "solution"}() {\n    }\n};\n`,
-        Java: `class Solution {\n    public void ${wmDsa.entry_point || "solution"}() {\n    }\n}\n`,
-      },
       testCases: wmDsa.test_cases || [],
     });
   }
@@ -635,7 +629,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
     const timeStr = formatTime(elapsedRef.current);
     const candidateTurn: ConversationTurn = {
       speaker: "Candidate",
-      text: `[Submitted ${result.language} Implementation]: Result: ${result.totalPassed}/${result.totalTests} tests passed. All visible and hidden test cases executed.`,
+      text: `[Submitted ${result.language} Implementation]: Result: ${result.totalPassed}/${result.totalTests} tests passed (the problem's full test suite, run in the browser).`,
       time: timeStr,
     };
 

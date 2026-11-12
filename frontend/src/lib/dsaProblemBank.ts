@@ -42,7 +42,6 @@ export interface DsaProblem {
   edgeCasesToProbe: string[];
   traps: DsaTrap[];
   hints: DsaHints;
-  templates: Record<"Python" | "JavaScript" | "C++" | "Java", string>;
   testCases: DsaTestCase[];
 }
 
@@ -90,12 +89,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "sliding window technique with left and right pointers",
       "tier2_structural": "frequency hash map/array storing last seen index",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def lengthOfLongestSubstring(self, input_val):\n        pass\n",
-      "JavaScript": "function lengthOfLongestSubstring(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void lengthOfLongestSubstring() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void lengthOfLongestSubstring() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -174,12 +167,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "two pointers expanding right and contracting left",
       "tier3_concrete": "Think about optimal approach: O(N + M)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def minWindow(self, input_val):\n        pass\n",
-      "JavaScript": "function minWindow(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void minWindow() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void minWindow() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -248,12 +235,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "window length minus max frequency <= k condition",
       "tier2_structural": "track max_freq in current window",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def characterReplacement(self, input_val):\n        pass\n",
-      "JavaScript": "function characterReplacement(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void characterReplacement() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void characterReplacement() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -324,12 +305,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "frequency array comparison with matches counter",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def checkInclusion(self, input_val):\n        pass\n",
-      "JavaScript": "function checkInclusion(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void checkInclusion() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void checkInclusion() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -395,12 +370,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "hash map with window pointers",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def totalFruit(self, input_val):\n        pass\n",
-      "JavaScript": "function totalFruit(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void totalFruit() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void totalFruit() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -464,12 +433,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "expand right pointer, contract left when zero_count > k",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def longestOnes(self, input_val):\n        pass\n",
-      "JavaScript": "function longestOnes(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void longestOnes() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void longestOnes() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -480,6 +443,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "2"
         ],
         "expectedOutput": "6",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1,0,1,1,0,1]\n1",
+        "args": [
+          "[1,0,1,1,0,1]",
+          "1"
+        ],
+        "expectedOutput": "4",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[0,0,0]\n0",
+        "args": [
+          "[0,0,0]",
+          "0"
+        ],
+        "expectedOutput": "0",
         "isHidden": false
       }
     ]
@@ -520,12 +505,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "fix first element and use two pointers for remaining two",
       "tier3_concrete": "Think about optimal approach: O(N^2)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def threeSum(self, input_val):\n        pass\n",
-      "JavaScript": "function threeSum(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void threeSum() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void threeSum() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -535,6 +514,36 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[-1,0,1,2,-1,-4]"
         ],
         "expectedOutput": "[[-1,-1,2],[-1,0,1]]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[0,0,0,0]",
+        "args": [
+          "[0,0,0,0]"
+        ],
+        "expectedOutput": "[[0,0,0]]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[0,1,1]",
+        "args": [
+          "[0,1,1]"
+        ],
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[1,2,-2,-1]",
+        "args": [
+          "[1,2,-2,-1]"
+        ],
+        "expectedOutput": "[]",
         "isHidden": false
       }
     ]
@@ -578,12 +587,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "two pointers at start and end",
       "tier2_structural": "area = min(h[l], h[r]) * (r - l)",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def maxArea(self, input_val):\n        pass\n",
-      "JavaScript": "function maxArea(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void maxArea() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void maxArea() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -644,12 +647,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "water trapped at index bounded by min(left_max, right_max) - height[i]",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def trap(self, input_val):\n        pass\n",
-      "JavaScript": "function trap(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void trap() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void trap() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -659,6 +656,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[0,1,0,2,1,0,1,3,2,1,2,1]"
         ],
         "expectedOutput": "6",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[4,2,0,3,2,5]",
+        "args": [
+          "[4,2,0,3,2,5]"
+        ],
+        "expectedOutput": "9",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1,2,3]",
+        "args": [
+          "[1,2,3]"
+        ],
+        "expectedOutput": "0",
         "isHidden": false
       }
     ]
@@ -703,12 +720,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "sum < target moves left rightward; sum > target moves right leftward",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def twoSum(self, input_val):\n        pass\n",
-      "JavaScript": "function twoSum(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void twoSum() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void twoSum() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -717,6 +728,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
         "args": [
           "[2,7,11,15]",
           "9"
+        ],
+        "expectedOutput": "[1,2]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[-3,-1,0,4,9]\n6",
+        "args": [
+          "[-3,-1,0,4,9]",
+          "6"
+        ],
+        "expectedOutput": "[1,5]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1,2]\n3",
+        "args": [
+          "[1,2]",
+          "3"
         ],
         "expectedOutput": "[1,2]",
         "isHidden": false
@@ -759,12 +792,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "swap 0 to low and increment low+mid; swap 2 to high and decrement high; 1 increments mid",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def sortColors(self, input_val):\n        pass\n",
-      "JavaScript": "function sortColors(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void sortColors() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void sortColors() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -774,6 +801,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[2,0,2,1,1,0]"
         ],
         "expectedOutput": "[0,0,1,1,2,2]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1,1,0,2,2,0,1]",
+        "args": [
+          "[1,1,0,2,2,0,1]"
+        ],
+        "expectedOutput": "[0,0,1,1,1,2,2]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[0]",
+        "args": [
+          "[0]"
+        ],
+        "expectedOutput": "[0]",
         "isHidden": false
       }
     ]
@@ -818,12 +865,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "number of valid subarrays ending at right is (right - left + 1)",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def numSubarrayProductLessThanK(self, input_val):\n        pass\n",
-      "JavaScript": "function numSubarrayProductLessThanK(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void numSubarrayProductLessThanK() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void numSubarrayProductLessThanK() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -834,6 +875,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "100"
         ],
         "expectedOutput": "8",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1,2,3]\n0",
+        "args": [
+          "[1,2,3]",
+          "0"
+        ],
+        "expectedOutput": "0",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1,1,1]\n2",
+        "args": [
+          "[1,1,1]",
+          "2"
+        ],
+        "expectedOutput": "6",
         "isHidden": false
       }
     ]
@@ -878,12 +941,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "contract left pointer while maintaining sum >= target to minimize window length",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def minSubArrayLen(self, input_val):\n        pass\n",
-      "JavaScript": "function minSubArrayLen(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void minSubArrayLen() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void minSubArrayLen() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -894,6 +951,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[2,3,1,2,4,3]"
         ],
         "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "4\n[1,4,4]",
+        "args": [
+          "4",
+          "[1,4,4]"
+        ],
+        "expectedOutput": "1",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "11\n[1,1,1,1,1]",
+        "args": [
+          "11",
+          "[1,1,1,1,1]"
+        ],
+        "expectedOutput": "0",
         "isHidden": false
       }
     ]
@@ -938,12 +1017,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "elements smaller than current element popped from back",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def maxSlidingWindow(self, input_val):\n        pass\n",
-      "JavaScript": "function maxSlidingWindow(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void maxSlidingWindow() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void maxSlidingWindow() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -954,6 +1027,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "3"
         ],
         "expectedOutput": "[3,3,5,5,6,7]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1]\n1",
+        "args": [
+          "[1]",
+          "1"
+        ],
+        "expectedOutput": "[1]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[9,11,8,5,7,10]\n2",
+        "args": [
+          "[9,11,8,5,7,10]",
+          "2"
+        ],
+        "expectedOutput": "[11,11,8,7,10]",
         "isHidden": false
       }
     ]
@@ -998,12 +1093,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "character frequency arrays for p and window in s",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def findAnagrams(self, input_val):\n        pass\n",
-      "JavaScript": "function findAnagrams(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void findAnagrams() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void findAnagrams() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -1014,6 +1103,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "\"abc\""
         ],
         "expectedOutput": "[0,6]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "\"abab\"\n\"ab\"",
+        "args": [
+          "\"abab\"",
+          "\"ab\""
+        ],
+        "expectedOutput": "[0,1,2]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "\"a\"\n\"ab\"",
+        "args": [
+          "\"a\"",
+          "\"ab\""
+        ],
+        "expectedOutput": "[]",
         "isHidden": false
       }
     ]
@@ -1061,12 +1172,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "prefix sum with frequency hash map",
       "tier2_structural": "formula: prefix_sum[j] - prefix_sum[i] = k -> prefix_sum[i] = prefix_sum[j] - k",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def subarraySum(self, input_val):\n        pass\n",
-      "JavaScript": "function subarraySum(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void subarraySum() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void subarraySum() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -1133,12 +1238,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "suffix products pass from right to left",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def productExceptSelf(self, input_val):\n        pass\n",
-      "JavaScript": "function productExceptSelf(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void productExceptSelf() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void productExceptSelf() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -1202,12 +1301,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "only start counting streak if (num - 1) is NOT in set (identifies sequence root)",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def longestConsecutive(self, input_val):\n        pass\n",
-      "JavaScript": "function longestConsecutive(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void longestConsecutive() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void longestConsecutive() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -1267,12 +1360,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "character count tuple achieves O(N * K) time",
       "tier3_concrete": "Think about optimal approach: O(N * K)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def groupAnagrams(self, input_val):\n        pass\n",
-      "JavaScript": "function groupAnagrams(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void groupAnagrams() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void groupAnagrams() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -1282,6 +1369,36 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]"
         ],
         "expectedOutput": "[[\"bat\"],[\"nat\",\"tan\"],[\"ate\",\"eat\",\"tea\"]]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[\"\"]",
+        "args": [
+          "[\"\"]"
+        ],
+        "expectedOutput": "[[\"\"]]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[\"a\"]",
+        "args": [
+          "[\"a\"]"
+        ],
+        "expectedOutput": "[[\"a\"]]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[\"abc\",\"bca\",\"cab\",\"xyz\"]",
+        "args": [
+          "[\"abc\",\"bca\",\"cab\",\"xyz\"]"
+        ],
+        "expectedOutput": "[[\"abc\",\"bca\",\"cab\"],[\"xyz\"]]",
         "isHidden": false
       }
     ]
@@ -1329,12 +1446,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "frequency hash map followed by bucket sort on frequencies",
       "tier2_structural": "bucket array indexed 0 to N holding lists of numbers",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def topKFrequent(self, input_val):\n        pass\n",
-      "JavaScript": "function topKFrequent(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void topKFrequent() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void topKFrequent() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -1405,12 +1516,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "map stores remainder -> earliest index seen",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def checkSubarraySum(self, input_val):\n        pass\n",
-      "JavaScript": "function checkSubarraySum(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void checkSubarraySum() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void checkSubarraySum() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -1476,12 +1581,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "track running prefix sum in hash map: sum -> first seen index",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def findMaxLength(self, input_val):\n        pass\n",
-      "JavaScript": "function findMaxLength(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void findMaxLength() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void findMaxLength() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -1541,12 +1640,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "decoder reads digits until '#' then reads exactly len bytes",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def encodeAndDecode(self, input_val):\n        pass\n",
-      "JavaScript": "function encodeAndDecode(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void encodeAndDecode() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void encodeAndDecode() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -1556,6 +1649,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[\"lint\",\"code\",\"love\",\"you\"]"
         ],
         "expectedOutput": "[\"lint\",\"code\",\"love\",\"you\"]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[\"\",\"a#b\",\"10#x\"]",
+        "args": [
+          "[\"\",\"a#b\",\"10#x\"]"
+        ],
+        "expectedOutput": "[\"\",\"a#b\",\"10#x\"]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[]",
+        "args": [
+          "[]"
+        ],
+        "expectedOutput": "[]",
         "isHidden": false
       }
     ]
@@ -1596,21 +1709,25 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "sub-box index calculated as (row // 3) * 3 + (col // 3)",
       "tier3_concrete": "Think about optimal approach: O(1)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def isValidSudoku(self, input_val):\n        pass\n",
-      "JavaScript": "function isValidSudoku(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void isValidSudoku() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void isValidSudoku() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
         "label": "Test Case 1",
-        "input": "[[\"5\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"]]",
+        "input": "[[\"5\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"],[\"6\",\".\",\".\",\"1\",\"9\",\"5\",\".\",\".\",\".\"],[\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\"6\",\".\"],[\"8\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"3\"],[\"4\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"1\"],[\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],[\".\",\"6\",\".\",\".\",\".\",\".\",\"2\",\"8\",\".\"],[\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"5\"],[\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]",
         "args": [
-          "[[\"5\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"]]"
+          "[[\"5\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"],[\"6\",\".\",\".\",\"1\",\"9\",\"5\",\".\",\".\",\".\"],[\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\"6\",\".\"],[\"8\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"3\"],[\"4\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"1\"],[\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],[\".\",\"6\",\".\",\".\",\".\",\".\",\"2\",\"8\",\".\"],[\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"5\"],[\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]"
         ],
         "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[[\"8\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"],[\"6\",\".\",\".\",\"1\",\"9\",\"5\",\".\",\".\",\".\"],[\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\"6\",\".\"],[\"8\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"3\"],[\"4\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"1\"],[\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],[\".\",\"6\",\".\",\".\",\".\",\".\",\"2\",\"8\",\".\"],[\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"5\"],[\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]",
+        "args": [
+          "[[\"8\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"],[\"6\",\".\",\".\",\"1\",\"9\",\"5\",\".\",\".\",\".\"],[\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\"6\",\".\"],[\"8\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"3\"],[\"4\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"1\"],[\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],[\".\",\"6\",\".\",\".\",\".\",\".\",\"2\",\"8\",\".\"],[\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"5\"],[\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]"
+        ],
+        "expectedOutput": "false",
         "isHidden": false
       }
     ]
@@ -1658,12 +1775,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "cyclic sort placing each number x into index x-1 if 1 <= x <= n",
       "tier2_structural": "second pass finds first index i where nums[i] != i + 1",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def firstMissingPositive(self, input_val):\n        pass\n",
-      "JavaScript": "function firstMissingPositive(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void firstMissingPositive() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void firstMissingPositive() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -1734,12 +1845,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "while current temp > stack.top temp, pop and resolve wait days: i - prev_idx",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def dailyTemperatures(self, input_val):\n        pass\n",
-      "JavaScript": "function dailyTemperatures(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void dailyTemperatures() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void dailyTemperatures() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -1749,6 +1854,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[73,74,75,71,69,72,76,73]"
         ],
         "expectedOutput": "[1,1,4,2,1,1,0,0]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[30,40,50,60]",
+        "args": [
+          "[30,40,50,60]"
+        ],
+        "expectedOutput": "[1,1,1,0]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[90,80,70]",
+        "args": [
+          "[90,80,70]"
+        ],
+        "expectedOutput": "[0,0,0]",
         "isHidden": false
       }
     ]
@@ -1792,12 +1917,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "monotonic increasing stack storing indices",
       "tier2_structural": "when a shorter bar arrives, pop top and calculate width = (i - stack.peek() - 1)",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def largestRectangleArea(self, input_val):\n        pass\n",
-      "JavaScript": "function largestRectangleArea(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void largestRectangleArea() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void largestRectangleArea() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -1858,12 +1977,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "single stack encoding difference (2*val - minVal) to achieve O(1) space per entry",
       "tier3_concrete": "Think about optimal approach: O(1)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def MinStack(self, input_val):\n        pass\n",
-      "JavaScript": "function MinStack(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void MinStack() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void MinStack() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -1874,6 +1987,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[[],[-2],[0],[-3],[],[],[],[]]"
         ],
         "expectedOutput": "[null,null,null,null,-3,null,0,-2]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[\"MinStack\",\"push\",\"push\",\"getMin\",\"top\",\"pop\",\"getMin\"]\n[[],[2],[1],[],[],[],[]]",
+        "args": [
+          "[\"MinStack\",\"push\",\"push\",\"getMin\",\"top\",\"pop\",\"getMin\"]",
+          "[[],[2],[1],[],[],[],[]]"
+        ],
+        "expectedOutput": "[null,null,null,1,1,null,2]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[\"MinStack\",\"push\",\"push\",\"push\",\"pop\",\"getMin\"]\n[[],[1],[1],[2],[],[]]",
+        "args": [
+          "[\"MinStack\",\"push\",\"push\",\"push\",\"pop\",\"getMin\"]",
+          "[[],[1],[1],[2],[],[]]"
+        ],
+        "expectedOutput": "[null,null,null,null,null,1]",
         "isHidden": false
       }
     ]
@@ -1917,12 +2052,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "operand stack",
       "tier2_structural": "when operator encountered, pop right operand then left operand, compute result, push back",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def evalRPN(self, input_val):\n        pass\n",
-      "JavaScript": "function evalRPN(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void evalRPN() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void evalRPN() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -1987,12 +2116,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "lookup each nums1 element in map in O(1)",
       "tier3_concrete": "Think about optimal approach: O(N1 + N2)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def nextGreaterElement(self, input_val):\n        pass\n",
-      "JavaScript": "function nextGreaterElement(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void nextGreaterElement() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void nextGreaterElement() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -2003,6 +2126,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[1,3,4,2]"
         ],
         "expectedOutput": "[-1,3,-1]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[2,4]\n[1,2,3,4]",
+        "args": [
+          "[2,4]",
+          "[1,2,3,4]"
+        ],
+        "expectedOutput": "[3,-1]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1,3,5,2,4]\n[6,5,4,3,2,1]",
+        "args": [
+          "[1,3,5,2,4]",
+          "[6,5,4,3,2,1]"
+        ],
+        "expectedOutput": "[-1,-1,-1,-1,-1]",
         "isHidden": false
       }
     ]
@@ -2046,12 +2191,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "simulate circular array by iterating 2 * N indices using modulo (i % n)",
       "tier2_structural": "monotonic decreasing stack storing indices",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def nextGreaterElements(self, input_val):\n        pass\n",
-      "JavaScript": "function nextGreaterElements(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void nextGreaterElements() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void nextGreaterElements() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -2119,12 +2258,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "stack representing surviving asteroids moving right (> 0)",
       "tier2_structural": "when negative asteroid arrives, collide against positive asteroids on stack until one explodes",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def asteroidCollision(self, input_val):\n        pass\n",
-      "JavaScript": "function asteroidCollision(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void asteroidCollision() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void asteroidCollision() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -2207,12 +2340,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "while k > 0 and stack.top > digit, pop from stack",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def removeKdigits(self, input_val):\n        pass\n",
-      "JavaScript": "function removeKdigits(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void removeKdigits() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void removeKdigits() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -2293,12 +2420,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "calculate time to target: (target - pos) / speed",
       "tier3_concrete": "Think about optimal approach: O(N log N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def carFleet(self, input_val):\n        pass\n",
-      "JavaScript": "function carFleet(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void carFleet() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void carFleet() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -2310,6 +2431,30 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[2,4,1,1,3]"
         ],
         "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "10\n[3]\n[3]",
+        "args": [
+          "10",
+          "[3]",
+          "[3]"
+        ],
+        "expectedOutput": "1",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "100\n[0,2,4]\n[4,2,1]",
+        "args": [
+          "100",
+          "[0,2,4]",
+          "[4,2,1]"
+        ],
+        "expectedOutput": "1",
         "isHidden": false
       }
     ]
@@ -2350,12 +2495,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "when higher bar encountered, pop bottom, compute bounded water between bottom and new stack.top",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def trapStack(self, input_val):\n        pass\n",
-      "JavaScript": "function trapStack(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void trapStack() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void trapStack() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -2365,6 +2504,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[0,1,0,2,1,0,1,3,2,1,2,1]"
         ],
         "expectedOutput": "6",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[4,2,0,3,2,5]",
+        "args": [
+          "[4,2,0,3,2,5]"
+        ],
+        "expectedOutput": "9",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[3,0,3]",
+        "args": [
+          "[3,0,3]"
+        ],
+        "expectedOutput": "3",
         "isHidden": false
       }
     ]
@@ -2412,12 +2571,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "mid = left + (right - left) // 2 to prevent integer overflow",
       "tier2_structural": "adjust pointers left = mid + 1 or right = mid - 1",
       "tier3_concrete": "Think about optimal approach: O(log N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def search(self, input_val):\n        pass\n",
-      "JavaScript": "function search(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void search() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void search() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -2488,12 +2641,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "check if target falls within the sorted half range",
       "tier3_concrete": "Think about optimal approach: O(log N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def searchRotated(self, input_val):\n        pass\n",
-      "JavaScript": "function searchRotated(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void searchRotated() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void searchRotated() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -2562,12 +2709,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "compare nums[mid] with nums[right]",
       "tier2_structural": "if nums[mid] > nums[right], minimum lies in right half (left = mid + 1); else right = mid",
       "tier3_concrete": "Think about optimal approach: O(log N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def findMin(self, input_val):\n        pass\n",
-      "JavaScript": "function findMin(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void findMin() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void findMin() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -2646,12 +2787,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "feasibility check: sum(ceil(p / k)) <= h in O(N)",
       "tier3_concrete": "Think about optimal approach: O(N log M)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def minEatingSpeed(self, input_val):\n        pass\n",
-      "JavaScript": "function minEatingSpeed(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void minEatingSpeed() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void minEatingSpeed() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -2721,12 +2856,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "greedy simulation to count required days for capacity cap",
       "tier3_concrete": "Think about optimal approach: O(N log S)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def shipWithinDays(self, input_val):\n        pass\n",
-      "JavaScript": "function shipWithinDays(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void shipWithinDays() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void shipWithinDays() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -2792,12 +2921,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "if nums[mid] < nums[mid + 1], a peak is guaranteed to exist on the right side",
       "tier3_concrete": "Think about optimal approach: O(log N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def findPeakElement(self, input_val):\n        pass\n",
-      "JavaScript": "function findPeakElement(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void findPeakElement() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void findPeakElement() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -2857,12 +2980,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "binary search on timestamps for largest timestamp <= target_time",
       "tier3_concrete": "Think about optimal approach: O(log N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def TimeMap(self, input_val):\n        pass\n",
-      "JavaScript": "function TimeMap(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void TimeMap() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void TimeMap() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -2873,6 +2990,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[[],[\"foo\",\"bar\",1],[\"foo\",1],[\"foo\",3],[\"foo\",\"bar2\",4],[\"foo\",4],[\"foo\",5]]"
         ],
         "expectedOutput": "[null,null,\"bar\",\"bar\",null,\"bar2\",\"bar2\"]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[\"TimeMap\",\"set\",\"set\",\"get\",\"get\",\"get\"]\n[[],[\"a\",\"x\",1],[\"a\",\"y\",5],[\"a\",0],[\"a\",3],[\"a\",9]]",
+        "args": [
+          "[\"TimeMap\",\"set\",\"set\",\"get\",\"get\",\"get\"]",
+          "[[],[\"a\",\"x\",1],[\"a\",\"y\",5],[\"a\",0],[\"a\",3],[\"a\",9]]"
+        ],
+        "expectedOutput": "[null,null,null,\"\",\"x\",\"y\"]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[\"TimeMap\",\"get\",\"set\",\"get\"]\n[[],[\"k\",1],[\"k\",\"v\",2],[\"k\",2]]",
+        "args": [
+          "[\"TimeMap\",\"get\",\"set\",\"get\"]",
+          "[[],[\"k\",1],[\"k\",\"v\",2],[\"k\",2]]"
+        ],
+        "expectedOutput": "[null,\"\",null,\"v\"]",
         "isHidden": false
       }
     ]
@@ -2920,12 +3059,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "binary search on partition of smaller array",
       "tier2_structural": "partition conditions: left1 <= right2 and left2 <= right1",
       "tier3_concrete": "Think about optimal approach: O(log(min(M, N)))"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def findMedianSortedArrays(self, input_val):\n        pass\n",
-      "JavaScript": "function findMedianSortedArrays(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void findMedianSortedArrays() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void findMedianSortedArrays() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -2996,12 +3129,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "feasibility check: greedy greedily greedily count subarrays needed for max allowed sum S",
       "tier3_concrete": "Think about optimal approach: O(N log S)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def splitArray(self, input_val):\n        pass\n",
-      "JavaScript": "function splitArray(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void splitArray() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void splitArray() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3067,12 +3194,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "mapping index: row = mid // n, col = mid % n",
       "tier3_concrete": "Think about optimal approach: O(log(MN))"
     },
-    "templates": {
-      "Python": "class Solution:\n    def searchMatrix(self, input_val):\n        pass\n",
-      "JavaScript": "function searchMatrix(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void searchMatrix() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void searchMatrix() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3081,6 +3202,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
         "args": [
           "[[1,3,5,7],[10,11,16,20],[23,30,34,60]]",
           "3"
+        ],
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[[1,3,5,7],[10,11,16,20],[23,30,34,60]]\n13",
+        "args": [
+          "[[1,3,5,7],[10,11,16,20],[23,30,34,60]]",
+          "13"
+        ],
+        "expectedOutput": "false",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[[1]]\n1",
+        "args": [
+          "[[1]]",
+          "1"
         ],
         "expectedOutput": "true",
         "isHidden": false
@@ -3130,12 +3273,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "two binary searches: one finding leftmost occurrence (bias left), one finding rightmost (bias right)",
       "tier2_structural": "O(log N) time and O(1) space",
       "tier3_concrete": "Think about optimal approach: O(log N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def searchRange(self, input_val):\n        pass\n",
-      "JavaScript": "function searchRange(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void searchRange() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void searchRange() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -3202,12 +3339,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "mid * mid <= x condition",
       "tier3_concrete": "Think about optimal approach: O(log X)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def mySqrt(self, input_val):\n        pass\n",
-      "JavaScript": "function mySqrt(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void mySqrt() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void mySqrt() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3267,12 +3398,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "redirect curr.next = prev, advance prev = curr, curr = next_node",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def reverseList(self, input_val):\n        pass\n",
-      "JavaScript": "function reverseList(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void reverseList() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void reverseList() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3282,6 +3407,36 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[1,2,3,4,5]"
         ],
         "expectedOutput": "[5,4,3,2,1]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[]",
+        "args": [
+          "[]"
+        ],
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1]",
+        "args": [
+          "[1]"
+        ],
+        "expectedOutput": "[1]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[1,2]",
+        "args": [
+          "[1,2]"
+        ],
+        "expectedOutput": "[2,1]",
         "isHidden": false
       }
     ]
@@ -3326,12 +3481,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "compare l1.val and l2.val, attach smaller node to tail, advance",
       "tier3_concrete": "Think about optimal approach: O(N + M)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def mergeTwoLists(self, input_val):\n        pass\n",
-      "JavaScript": "function mergeTwoLists(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void mergeTwoLists() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void mergeTwoLists() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3342,6 +3491,39 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[1,3,4]"
         ],
         "expectedOutput": "[1,1,2,3,4,4]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[]\n[]",
+        "args": [
+          "[]",
+          "[]"
+        ],
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[]\n[0]",
+        "args": [
+          "[]",
+          "[0]"
+        ],
+        "expectedOutput": "[0]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[5]\n[1,2,4]",
+        "args": [
+          "[5]",
+          "[1,2,4]"
+        ],
+        "expectedOutput": "[1,2,4,5]",
         "isHidden": false
       }
     ]
@@ -3382,12 +3564,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "extract min, append to result, push node.next if exists",
       "tier3_concrete": "Think about optimal approach: O(N log K)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def mergeKLists(self, input_val):\n        pass\n",
-      "JavaScript": "function mergeKLists(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void mergeKLists() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void mergeKLists() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3397,6 +3573,36 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[[1,4,5],[1,3,4],[2,6]]"
         ],
         "expectedOutput": "[1,1,2,3,4,4,5,6]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[]",
+        "args": [
+          "[]"
+        ],
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[[]]",
+        "args": [
+          "[[]]"
+        ],
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[[1],[0]]",
+        "args": [
+          "[[1],[0]]"
+        ],
+        "expectedOutput": "[0,1]",
         "isHidden": false
       }
     ]
@@ -3440,12 +3646,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "find middle of list using fast/slow pointers",
       "tier2_structural": "reverse the second half of the list",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def reorderList(self, input_val):\n        pass\n",
-      "JavaScript": "function reorderList(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void reorderList() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void reorderList() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -3514,12 +3714,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "two pointers fast and slow spaced n + 1 steps apart",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def removeNthFromEnd(self, input_val):\n        pass\n",
-      "JavaScript": "function removeNthFromEnd(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void removeNthFromEnd() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void removeNthFromEnd() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3581,12 +3775,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "reset one pointer to head; advance both 1 step at a time; intersection is cycle entrance",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def detectCycle(self, input_val):\n        pass\n",
-      "JavaScript": "function detectCycle(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void detectCycle() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void detectCycle() {\n    }\n}\n"
-    },
     "testCases": []
   },
   {
@@ -3624,12 +3812,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "interweave cloned nodes directly next to original nodes: A -> A' -> B -> B'",
       "tier2_structural": "assign random pointers: curr.next.random = curr.random.next",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def copyRandomList(self, input_val):\n        pass\n",
-      "JavaScript": "function copyRandomList(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void copyRandomList() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void copyRandomList() {\n    }\n}\n"
     },
     "testCases": []
   },
@@ -3669,12 +3851,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "doubly linked list maintaining access order with dummy head and tail",
       "tier3_concrete": "Think about optimal approach: O(1)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def LRUCache(self, input_val):\n        pass\n",
-      "JavaScript": "function LRUCache(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void LRUCache() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void LRUCache() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3685,6 +3861,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]"
         ],
         "expectedOutput": "[null,null,null,1,null,-1,null,-1,3,4]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[\"LRUCache\",\"put\",\"put\",\"put\",\"get\",\"get\"]\n[[1],[1,1],[2,2],[3,3],[1],[3]]",
+        "args": [
+          "[\"LRUCache\",\"put\",\"put\",\"put\",\"get\",\"get\"]",
+          "[[1],[1,1],[2,2],[3,3],[1],[3]]"
+        ],
+        "expectedOutput": "[null,null,null,null,-1,3]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[\"LRUCache\",\"put\",\"put\",\"put\",\"get\",\"put\",\"get\"]\n[[2],[1,1],[2,2],[1,10],[1],[3,3],[2]]",
+        "args": [
+          "[\"LRUCache\",\"put\",\"put\",\"put\",\"get\",\"put\",\"get\"]",
+          "[[2],[1,1],[2,2],[1,10],[1],[3,3],[2]]"
+        ],
+        "expectedOutput": "[null,null,null,null,10,null,-1]",
         "isHidden": false
       }
     ]
@@ -3724,12 +3922,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "O(N) time and O(H) stack",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def invertTree(self, input_val):\n        pass\n",
-      "JavaScript": "function invertTree(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void invertTree() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void invertTree() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3739,6 +3931,36 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[4,2,7,1,3,6,9]"
         ],
         "expectedOutput": "[4,7,2,9,6,3,1]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[2,1,3]",
+        "args": [
+          "[2,1,3]"
+        ],
+        "expectedOutput": "[2,3,1]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[]",
+        "args": [
+          "[]"
+        ],
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[1]",
+        "args": [
+          "[1]"
+        ],
+        "expectedOutput": "[1]",
         "isHidden": false
       }
     ]
@@ -3778,12 +4000,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def maxDepth(self, input_val):\n        pass\n",
-      "JavaScript": "function maxDepth(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void maxDepth() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void maxDepth() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3793,6 +4009,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[3,9,20,null,null,15,7]"
         ],
         "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1,null,2]",
+        "args": [
+          "[1,null,2]"
+        ],
+        "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[]",
+        "args": [
+          "[]"
+        ],
+        "expectedOutput": "0",
         "isHidden": false
       }
     ]
@@ -3832,12 +4068,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "global max tracking",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def diameterOfBinaryTree(self, input_val):\n        pass\n",
-      "JavaScript": "function diameterOfBinaryTree(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void diameterOfBinaryTree() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void diameterOfBinaryTree() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3847,6 +4077,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[1,2,3,4,5]"
         ],
         "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1,2]",
+        "args": [
+          "[1,2]"
+        ],
+        "expectedOutput": "1",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1,2,3,4,5,null,null,6]",
+        "args": [
+          "[1,2,3,4,5,null,null,6]"
+        ],
+        "expectedOutput": "4",
         "isHidden": false
       }
     ]
@@ -3886,12 +4136,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "O(N) vs naive O(N^2) top-down",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def isBalanced(self, input_val):\n        pass\n",
-      "JavaScript": "function isBalanced(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void isBalanced() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void isBalanced() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3899,6 +4143,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
         "input": "[3,9,20,null,null,15,7]",
         "args": [
           "[3,9,20,null,null,15,7]"
+        ],
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1,2,2,3,3,null,null,4,4]",
+        "args": [
+          "[1,2,2,3,3,null,null,4,4]"
+        ],
+        "expectedOutput": "false",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[]",
+        "args": [
+          "[]"
         ],
         "expectedOutput": "true",
         "isHidden": false
@@ -3944,12 +4208,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "base cases: both null, one null, values differ",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def isSameTree(self, input_val):\n        pass\n",
-      "JavaScript": "function isSameTree(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void isSameTree() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void isSameTree() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -3958,6 +4216,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
         "args": [
           "[1,2,3]",
           "[1,2,3]"
+        ],
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1,2]\n[1,null,2]",
+        "args": [
+          "[1,2]",
+          "[1,null,2]"
+        ],
+        "expectedOutput": "false",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[]\n[]",
+        "args": [
+          "[]",
+          "[]"
         ],
         "expectedOutput": "true",
         "isHidden": false
@@ -4003,12 +4283,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "Merkle tree hashing O(N) optimization",
       "tier3_concrete": "Think about optimal approach: O(N * M)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def isSubtree(self, input_val):\n        pass\n",
-      "JavaScript": "function isSubtree(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void isSubtree() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void isSubtree() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -4017,6 +4291,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
         "args": [
           "[3,4,5,1,2]",
           "[4,1,2]"
+        ],
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[3,4,5,1,2,null,null,null,null,0]\n[4,1,2]",
+        "args": [
+          "[3,4,5,1,2,null,null,null,null,0]",
+          "[4,1,2]"
+        ],
+        "expectedOutput": "false",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1]\n[1]",
+        "args": [
+          "[1]",
+          "[1]"
         ],
         "expectedOutput": "true",
         "isHidden": false
@@ -4066,12 +4362,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "O(H) time",
       "tier3_concrete": "Think about optimal approach: O(H)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def lowestCommonAncestor(self, input_val):\n        pass\n",
-      "JavaScript": "function lowestCommonAncestor(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void lowestCommonAncestor() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void lowestCommonAncestor() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -4083,6 +4373,30 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "8"
         ],
         "expectedOutput": "6",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[6,2,8,0,4,7,9,null,null,3,5]\n2\n4",
+        "args": [
+          "[6,2,8,0,4,7,9,null,null,3,5]",
+          "2",
+          "4"
+        ],
+        "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[6,2,8,0,4,7,9,null,null,3,5]\n3\n5",
+        "args": [
+          "[6,2,8,0,4,7,9,null,null,3,5]",
+          "3",
+          "5"
+        ],
+        "expectedOutput": "4",
         "isHidden": false
       }
     ]
@@ -4130,12 +4444,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "if left and right return non-null, current node is LCA",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def lowestCommonAncestorBT(self, input_val):\n        pass\n",
-      "JavaScript": "function lowestCommonAncestorBT(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void lowestCommonAncestorBT() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void lowestCommonAncestorBT() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -4147,6 +4455,30 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "1"
         ],
         "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[3,5,1,6,2,0,8,null,null,7,4]\n5\n4",
+        "args": [
+          "[3,5,1,6,2,0,8,null,null,7,4]",
+          "5",
+          "4"
+        ],
+        "expectedOutput": "5",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[3,5,1,6,2,0,8,null,null,7,4]\n6\n4",
+        "args": [
+          "[3,5,1,6,2,0,8,null,null,7,4]",
+          "6",
+          "4"
+        ],
+        "expectedOutput": "5",
         "isHidden": false
       }
     ]
@@ -4186,12 +4518,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "O(N) time and O(N) space",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def levelOrder(self, input_val):\n        pass\n",
-      "JavaScript": "function levelOrder(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void levelOrder() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void levelOrder() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -4201,6 +4527,36 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[3,9,20,null,null,15,7]"
         ],
         "expectedOutput": "[[3],[9,20],[15,7]]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[]",
+        "args": [
+          "[]"
+        ],
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1]",
+        "args": [
+          "[1]"
+        ],
+        "expectedOutput": "[[1]]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[1,2,3,4,null,null,5]",
+        "args": [
+          "[1,2,3,4,null,null,5]"
+        ],
+        "expectedOutput": "[[1],[2,3],[4,5]]",
         "isHidden": false
       }
     ]
@@ -4240,12 +4596,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def rightSideView(self, input_val):\n        pass\n",
-      "JavaScript": "function rightSideView(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void rightSideView() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void rightSideView() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -4255,6 +4605,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[1,2,3,null,5,null,4]"
         ],
         "expectedOutput": "[1,3,4]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1,null,3]",
+        "args": [
+          "[1,null,3]"
+        ],
+        "expectedOutput": "[1,3]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[]",
+        "args": [
+          "[]"
+        ],
+        "expectedOutput": "[]",
         "isHidden": false
       }
     ]
@@ -4294,12 +4664,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "increment count if node.val >= max_val",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def goodNodes(self, input_val):\n        pass\n",
-      "JavaScript": "function goodNodes(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void goodNodes() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void goodNodes() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -4309,6 +4673,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[3,1,4,3,null,1,5]"
         ],
         "expectedOutput": "4",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[3,3,null,4,2]",
+        "args": [
+          "[3,3,null,4,2]"
+        ],
+        "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1]",
+        "args": [
+          "[1]"
+        ],
+        "expectedOutput": "1",
         "isHidden": false
       }
     ]
@@ -4351,12 +4735,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "recursion passing valid range (min_val, max_val)",
       "tier2_structural": "in-order traversal verifying strictly increasing values",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def isValidBST(self, input_val):\n        pass\n",
-      "JavaScript": "function isValidBST(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void isValidBST() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void isValidBST() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -4420,12 +4798,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "iterative stack implementation in O(H + k)",
       "tier3_concrete": "Think about optimal approach: O(H + k)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def kthSmallest(self, input_val):\n        pass\n",
-      "JavaScript": "function kthSmallest(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void kthSmallest() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void kthSmallest() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -4433,6 +4805,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
         "input": "[3,1,4,null,2]\n1",
         "args": [
           "[3,1,4,null,2]",
+          "1"
+        ],
+        "expectedOutput": "1",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[5,3,6,2,4,null,null,1]\n3",
+        "args": [
+          "[5,3,6,2,4,null,null,1]",
+          "3"
+        ],
+        "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[5,3,6,2,4,null,null,1]\n1",
+        "args": [
+          "[5,3,6,2,4,null,null,1]",
           "1"
         ],
         "expectedOutput": "1",
@@ -4479,12 +4873,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "O(N) time with hash map",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def buildTree(self, input_val):\n        pass\n",
-      "JavaScript": "function buildTree(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void buildTree() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void buildTree() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -4495,6 +4883,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[9,3,15,20,7]"
         ],
         "expectedOutput": "[3,9,20,null,null,15,7]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[-1]\n[-1]",
+        "args": [
+          "[-1]",
+          "[-1]"
+        ],
+        "expectedOutput": "[-1]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1,2]\n[2,1]",
+        "args": [
+          "[1,2]",
+          "[2,1]"
+        ],
+        "expectedOutput": "[1,2]",
         "isHidden": false
       }
     ]
@@ -4537,12 +4947,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "post-order traversal: max_gain = max(0, dfs(child))",
       "tier2_structural": "split_path = node.val + left_gain + right_gain updates global max",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def maxPathSum(self, input_val):\n        pass\n",
-      "JavaScript": "function maxPathSum(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void maxPathSum() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void maxPathSum() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -4602,12 +5006,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "reconstruction consumes tokens from queue in O(N)",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def Codec(self, input_val):\n        pass\n",
-      "JavaScript": "function Codec(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void Codec() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void Codec() {\n    }\n}\n"
-    },
     "testCases": []
   },
   {
@@ -4644,12 +5042,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "BFS/DFS connected component discovery",
       "tier2_structural": "in-place grid mutation ('0') to track visited in O(1) space",
       "tier3_concrete": "Think about optimal approach: O(MN)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def numIslands(self, input_val):\n        pass\n",
-      "JavaScript": "function numIslands(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void numIslands() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void numIslands() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -4709,12 +5101,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "DFS/BFS copying neighbors",
       "tier3_concrete": "Think about optimal approach: O(V + E)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def cloneGraph(self, input_val):\n        pass\n",
-      "JavaScript": "function cloneGraph(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void cloneGraph() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void cloneGraph() {\n    }\n}\n"
-    },
     "testCases": []
   },
   {
@@ -4751,12 +5137,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "DFS computing area = 1 + sum(dfs(neighbors))",
       "tier2_structural": "mark visited cells",
       "tier3_concrete": "Think about optimal approach: O(MN)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def maxAreaOfIsland(self, input_val):\n        pass\n",
-      "JavaScript": "function maxAreaOfIsland(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void maxAreaOfIsland() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void maxAreaOfIsland() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -4816,12 +5196,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "intersection of pacific_reachable and atlantic_reachable sets",
       "tier3_concrete": "Think about optimal approach: O(MN)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def pacificAtlantic(self, input_val):\n        pass\n",
-      "JavaScript": "function pacificAtlantic(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void pacificAtlantic() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void pacificAtlantic() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -4880,12 +5254,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "flip remaining 'O' to 'X' and uncapturable back to 'O'",
       "tier3_concrete": "Think about optimal approach: O(MN)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def solve(self, input_val):\n        pass\n",
-      "JavaScript": "function solve(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void solve() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void solve() {\n    }\n}\n"
-    },
     "testCases": []
   },
   {
@@ -4926,12 +5294,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "multi-source BFS starting with all initially rotten oranges",
       "tier2_structural": "track fresh_count and decrement per infection",
       "tier3_concrete": "Think about optimal approach: O(MN)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def orangesRotting(self, input_val):\n        pass\n",
-      "JavaScript": "function orangesRotting(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void orangesRotting() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void orangesRotting() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -5009,12 +5371,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "Kahn's algorithm (BFS with in-degree array) or DFS with 3-color states",
       "tier3_concrete": "Think about optimal approach: O(V + E)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def canFinish(self, input_val):\n        pass\n",
-      "JavaScript": "function canFinish(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void canFinish() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void canFinish() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5079,12 +5435,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "if len(order) != numCourses return []",
       "tier3_concrete": "Think about optimal approach: O(V + E)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def findOrder(self, input_val):\n        pass\n",
-      "JavaScript": "function findOrder(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void findOrder() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void findOrder() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5095,6 +5445,39 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[[1,0],[2,0],[3,1],[3,2]]"
         ],
         "expectedOutput": "[0,2,1,3]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "2\n[[1,0]]",
+        "args": [
+          "2",
+          "[[1,0]]"
+        ],
+        "expectedOutput": "[0,1]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "2\n[[1,0],[0,1]]",
+        "args": [
+          "2",
+          "[[1,0],[0,1]]"
+        ],
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "1\n[]",
+        "args": [
+          "1",
+          "[]"
+        ],
+        "expectedOutput": "[0]",
         "isHidden": false
       }
     ]
@@ -5134,12 +5517,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "first edge connecting two nodes already in same component is redundant",
       "tier3_concrete": "Think about optimal approach: O(E * alpha(V))"
     },
-    "templates": {
-      "Python": "class Solution:\n    def findRedundantConnection(self, input_val):\n        pass\n",
-      "JavaScript": "function findRedundantConnection(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void findRedundantConnection() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void findRedundantConnection() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5149,6 +5526,16 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[[1,2],[1,3],[2,3]]"
         ],
         "expectedOutput": "[2,3]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[[1,2],[2,3],[3,4],[1,4],[1,5]]",
+        "args": [
+          "[[1,2],[2,3],[3,4],[1,4],[1,5]]"
+        ],
+        "expectedOutput": "[1,4]",
         "isHidden": false
       }
     ]
@@ -5196,12 +5583,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "intermediate wildcard patterns (d*g) to find neighbors in O(L^2)",
       "tier3_concrete": "Think about optimal approach: O(N * L^2)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def ladderLength(self, input_val):\n        pass\n",
-      "JavaScript": "function ladderLength(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void ladderLength() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void ladderLength() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5213,6 +5594,30 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[\"hot\",\"dot\",\"dog\",\"lot\",\"log\",\"cog\"]"
         ],
         "expectedOutput": "5",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "\"hit\"\n\"cog\"\n[\"hot\",\"dot\",\"dog\",\"lot\",\"log\"]",
+        "args": [
+          "\"hit\"",
+          "\"cog\"",
+          "[\"hot\",\"dot\",\"dog\",\"lot\",\"log\"]"
+        ],
+        "expectedOutput": "0",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "\"a\"\n\"c\"\n[\"a\",\"b\",\"c\"]",
+        "args": [
+          "\"a\"",
+          "\"c\"",
+          "[\"a\",\"b\",\"c\"]"
+        ],
+        "expectedOutput": "2",
         "isHidden": false
       }
     ]
@@ -5260,12 +5665,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "dist array initialized to infinity, relax edges",
       "tier3_concrete": "Think about optimal approach: O(E log V)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def networkDelayTime(self, input_val):\n        pass\n",
-      "JavaScript": "function networkDelayTime(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void networkDelayTime() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void networkDelayTime() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5277,6 +5676,30 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "2"
         ],
         "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[[1,2,1]]\n2\n1",
+        "args": [
+          "[[1,2,1]]",
+          "2",
+          "1"
+        ],
+        "expectedOutput": "1",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[[1,2,1]]\n2\n2",
+        "args": [
+          "[[1,2,1]]",
+          "2",
+          "2"
+        ],
+        "expectedOutput": "-1",
         "isHidden": false
       }
     ]
@@ -5316,12 +5739,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "topological sort; check for prefix invalidity and cycles",
       "tier3_concrete": "Think about optimal approach: O(C)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def alienOrder(self, input_val):\n        pass\n",
-      "JavaScript": "function alienOrder(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void alienOrder() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void alienOrder() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5331,6 +5748,36 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[\"wrt\",\"wrf\",\"erf\",\"ett\",\"rftt\"]"
         ],
         "expectedOutput": "\"wertf\"",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[\"z\",\"x\"]",
+        "args": [
+          "[\"z\",\"x\"]"
+        ],
+        "expectedOutput": "\"zx\"",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[\"z\",\"x\",\"z\"]",
+        "args": [
+          "[\"z\",\"x\",\"z\"]"
+        ],
+        "expectedOutput": "\"\"",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[\"abc\",\"ab\"]",
+        "args": [
+          "[\"abc\",\"ab\"]"
+        ],
+        "expectedOutput": "\"\"",
         "isHidden": false
       }
     ]
@@ -5373,12 +5820,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "dp[i] = dp[i-1] + dp[i-2]",
       "tier2_structural": "Fibonacci space optimization O(1)",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def climbStairs(self, input_val):\n        pass\n",
-      "JavaScript": "function climbStairs(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void climbStairs() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void climbStairs() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -5438,12 +5879,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def minCostClimbingStairs(self, input_val):\n        pass\n",
-      "JavaScript": "function minCostClimbingStairs(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void minCostClimbingStairs() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void minCostClimbingStairs() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5453,6 +5888,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[10,15,20]"
         ],
         "expectedOutput": "15",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[1,100,1,1,1,100,1,1,100,1]",
+        "args": [
+          "[1,100,1,1,1,100,1,1,100,1]"
+        ],
+        "expectedOutput": "6",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[0,0]",
+        "args": [
+          "[0,0]"
+        ],
+        "expectedOutput": "0",
         "isHidden": false
       }
     ]
@@ -5495,12 +5950,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "dp[i] = max(dp[i-1], nums[i] + dp[i-2])",
       "tier2_structural": "two rolling variables rob1 and rob2 in O(1) space",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def rob(self, input_val):\n        pass\n",
-      "JavaScript": "function rob(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void rob() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void rob() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -5564,12 +6013,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "max of both",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def robCircular(self, input_val):\n        pass\n",
-      "JavaScript": "function robCircular(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void robCircular() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void robCircular() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5632,12 +6075,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "DP table dp[i][j] = s[i]==s[j] and dp[i+1][j-1]",
       "tier3_concrete": "Think about optimal approach: O(N^2)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def longestPalindrome(self, input_val):\n        pass\n",
-      "JavaScript": "function longestPalindrome(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void longestPalindrome() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void longestPalindrome() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5699,12 +6136,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "expand around 2N-1 centers counting valid expansions",
       "tier2_structural": "O(N^2) time and O(1) space",
       "tier3_concrete": "Think about optimal approach: O(N^2)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def countSubstrings(self, input_val):\n        pass\n",
-      "JavaScript": "function countSubstrings(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void countSubstrings() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void countSubstrings() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -5771,12 +6202,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "dp[i] takes 1 digit if valid (1-9) + takes 2 digits if valid (10-26)",
       "tier2_structural": "carefully handle '0' digits",
       "tier3_concrete": "Think about optimal approach: O(N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def numDecodings(self, input_val):\n        pass\n",
-      "JavaScript": "function numDecodings(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void numDecodings() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void numDecodings() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -5854,12 +6279,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "initialize dp with infinity, dp[0] = 0",
       "tier3_concrete": "Think about optimal approach: O(N * amount)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def coinChange(self, input_val):\n        pass\n",
-      "JavaScript": "function coinChange(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void coinChange() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void coinChange() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5924,12 +6343,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "negative number swaps max and min",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def maxProduct(self, input_val):\n        pass\n",
-      "JavaScript": "function maxProduct(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void maxProduct() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void maxProduct() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -5992,12 +6405,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "Trie optimization for matching",
       "tier3_concrete": "Think about optimal approach: O(N^2 * L)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def wordBreak(self, input_val):\n        pass\n",
-      "JavaScript": "function wordBreak(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void wordBreak() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void wordBreak() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6008,6 +6415,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[\"leet\",\"code\"]"
         ],
         "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "\"applepenapple\"\n[\"apple\",\"pen\"]",
+        "args": [
+          "\"applepenapple\"",
+          "[\"apple\",\"pen\"]"
+        ],
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "\"catsandog\"\n[\"cats\",\"dog\",\"sand\",\"and\",\"cat\"]",
+        "args": [
+          "\"catsandog\"",
+          "[\"cats\",\"dog\",\"sand\",\"and\",\"cat\"]"
+        ],
+        "expectedOutput": "false",
         "isHidden": false
       }
     ]
@@ -6048,12 +6477,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "O(N log N) time and O(N) space",
       "tier3_concrete": "Think about optimal approach: O(N log N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def lengthOfLIS(self, input_val):\n        pass\n",
-      "JavaScript": "function lengthOfLIS(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void lengthOfLIS() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void lengthOfLIS() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6063,6 +6486,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[10,9,2,5,3,7,101,18]"
         ],
         "expectedOutput": "4",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[0,1,0,3,2,3]",
+        "args": [
+          "[0,1,0,3,2,3]"
+        ],
+        "expectedOutput": "4",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[7,7,7,7]",
+        "args": [
+          "[7,7,7,7]"
+        ],
+        "expectedOutput": "1",
         "isHidden": false
       }
     ]
@@ -6105,12 +6548,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "0/1 Knapsack with target = sum // 2",
       "tier2_structural": "bitset or reverse iteration 1D boolean array",
       "tier3_concrete": "Think about optimal approach: O(N * target)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def canPartition(self, input_val):\n        pass\n",
-      "JavaScript": "function canPartition(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void canPartition() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void canPartition() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -6178,12 +6615,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "1D row rolling array in O(N) space",
       "tier3_concrete": "Think about optimal approach: O(MN)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def uniquePaths(self, input_val):\n        pass\n",
-      "JavaScript": "function uniquePaths(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void uniquePaths() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void uniquePaths() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6248,12 +6679,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "O(M * N) time and O(min(M, N)) space",
       "tier3_concrete": "Think about optimal approach: O(MN)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def longestCommonSubsequence(self, input_val):\n        pass\n",
-      "JavaScript": "function longestCommonSubsequence(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void longestCommonSubsequence() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void longestCommonSubsequence() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6264,6 +6689,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "\"ace\""
         ],
         "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "\"abc\"\n\"abc\"",
+        "args": [
+          "\"abc\"",
+          "\"abc\""
+        ],
+        "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "\"abc\"\n\"def\"",
+        "args": [
+          "\"abc\"",
+          "\"def\""
+        ],
+        "expectedOutput": "0",
         "isHidden": false
       }
     ]
@@ -6310,12 +6757,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "dp[i][j] = 1 + min(insert, delete, replace) on mismatch",
       "tier2_structural": "O(M * N) time and O(N) space",
       "tier3_concrete": "Think about optimal approach: O(MN)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def minDistance(self, input_val):\n        pass\n",
-      "JavaScript": "function minDistance(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void minDistance() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void minDistance() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -6381,12 +6822,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "Quickselect in O(N) average time",
       "tier3_concrete": "Think about optimal approach: O(N log K)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def findKthLargest(self, input_val):\n        pass\n",
-      "JavaScript": "function findKthLargest(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void findKthLargest() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void findKthLargest() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6397,6 +6832,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "2"
         ],
         "expectedOutput": "5",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[3,2,3,1,2,4,5,5,6]\n4",
+        "args": [
+          "[3,2,3,1,2,4,5,5,6]",
+          "4"
+        ],
+        "expectedOutput": "4",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[1]\n1",
+        "args": [
+          "[1]",
+          "1"
+        ],
+        "expectedOutput": "1",
         "isHidden": false
       }
     ]
@@ -6440,12 +6897,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "formula: (max_freq - 1) * (n + 1) + count(max_freq)",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def leastInterval(self, input_val):\n        pass\n",
-      "JavaScript": "function leastInterval(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void leastInterval() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void leastInterval() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6456,6 +6907,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "2"
         ],
         "expectedOutput": "8",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[\"A\",\"A\",\"A\",\"B\",\"B\",\"B\"]\n0",
+        "args": [
+          "[\"A\",\"A\",\"A\",\"B\",\"B\",\"B\"]",
+          "0"
+        ],
+        "expectedOutput": "6",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[\"A\",\"A\",\"A\",\"A\",\"A\",\"A\",\"B\",\"C\",\"D\",\"E\",\"F\",\"G\"]\n2",
+        "args": [
+          "[\"A\",\"A\",\"A\",\"A\",\"A\",\"A\",\"B\",\"C\",\"D\",\"E\",\"F\",\"G\"]",
+          "2"
+        ],
+        "expectedOutput": "16",
         "isHidden": false
       }
     ]
@@ -6495,12 +6968,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "compare curr.start with prev.end",
       "tier3_concrete": "Think about optimal approach: O(N log N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def merge(self, input_val):\n        pass\n",
-      "JavaScript": "function merge(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void merge() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void merge() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6510,6 +6977,36 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[[1,3],[2,6],[8,10],[15,18]]"
         ],
         "expectedOutput": "[[1,6],[8,10],[15,18]]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[[1,4],[4,5]]",
+        "args": [
+          "[[1,4],[4,5]]"
+        ],
+        "expectedOutput": "[[1,5]]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[[1,4],[0,4]]",
+        "args": [
+          "[[1,4],[0,4]]"
+        ],
+        "expectedOutput": "[[0,4]]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[[1,4],[2,3]]",
+        "args": [
+          "[[1,4],[2,3]]"
+        ],
+        "expectedOutput": "[[1,4]]",
         "isHidden": false
       }
     ]
@@ -6553,12 +7050,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "O(N) time single pass",
       "tier3_concrete": "Think about optimal approach: O(N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def insert(self, input_val):\n        pass\n",
-      "JavaScript": "function insert(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void insert() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void insert() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6569,6 +7060,39 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[2,5]"
         ],
         "expectedOutput": "[[1,5],[6,9]]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[]\n[5,7]",
+        "args": [
+          "[]",
+          "[5,7]"
+        ],
+        "expectedOutput": "[[5,7]]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[[1,5]]\n[2,3]",
+        "args": [
+          "[[1,5]]",
+          "[2,3]"
+        ],
+        "expectedOutput": "[[1,5]]",
+        "isHidden": false
+      },
+      {
+        "id": 4,
+        "label": "Test Case 4",
+        "input": "[[1,2],[3,5],[6,7],[8,10],[12,16]]\n[4,8]",
+        "args": [
+          "[[1,2],[3,5],[6,7],[8,10],[12,16]]",
+          "[4,8]"
+        ],
+        "expectedOutput": "[[1,2],[3,10],[12,16]]",
         "isHidden": false
       }
     ]
@@ -6608,12 +7132,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "always keep the interval that finishes earliest to leave room for future intervals",
       "tier3_concrete": "Think about optimal approach: O(N log N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def eraseOverlapIntervals(self, input_val):\n        pass\n",
-      "JavaScript": "function eraseOverlapIntervals(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void eraseOverlapIntervals() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void eraseOverlapIntervals() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6623,6 +7141,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[[1,2],[2,3],[3,4],[1,3]]"
         ],
         "expectedOutput": "1",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[[1,2],[1,2],[1,2]]",
+        "args": [
+          "[[1,2],[1,2],[1,2]]"
+        ],
+        "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[[1,2],[2,3]]",
+        "args": [
+          "[[1,2],[2,3]]"
+        ],
+        "expectedOutput": "0",
         "isHidden": false
       }
     ]
@@ -6662,12 +7200,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "two pointers counting active overlapping meetings",
       "tier3_concrete": "Think about optimal approach: O(N log N)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def minMeetingRooms(self, input_val):\n        pass\n",
-      "JavaScript": "function minMeetingRooms(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void minMeetingRooms() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void minMeetingRooms() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6677,6 +7209,26 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "[[0,30],[5,10],[15,20]]"
         ],
         "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[[7,10],[2,4]]",
+        "args": [
+          "[[7,10],[2,4]]"
+        ],
+        "expectedOutput": "1",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[[1,5],[2,6],[3,7]]",
+        "args": [
+          "[[1,5],[2,6],[3,7]]"
+        ],
+        "expectedOutput": "3",
         "isHidden": false
       }
     ]
@@ -6715,12 +7267,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "backtracking DFS with pick / don't pick branching",
       "tier2_structural": "bit manipulation 1 << N iterating binary masks",
       "tier3_concrete": "Think about optimal approach: O(N * 2^N)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def subsets(self, input_val):\n        pass\n",
-      "JavaScript": "function subsets(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void subsets() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void subsets() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -6779,12 +7325,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "backtracking with swap in-place or boolean visited array",
       "tier2_structural": "O(N * N!) time",
       "tier3_concrete": "Think about optimal approach: O(N * N!)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def permute(self, input_val):\n        pass\n",
-      "JavaScript": "function permute(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void permute() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void permute() {\n    }\n}\n"
     },
     "testCases": [
       {
@@ -6858,12 +7398,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier2_structural": "sort and prune when candidate > remaining target",
       "tier3_concrete": "Think about optimal approach: O(2^T)"
     },
-    "templates": {
-      "Python": "class Solution:\n    def combinationSum(self, input_val):\n        pass\n",
-      "JavaScript": "function combinationSum(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void combinationSum() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void combinationSum() {\n    }\n}\n"
-    },
     "testCases": [
       {
         "id": 1,
@@ -6874,6 +7408,28 @@ export const DSA_PROBLEMS: DsaProblem[] = [
           "7"
         ],
         "expectedOutput": "[[2,2,3],[7]]",
+        "isHidden": false
+      },
+      {
+        "id": 2,
+        "label": "Test Case 2",
+        "input": "[2]\n1",
+        "args": [
+          "[2]",
+          "1"
+        ],
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "id": 3,
+        "label": "Test Case 3",
+        "input": "[2,3,5]\n8",
+        "args": [
+          "[2,3,5]",
+          "8"
+        ],
+        "expectedOutput": "[[2,2,2,2],[2,3,3],[3,5]]",
         "isHidden": false
       }
     ]
@@ -6916,12 +7472,6 @@ export const DSA_PROBLEMS: DsaProblem[] = [
       "tier1_conceptual": "backtracking DFS exploring 4 directions",
       "tier2_structural": "temporarily mutate board[r][c] = '#' to mark visited without extra memory",
       "tier3_concrete": "Think about optimal approach: O(N * 3^L)"
-    },
-    "templates": {
-      "Python": "class Solution:\n    def exist(self, input_val):\n        pass\n",
-      "JavaScript": "function exist(input_val) {\n}\n",
-      "C++": "class Solution {\npublic:\n    void exist() {\n    }\n};\n",
-      "Java": "class Solution {\n    public void exist() {\n    }\n}\n"
     },
     "testCases": [
       {

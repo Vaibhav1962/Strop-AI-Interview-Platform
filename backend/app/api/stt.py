@@ -178,7 +178,7 @@ async def speech_to_text(
                 if _cooling_down(endpoint_url):
                     continue
                 try:
-                    res = await client.post(f"{endpoint_url}?key={gemini_key}", json=payload, timeout=25.0)
+                    res = await client.post(endpoint_url, json=payload, headers={"x-goog-api-key": gemini_key}, timeout=25.0)
                     if res.status_code == 429:
                         _start_cooldown(endpoint_url, _retry_after(res, 45.0), "rate limited")
                     if res.status_code == 200:

@@ -836,14 +836,14 @@ class OrchestratorService:
                         {
                             "session_id": session_id,
                             "user_id": user_id,
-                            "error_msg": str(e),
+                            "error_msg": "Evaluation could not be completed right now. Please retry.",
                             "now": now,
                         },
                     )
                     legacy = await db.get(InterviewSession, session_id)
                     if legacy:
                         legacy.competency_level = "Evaluation Paused"
-                        legacy.metrics = {"evaluation_status": "failed", "error": str(e)}
+                        legacy.metrics = {"evaluation_status": "failed", "error": "Evaluation could not be completed right now. Please retry."}
                     await db.commit()
             except Exception as db_err:
                 logger.exception("Failed to persist evaluation failure status to database: %s", db_err)

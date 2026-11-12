@@ -272,7 +272,8 @@ class EvaluationWorker:
             report_obj = await evaluator.evaluate_session(ephemeral_session)
         except Exception as e:
             logger.exception("Evaluation execution error for session %s: %s", session_id, e)
-            eval_error = str(e)
+            # The exception text can carry provider URLs or internals: it is logged above, the user sees this.
+            eval_error = "Evaluation could not be completed right now. Please retry."
 
         # Open fresh short transaction to persist the outcome
         async with async_session() as db:

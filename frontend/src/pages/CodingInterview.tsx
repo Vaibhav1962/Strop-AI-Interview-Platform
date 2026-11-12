@@ -1,32 +1,60 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import CodeMirror, { type Extension } from "@uiw/react-codemirror";
-import { cpp } from "@codemirror/lang-cpp";
-import { java } from "@codemirror/lang-java";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { buildEditorTheme } from "../lib/editorTheme";
 import { useTheme } from "../lib/theme";
-import { DSA_PROBLEMS, type DsaProblem } from "../lib/dsaProblemBank";
-import { saveInterviewSession, type ExecuteLanguage } from "../lib/api";
-import { executeCode, warmUpPython } from "../lib/codeExecution";
+import { DSA_PROBLEMS, normalizeDsaTestCases, type DsaProblem } from "../lib/dsaProblemBank";
+import { saveInterviewSession } from "../lib/api";
+import { EXECUTE_LANGUAGES, warmUpRuntimes, type ExecuteLanguage } from "../lib/codeExecution";
+import { isRunnable, runDsaTests, starterCode, type DsaTestResult } from "../lib/dsaRunner";
 
 type TestStatus = "idle" | "running" | "passed" | "failed";
 
-const LANGUAGES: ExecuteLanguage[] = ["Python", "JavaScript", "Java", "C++"];
+const LANGUAGES = EXECUTE_LANGUAGES;
 
-const LANGUAGE_EXTENSIONS: Record<ExecuteLanguage, Extension> = {
-  Python: python(),
-  JavaScript: javascript(),
-  Java: java(),
-  "C++": cpp(),
+// Built once: a new extensions array on every keystroke makes CodeMirror rebuild the editor state.
+const LANGUAGE_EXTENSIONS: Record<ExecuteLanguage, Extension[]> = {
+  Python: [python()],
+  JavaScript: [javascript()],
 };
+
+const EDITOR_SETUP = {
+  lineNumbers: true,
+  highlightActiveLineGutter: true,
+  foldGutter: false,
+  history: true,
+  bracketMatching: true,
+  closeBrackets: true,
+  autocompletion: true,
+  highlightActiveLine: true,
+} as const;
+
+// Only problems that ship with tests can be judged; the rest are interview-discussion problems.
+const PROBLEMS: DsaProblem[] = DSA_PROBLEMS.map((p) => ({ ...p, testCases: normalizeDsaTestCases(p.testCases) })).filter(isRunnable);
+
+function describeResults(results: DsaTestResult[], elapsedLabel: string): string {
+  const passed = results.filter((r) => r.passed).length;
+  const lines = [`${passed}/${results.length} tests passed${elapsedLabel}`, ""];
+  results.forEach((r, i) => {
+    lines.push(`${r.passed ? "✓" : "✗"} Case ${i + 1}${r.passed ? "" : ` — ${r.skipped ? r.error : "wrong answer"}`}`);
+    if (!r.passed && !r.skipped) {
+      lines.push(`    input:    ${r.testCase.input.replace(/\n/g, "  ")}`);
+      lines.push(`    expected: ${r.testCase.expectedOutput}`);
+      lines.push(`    got:      ${r.actualOutput}`);
+      if (r.error) lines.push("", ...r.error.split("\n").map((l) => `    ${l}`));
+    }
+    if (r.printed) lines.push(`    printed:  ${r.printed.split("\n").join("\n              ")}`);
+  });
+  return lines.join("\n");
+}
 
 export default function CodingInterview({ onNavigate }: { onNavigate: (p: string) => void }) {
   const [problemIndex, setProblemIndex] = useState(0);
-  const problem: DsaProblem = DSA_PROBLEMS[problemIndex] || DSA_PROBLEMS[0];
+  const problem: DsaProblem = PROBLEMS[problemIndex] || PROBLEMS[0];
 
   const [selectedLang, setSelectedLang] = useState<ExecuteLanguage>("Python");
-  const [code, setCode] = useState(() => problem.templates["Python"] || "");
+  const [code, setCode] = useState(() => starterCode(problem, "Python"));
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [output, setOutput] = useState<string | null>(null);
   const [failedRuns, setFailedRuns] = useState(0);
@@ -34,25 +62,33 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
+  const [lastRun, setLastRun] = useState<{ passed: number; total: number } | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { theme } = useTheme();
   const editorTheme = useMemo(() => buildEditorTheme(13, theme === "light"), [theme]);
-  const currentExtension = useMemo(() => [LANGUAGE_EXTENSIONS[selectedLang]], [selectedLang]);
+  const currentExtension = LANGUAGE_EXTENSIONS[selectedLang];
+  const handleCodeChange = useCallback((val: string) => setCode(val), []);
 
-  useEffect(() => {
-    setCode(problem.templates[selectedLang] || "");
-  }, [problemIndex, selectedLang]);
-
-  const handleLangChange = (lang: ExecuteLanguage) => {
-    setSelectedLang(lang);
-    if (problem.templates[lang]) {
-      setCode(problem.templates[lang]);
-    }
+  // One draft per problem and language, so switching never throws work away. The switch happens in one batch
+  // (language, problem and code together) so the editor never shows a mismatched pair for a frame.
+  const drafts = useRef<Record<string, string>>({});
+  const switchTo = (nextIndex: number, nextLang: ExecuteLanguage) => {
+    const next = PROBLEMS[nextIndex] ?? PROBLEMS[0];
+    drafts.current[`${problem.id}::${selectedLang}`] = code;
+    setProblemIndex(nextIndex);
+    setSelectedLang(nextLang);
+    setCode(drafts.current[`${next.id}::${nextLang}`] ?? starterCode(next, nextLang));
+    // a different problem or language starts with a clean console
+    setOutput(null);
+    setTestStatus("idle");
+    setLastRun(null);
   };
+  const handleLangChange = (lang: ExecuteLanguage) => switchTo(problemIndex, lang);
 
   useEffect(() => {
-    warmUpPython();
+    warmUpRuntimes();
   }, []);
 
   useEffect(() => {
@@ -69,90 +105,68 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
   const timeWarning = elapsed > timeLimitSecs * 0.85;
 
   const runTests = async () => {
+    if (testStatus === "running") return;
     setTestStatus("running");
-    setOutput("Executing code in cloud sandbox...");
-
+    setOutput("Running your solution against the test cases...");
     try {
-      const res = await executeCode({
-        language: selectedLang,
-        source_code: code,
-        stdin: "",
-      }, { label: "coding-interview" });
-
-      if (res.compile_output) {
-        setTestStatus("failed");
-        setFailedRuns((n) => n + 1);
-        setOutput(`Compilation Error:\n${res.compile_output}`);
-        return;
-      }
-
-      if (res.stderr) {
-        setTestStatus("failed");
-        setFailedRuns((n) => n + 1);
-        setOutput(`Runtime Error:\n${res.stderr}`);
-        return;
-      }
-
-      if (res.stdout) {
+      const results = await runDsaTests(problem, selectedLang, code, problem.testCases, "coding-interview");
+      const passed = results.filter((r) => r.passed).length;
+      setLastRun({ passed, total: results.length });
+      setOutput(describeResults(results, ""));
+      if (passed === results.length) {
         setTestStatus("passed");
-        setOutput(
-          `Execution Complete (${res.time ?? "0.02"}s, ${(res.memory ? res.memory / 1024 : 12.4).toFixed(1)} MB):\n\n${res.stdout}`
-        );
-        return;
+      } else {
+        setTestStatus("failed");
+        setFailedRuns((n) => n + 1);
       }
-
-      setTestStatus("passed");
-      setOutput(`Execution Succeeded with status: ${res.status || "OK"} (${res.time ?? "0.01"}s)`);
+      return { passed, total: results.length };
     } catch (err: any) {
       setTestStatus("failed");
-        setFailedRuns((n) => n + 1);
-      setOutput(`Execution failed: ${err.message || "Failed to reach execution service"}`);
+      setFailedRuns((n) => n + 1);
+      setOutput(`Execution failed: ${err?.message || "the in-browser runtime could not start"}`);
     }
   };
 
-  // IDE Keyboard Shortcut: Cmd/Ctrl + Enter runs code
+  // IDE Keyboard Shortcut: Cmd/Ctrl + Enter runs the tests
+  const runRef = useRef(runTests);
+  runRef.current = runTests;
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
         e.preventDefault();
-        runTests();
+        runRef.current();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedLang, code]);
+  }, []);
 
   const handleSubmitInterview = async () => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
-    let currentStatus = testStatus;
-    let currentOut = output;
 
-    if (currentStatus === "idle") {
+    // Score what the candidate actually delivered: the share of tests their final code passes.
+    let outcome = lastRun;
+    let log = output;
+    if (testStatus === "idle" || testStatus === "running") {
       try {
-        const res = await executeCode({
-          language: selectedLang,
-          source_code: code,
-          stdin: "",
-        }, { label: "coding-interview-submit" });
-        if (res.stdout) {
-          currentStatus = "passed";
-          currentOut = res.stdout;
-        } else if (res.stderr || res.compile_output) {
-          currentStatus = "failed";
-          currentOut = res.stderr || res.compile_output;
-        }
+        const results = await runDsaTests(problem, selectedLang, code, problem.testCases, "coding-interview-submit");
+        outcome = { passed: results.filter((r) => r.passed).length, total: results.length };
+        log = describeResults(results, "");
       } catch (e: any) {
-        currentOut = e.message;
+        log = e?.message ?? "Could not run the tests";
       }
     }
-
-    const calculatedScore = currentStatus === "passed" ? 92 : currentStatus === "failed" ? 64 : 75;
+    const passed = outcome?.passed ?? 0;
+    const total = outcome?.total ?? problem.testCases.length;
+    const calculatedScore = total > 0 ? Math.round((passed / total) * 100) : 0;
+    const status = total > 0 && passed === total ? "passed" : "failed";
     setFinalScore(calculatedScore);
 
     try {
       await saveInterviewSession({
         title: `Coding Assessment — ${problem.title}`,
-        track: "Algorithms & Data Structures",
+        track: "DSA",
         question_count: 1,
         duration_seconds: elapsed,
         transcript: [
@@ -163,27 +177,27 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
           },
           {
             speaker: "You",
-            text: `[Submitted Implementation in ${selectedLang}]:\n\n${code}\n\nExecution Log:\n${currentOut || "No output recorded"}`,
+            text: `[Submitted Implementation in ${selectedLang}]:\n\n${code}\n\nTest results:\n${log || "No output recorded"}`,
             time: fmtTime(elapsed),
           },
         ],
         overall_score: calculatedScore,
-        competency_level: calculatedScore >= 85 ? "Senior" : "Mid-Level",
+        competency_level: calculatedScore >= 85 ? "Senior" : calculatedScore >= 60 ? "Mid-Level" : "Junior",
         metrics: {
           language: selectedLang,
           difficulty: problem.difficulty,
-          status: currentStatus,
+          status,
+          tests_passed: passed,
+          tests_total: total,
         },
-        strengths: currentStatus === "passed"
-          ? ["Clean algorithmic implementation", "Passed compilation and execution in sandbox"]
-          : ["Constructed working syntax and problem structure"],
-        weaknesses: currentStatus === "failed"
-          ? ["Execution error or unresolved edge cases"]
-          : [],
+        strengths: status === "passed" ? ["Passed every test case", "Working solution in the allotted time"] : passed > 0 ? ["Handled part of the test cases"] : [],
+        weaknesses: status === "failed" ? [`Passed ${passed} of ${total} test cases`] : [],
       });
+      setSaveFailed(false);
       setShowCompleteModal(true);
     } catch (err) {
       console.error("Failed to save coding session:", err);
+      setSaveFailed(true);
       setShowCompleteModal(true);
     } finally {
       setIsSubmitting(false);
@@ -205,8 +219,8 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
           </button>
           <div className="flex items-center gap-2">
             <span className="relative inline-flex">
-              <select aria-label="Problem" value={problemIndex} onChange={(e) => setProblemIndex(Number(e.target.value))} className={`${dd} !text-[15px] !font-sans`}>
-                {DSA_PROBLEMS.map((p, idx) => (
+              <select aria-label="Problem" value={problemIndex} onChange={(e) => switchTo(Number(e.target.value), selectedLang)} className={`${dd} !text-[15px] !font-sans`}>
+                {PROBLEMS.map((p, idx) => (
                   <option key={p.id} value={idx}>{p.title}</option>
                 ))}
               </select>
@@ -301,14 +315,18 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
               </div>
             </div>
             <div className="flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+              {/* The key remounts the editor when the document is swapped from outside (another language or
+                  problem); otherwise the editor library holds back an outside change for ~0.7s after the last
+                  keystroke and the old code stays on screen under the new language. */}
               <CodeMirror
+                key={`${problem.id}:${selectedLang}`}
                 value={code}
                 height="100%"
                 extensions={currentExtension}
                 theme={editorTheme}
-                onChange={(val) => setCode(val)}
+                onChange={handleCodeChange}
                 className="h-full text-xs font-mono"
-                basicSetup={{ lineNumbers: true, highlightActiveLineGutter: true, foldGutter: false, history: true, bracketMatching: true, closeBrackets: true, autocompletion: true, highlightActiveLine: true }}
+                basicSetup={EDITOR_SETUP}
               />
             </div>
           </div>
@@ -318,8 +336,8 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
               <span className="ob-lb">Console</span>
               <span className="flex items-center gap-2.5">
                 {testStatus === "running" && <span className="ob-chip ob-sq ob-live">running</span>}
-                {testStatus === "passed" && <span className="ob-chip ob-sq ob-ok">ran cleanly</span>}
-                {testStatus === "failed" && <span className="ob-chip ob-sq ob-err">failed</span>}
+                {testStatus === "passed" && <span className="ob-chip ob-sq ob-ok">all tests passed</span>}
+                {testStatus === "failed" && <span className="ob-chip ob-sq ob-err">{lastRun ? `${lastRun.passed}/${lastRun.total} passed` : "failed"}</span>}
                 {output && (
                   <button type="button" onClick={() => { setOutput(null); setTestStatus("idle"); }} className="ob-mo text-[11.5px] ob-tx3 hover:text-ob-tx cursor-pointer">clear</button>
                 )}
@@ -342,17 +360,19 @@ export default function CodingInterview({ onNavigate }: { onNavigate: (p: string
           <div className="ob-pane max-w-md w-full p-7 flex flex-col gap-5">
             <div>
               <div className="ob-lb ob-txa">Submitted</div>
-              <h2 id="coding-done-title" className="text-[20px] font-medium tracking-[-0.02em] mt-2.5 mb-2">Solution saved</h2>
+              <h2 id="coding-done-title" className="text-[20px] font-medium tracking-[-0.02em] mt-2.5 mb-2">{saveFailed ? "Result not saved" : "Solution saved"}</h2>
               <p className="ob-tx2 text-[13px] m-0">
-                Your {selectedLang} implementation of {problem.title} was recorded in your history.
+                {saveFailed
+                  ? `Your ${selectedLang} implementation of ${problem.title} was scored, but we couldn't save it to your history. Check your connection and submit again.`
+                  : `Your ${selectedLang} implementation of ${problem.title} was recorded in your history.`}
               </p>
             </div>
             <div className="rounded-[10px] border border-ob-ln bg-ob-bg p-4 flex items-center justify-between gap-4">
               <div>
-                <div className="text-[13px]">{testStatus === "passed" ? "Ran cleanly in the sandbox" : testStatus === "failed" ? "Last run failed" : "Not run before submit"}</div>
+                <div className="text-[13px]">{finalScore !== null ? `${finalScore}% of tests passed` : "Saved"}</div>
                 <div className="ob-mo text-xs ob-tx3 mt-0.5">{fmtTime(elapsed)} · {selectedLang}</div>
               </div>
-              <span className="ob-chip ob-sq">{finalScore !== null ? "recorded" : "saved"}</span>
+              <span className={`ob-chip ob-sq ${saveFailed ? "ob-err" : finalScore === 100 ? "ob-ok" : ""}`}>{saveFailed ? "not saved" : "recorded"}</span>
             </div>
             <div className="grid gap-2.5">
               <button type="button" className="ob-btn ob-pr" onClick={() => onNavigate("history")}>View in history</button>

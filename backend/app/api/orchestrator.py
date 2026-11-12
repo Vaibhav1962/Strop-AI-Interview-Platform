@@ -8,8 +8,11 @@ Mounts isolated Stage 0.3 routes at `/api/v1/orchestrator`:
 """
 
 import json
+import logging
 import uuid
 from typing import Any
+
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import StreamingResponse
@@ -17,6 +20,14 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.api.rate_limiter import (
+    evaluate_limiter,
+    limit_user,
+    pdf_limiter,
+    scratchpad_limiter,
+    session_create_limiter,
+    turn_limiter,
+)
 from app.database import get_db, async_session
 from app.models.user import User
 from app.orchestrator.actor import InterviewerActor
@@ -30,7 +41,10 @@ from app.schemas.orchestrator import (
 )
 from app.services.orchestrator_service import OrchestratorService
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/orchestrator", tags=["orchestrator"])
+# Provider and database errors can carry URLs, keys or SQL: log them here, tell the browser something generic.
+PUBLIC_TURN_ERROR = "The interviewer hit a problem and could not answer. Please try again."
 runner = OrchestratorRunner()
 
 
@@ -90,7 +104,12 @@ class TurnExecutionResponse(BaseModel):
     status: str
 
 
-@router.post("/session", response_model=OrchestratorSessionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/session",
+    response_model=OrchestratorSessionResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(limit_user(session_create_limiter))],
+)
 async def create_session(
     payload: OrchestratorSessionCreate,
     current_user: User = Depends(get_current_user),
@@ -127,7 +146,11 @@ async def get_session(
     return session
 
 
-@router.post("/session/{session_id}/turn", response_model=TurnExecutionResponse)
+@router.post(
+    "/session/{session_id}/turn",
+    response_model=TurnExecutionResponse,
+    dependencies=[Depends(limit_user(turn_limiter))],
+)
 async def execute_turn(
     session_id: uuid.UUID,
     payload: TurnExecutionRequest,
@@ -147,7 +170,11 @@ async def execute_turn(
     return result
 
 
-@router.post("/session/{session_id}/submit-code", response_model=TurnExecutionResponse)
+@router.post(
+    "/session/{session_id}/submit-code",
+    response_model=TurnExecutionResponse,
+    dependencies=[Depends(limit_user(turn_limiter))],
+)
 async def submit_code(
     session_id: uuid.UUID,
     payload: CodeSubmissionRequest,
@@ -194,7 +221,7 @@ async def submit_code(
     return result
 
 
-@router.patch("/session/{session_id}/scratchpad")
+@router.patch("/session/{session_id}/scratchpad", dependencies=[Depends(limit_user(scratchpad_limiter))])
 async def update_scratchpad(
     session_id: uuid.UUID,
     payload: ScratchpadUpdateRequest,
@@ -214,7 +241,7 @@ async def update_scratchpad(
     return {"status": "ok", "notes_length": len(payload.notes)}
 
 
-@router.post("/session/{session_id}/turn/stream")
+@router.post("/session/{session_id}/turn/stream", dependencies=[Depends(limit_user(turn_limiter))])
 async def execute_turn_stream(
     session_id: uuid.UUID,
     payload: TurnExecutionRequest,
@@ -268,11 +295,11 @@ async def execute_turn_stream(
                     final_response_text = event["assistant_response"]
                     final_delta = event["delta_metadata"]
         except Exception as exc:
-            print(f"[Orchestrator Stream] Error during LLM turn generation: {exc}")
+            logger.exception("Orchestrator stream: LLM turn generation failed")
             await OrchestratorService.release_turn_lease(
                 session_id, current_user.id, fencing_token, payload.client_turn_id
             )
-            yield f"data: {json.dumps({'type': 'error', 'error_type': 'ORCHESTRATOR_INFERENCE_ERROR', 'message': str(exc), 'partial_response': final_response_text})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'error_type': 'ORCHESTRATOR_INFERENCE_ERROR', 'message': PUBLIC_TURN_ERROR, 'partial_response': final_response_text})}\n\n"
             yield "data: [DONE]\n\n"
             return
 
@@ -334,11 +361,11 @@ async def execute_turn_stream(
                 yield f"data: {json.dumps({'type': 'committed', 'directive_action': directive.action, 'turn_index': committed.turn_index, 'fencing_token': committed.fencing_token, 'assistant_response': final_response_text, 'delta_metadata': final_delta, 'working_memory': sanitize_working_memory_for_client(updated_memory), 'dsa_problem_revealed': dsa_revealed, 'dsa_problem': sanitize_dsa_problem_for_client(dsa_prob_info if dsa_revealed else None), 'status': committed.status, 'remaining_seconds': rem_seconds, 'scheduled_deadline': updated_memory.get('scheduled_deadline')})}\n\n"
                 yield "data: [DONE]\n\n"
         except Exception as exc:
-            print(f"[Orchestrator Stream] Error during turn commit: {exc}")
+            logger.exception("Orchestrator stream: turn commit failed")
             await OrchestratorService.release_turn_lease(
                 session_id, current_user.id, fencing_token, payload.client_turn_id
             )
-            yield f"data: {json.dumps({'type': 'error', 'error_type': 'TURN_COMMIT_ERROR', 'message': str(exc), 'partial_response': final_response_text})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'error_type': 'TURN_COMMIT_ERROR', 'message': PUBLIC_TURN_ERROR, 'partial_response': final_response_text})}\n\n"
             yield "data: [DONE]\n\n"
 
     return StreamingResponse(sse_event_stream(), media_type="text/event-stream")
@@ -376,7 +403,11 @@ async def reset_sessions(
     return {"message": f"Successfully reset {count} interview sessions."}
 
 
-@router.post("/session/{session_id}/evaluate", response_model=BarsEvaluationReport)
+@router.post(
+    "/session/{session_id}/evaluate",
+    response_model=BarsEvaluationReport,
+    dependencies=[Depends(limit_user(evaluate_limiter))],
+)
 async def evaluate_session(
     session_id: uuid.UUID,
     force_recompute: bool = False,
@@ -411,7 +442,11 @@ async def get_session_evaluation(
     return report
 
 
-@router.post("/session/{session_id}/evaluate-async", response_model=EvaluationStatusResponse)
+@router.post(
+    "/session/{session_id}/evaluate-async",
+    response_model=EvaluationStatusResponse,
+    dependencies=[Depends(limit_user(evaluate_limiter))],
+)
 async def evaluate_session_async(
     session_id: uuid.UUID,
     force_recompute: bool = False,
@@ -443,7 +478,7 @@ async def get_session_status(
     return status_payload
 
 
-@router.get("/session/{session_id}/pdf")
+@router.get("/session/{session_id}/pdf", dependencies=[Depends(limit_user(pdf_limiter))])
 async def download_session_pdf(
     session_id: uuid.UUID,
     current_user: User = Depends(get_current_user),

@@ -318,10 +318,11 @@ async def _synthesize_gemini(clean_text: str, api_key: str, voice_name: str = "C
         if _cooling_down(f"gemini:{model}"):
             continue
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
             res = await client.post(
                 url,
-                headers={"Content-Type": "application/json"},
+                # The key travels in a header, never in the URL, so it cannot show up in an error message or a log line.
+                headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
                 json={
                     "contents": [{"parts": [{"text": clean_text}]}],
                     "generationConfig": {

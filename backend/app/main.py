@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import select, update
 
 from app.api.routes import api_router
@@ -58,8 +59,14 @@ _docs = {} if not settings.is_production else {"docs_url": None, "redoc_url": No
 app = FastAPI(title=settings.project_name, lifespan=lifespan, **_docs)
 
 
+MAX_REQUEST_BYTES = 30 * 1024 * 1024  # the largest legitimate body is a ~10 MB audio clip or resume
+
+
 @app.middleware("http")
 async def security_headers(request, call_next):
+    declared = request.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > MAX_REQUEST_BYTES:
+        return JSONResponse(status_code=413, content={"detail": "Request body too large."})
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")

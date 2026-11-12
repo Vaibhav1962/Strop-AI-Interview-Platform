@@ -1,16 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import CodeMirror, { type Extension } from "@uiw/react-codemirror";
-import { cpp } from "@codemirror/lang-cpp";
-import { java } from "@codemirror/lang-java";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
-import { ApiError, type ExecuteLanguage } from "../lib/api";
-import { executeCode, warmUpPython } from "../lib/codeExecution";
+import { EXECUTE_LANGUAGES, executeCode, warmUpRuntimes, type ExecuteLanguage } from "../lib/codeExecution";
 import { buildEditorTheme } from "../lib/editorTheme";
 import { useTheme } from "../lib/theme";
 
-const LANGUAGES = ["Python", "JavaScript", "C++", "Java"] as const satisfies readonly ExecuteLanguage[];
-type Language = (typeof LANGUAGES)[number];
+const LANGUAGES = EXECUTE_LANGUAGES;
+type Language = ExecuteLanguage;
 
 export type PresetId = "blank" | "two-sum" | "binary-search" | "lru-cache";
 
@@ -33,8 +30,6 @@ const PRESETS: PresetConfig[] = [
     templates: {
       Python: `def main():\n    print("Hello, World!")\n\n\nif __name__ == "__main__":\n    main()\n`,
       JavaScript: `function main() {\n  console.log("Hello, World!");\n}\n\nmain();\n`,
-      Java: `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}\n`,
-      "C++": `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}\n`,
     },
   },
   {
@@ -46,8 +41,6 @@ const PRESETS: PresetConfig[] = [
     templates: {
       Python: `def two_sum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in seen:\n            return [seen[complement], i]\n        seen[num] = i\n    return []\n\nif __name__ == "__main__":\n    nums = [2, 7, 11, 15]\n    target = 9\n    result = two_sum(nums, target)\n    print(f"Input: nums={nums}, target={target}")\n    print(f"Output: {result}")\n    print("Verdict: PASSED" if result == [0, 1] else "Verdict: FAILED")\n`,
       JavaScript: `function twoSum(nums, target) {\n  const seen = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (seen.has(complement)) {\n      return [seen.get(complement), i];\n    }\n    seen.set(nums[i], i);\n  }\n  return [];\n}\n\nconst nums = [2, 7, 11, 15];\nconst target = 9;\nconst result = twoSum(nums, target);\nconsole.log(\`Input: nums=[\${nums}], target=\${target}\`);\nconsole.log(\`Output: [\${result}]\`);\nconsole.log(result[0] === 0 && result[1] === 1 ? "Verdict: PASSED" : "Verdict: FAILED");\n`,
-      Java: `import java.util.*;\n\npublic class Main {\n    public static int[] twoSum(int[] nums, int target) {\n        Map<Integer, Integer> seen = new HashMap<>();\n        for (int i = 0; i < nums.length; i++) {\n            int complement = target - nums[i];\n            if (seen.containsKey(complement)) {\n                return new int[] { seen.get(complement), i };\n            }\n            seen.put(nums[i], i);\n        }\n        return new int[0];\n    }\n\n    public static void main(String[] args) {\n        int[] nums = {2, 7, 11, 15};\n        int target = 9;\n        int[] result = twoSum(nums, target);\n        System.out.println("Input: nums=[2, 7, 11, 15], target=9");\n        System.out.println("Output: " + Arrays.toString(result));\n        System.out.println(result.length == 2 && result[0] == 0 && result[1] == 1 ? "Verdict: PASSED" : "Verdict: FAILED");\n    }\n}\n`,
-      "C++": `#include <iostream>\n#include <vector>\n#include <unordered_map>\nusing namespace std;\n\nvector<int> twoSum(vector<int>& nums, int target) {\n    unordered_map<int, int> seen;\n    for (int i = 0; i < nums.size(); i++) {\n        int complement = target - nums[i];\n        if (seen.count(complement)) {\n            return {seen[complement], i};\n        }\n        seen[nums[i]] = i;\n    }\n    return {};\n}\n\nint main() {\n    vector<int> nums = {2, 7, 11, 15};\n    int target = 9;\n    vector<int> result = twoSum(nums, target);\n    cout << "Input: nums=[2, 7, 11, 15], target=9" << endl;\n    cout << "Output: [" << result[0] << ", " << result[1] << "]" << endl;\n    cout << (result.size() == 2 && result[0] == 0 && result[1] == 1 ? "Verdict: PASSED" : "Verdict: FAILED") << endl;\n    return 0;\n}\n`,
     },
   },
   {
@@ -59,8 +52,6 @@ const PRESETS: PresetConfig[] = [
     templates: {
       Python: `def binary_search(nums, target):\n    left, right = 0, len(nums) - 1\n    while left <= right:\n        mid = (left + right) // 2\n        if nums[mid] == target:\n            return mid\n        elif nums[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    return -1\n\nif __name__ == "__main__":\n    nums = [-1, 0, 3, 5, 9, 12]\n    target = 9\n    idx = binary_search(nums, target)\n    print(f"Input: nums={nums}, target={target}")\n    print(f"Output: Index {idx}")\n    print("Verdict: PASSED" if idx == 4 else "Verdict: FAILED")\n`,
       JavaScript: `function binarySearch(nums, target) {\n  let left = 0, right = nums.length - 1;\n  while (left <= right) {\n    const mid = Math.floor((left + right) / 2);\n    if (nums[mid] === target) return mid;\n    if (nums[mid] < target) left = mid + 1;\n    else right = mid - 1;\n  }\n  return -1;\n}\n\nconst nums = [-1, 0, 3, 5, 9, 12];\nconst target = 9;\nconst idx = binarySearch(nums, target);\nconsole.log(\`Input: nums=[\${nums}], target=\${target}\`);\nconsole.log(\`Output: Index \${idx}\`);\nconsole.log(idx === 4 ? "Verdict: PASSED" : "Verdict: FAILED");\n`,
-      Java: `import java.util.*;\n\npublic class Main {\n    public static int binarySearch(int[] nums, int target) {\n        int left = 0, right = nums.length - 1;\n        while (left <= right) {\n            int mid = left + (right - left) / 2;\n            if (nums[mid] == target) return mid;\n            if (nums[mid] < target) left = mid + 1;\n            else right = mid - 1;\n        }\n        return -1;\n    }\n\n    public static void main(String[] args) {\n        int[] nums = {-1, 0, 3, 5, 9, 12};\n        int target = 9;\n        int idx = binarySearch(nums, target);\n        System.out.println("Input: nums=[-1, 0, 3, 5, 9, 12], target=9");\n        System.out.println("Output: Index " + idx);\n        System.out.println(idx == 4 ? "Verdict: PASSED" : "Verdict: FAILED");\n    }\n}\n`,
-      "C++": `#include <iostream>\n#include <vector>\nusing namespace std;\n\nint binarySearch(const vector<int>& nums, int target) {\n    int left = 0, right = nums.size() - 1;\n    while (left <= right) {\n        int mid = left + (right - left) / 2;\n        if (nums[mid] == target) return mid;\n        if (nums[mid] < target) left = mid + 1;\n        else right = mid - 1;\n    }\n    return -1;\n}\n\nint main() {\n    vector<int> nums = {-1, 0, 3, 5, 9, 12};\n    int target = 9;\n    int idx = binarySearch(nums, target);\n    cout << "Input: nums=[-1, 0, 3, 5, 9, 12], target=9" << endl;\n    cout << "Output: Index " << idx << endl;\n    cout << (idx == 4 ? "Verdict: PASSED" : "Verdict: FAILED") << endl;\n    return 0;\n}\n`,
     },
   },
   {
@@ -72,18 +63,17 @@ const PRESETS: PresetConfig[] = [
     templates: {
       Python: `from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity: int):\n        self.capacity = capacity\n        self.cache = OrderedDict()\n\n    def get(self, key: int) -> int:\n        if key not in self.cache:\n            return -1\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key: int, value: int) -> None:\n        if key in self.cache:\n            self.cache.move_to_end(key)\n        self.cache[key] = value\n        if len(self.cache) > self.capacity:\n            self.cache.popitem(last=False)\n\nif __name__ == "__main__":\n    lru = LRUCache(2)\n    lru.put(1, 1)\n    lru.put(2, 2)\n    val1 = lru.get(1)  # returns 1\n    lru.put(3, 3)      # evicts key 2\n    val2 = lru.get(2)  # returns -1\n    val3 = lru.get(3)  # returns 3\n    print(f"Operations: put(1,1), put(2,2), get(1)={val1}, put(3,3), get(2)={val2}, get(3)={val3}")\n    passed = val1 == 1 and val2 == -1 and val3 == 3\n    print("Verdict: PASSED" if passed else "Verdict: FAILED")\n`,
       JavaScript: `class LRUCache {\n  constructor(capacity) {\n    this.capacity = capacity;\n    this.cache = new Map();\n  }\n\n  get(key) {\n    if (!this.cache.has(key)) return -1;\n    const val = this.cache.get(key);\n    this.cache.delete(key);\n    this.cache.set(key, val);\n    return val;\n  }\n\n  put(key, value) {\n    if (this.cache.has(key)) this.cache.delete(key);\n    this.cache.set(key, value);\n    if (this.cache.size > this.capacity) {\n      const oldest = this.cache.keys().next().value;\n      this.cache.delete(oldest);\n    }\n  }\n}\n\nconst lru = new LRUCache(2);\nlru.put(1, 1);\nlru.put(2, 2);\nconst val1 = lru.get(1);\nlru.put(3, 3);\nconst val2 = lru.get(2);\nconst val3 = lru.get(3);\nconsole.log(\`Operations: put(1,1), put(2,2), get(1)=\${val1}, put(3,3), get(2)=\${val2}, get(3)=\${val3}\`);\nconsole.log(val1 === 1 && val2 === -1 && val3 === 3 ? "Verdict: PASSED" : "Verdict: FAILED");\n`,
-      Java: `import java.util.*;\n\nclass LRUCache extends LinkedHashMap<Integer, Integer> {\n    private final int capacity;\n\n    public LRUCache(int capacity) {\n        super(capacity, 0.75f, true);\n        this.capacity = capacity;\n    }\n\n    public int get(int key) {\n        return super.getOrDefault(key, -1);\n    }\n\n    public void put(int key, int value) {\n        super.put(key, value);\n    }\n\n    @Override\n    protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {\n        return size() > capacity;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        LRUCache lru = new LRUCache(2);\n        lru.put(1, 1);\n        lru.put(2, 2);\n        int val1 = lru.get(1);\n        lru.put(3, 3);\n        int val2 = lru.get(2);\n        int val3 = lru.get(3);\n        System.out.println("Operations: put(1,1), put(2,2), get(1)=" + val1 + ", put(3,3), get(2)=" + val2 + ", get(3)=" + val3);\n        System.out.println(val1 == 1 && val2 == -1 && val3 == 3 ? "Verdict: PASSED" : "Verdict: FAILED");\n    }\n}\n`,
-      "C++": `#include <iostream>\n#include <list>\n#include <unordered_map>\nusing namespace std;\n\nclass LRUCache {\n    int cap;\n    list<pair<int, int>> lru;\n    unordered_map<int, list<pair<int, int>>::iterator> mp;\npublic:\n    LRUCache(int capacity) : cap(capacity) {}\n\n    int get(int key) {\n        if (!mp.count(key)) return -1;\n        lru.splice(lru.begin(), lru, mp[key]);\n        return mp[key]->second;\n    }\n\n    void put(int key, int value) {\n        if (mp.count(key)) {\n            mp[key]->second = value;\n            lru.splice(lru.begin(), lru, mp[key]);\n            return;\n        }\n        if (lru.size() == cap) {\n            mp.erase(lru.back().first);\n            lru.pop_back();\n        }\n        lru.emplace_front(key, value);\n        mp[key] = lru.begin();\n    }\n};\n\nint main() {\n    LRUCache lru(2);\n    lru.put(1, 1);\n    lru.put(2, 2);\n    int val1 = lru.get(1);\n    lru.put(3, 3);\n    int val2 = lru.get(2);\n    int val3 = lru.get(3);\n    cout << "Operations: put(1,1), put(2,2), get(1)=" << val1 << ", put(3,3), get(2)=" << val2 << ", get(3)=" << val3 << endl;\n    cout << (val1 == 1 && val2 == -1 && val3 == 3 ? "Verdict: PASSED" : "Verdict: FAILED") << endl;\n    return 0;\n}\n`,
     },
   },
 ];
 
-const LANGUAGE_EXTENSIONS: Record<Language, Extension> = {
-  Python: python(),
-  JavaScript: javascript(),
-  Java: java(),
-  "C++": cpp(),
+// Built once: a new extensions array on every keystroke makes CodeMirror rebuild the editor state.
+const LANGUAGE_EXTENSIONS: Record<Language, Extension[]> = {
+  Python: [python()],
+  JavaScript: [javascript()],
 };
+
+const EDITOR_SETUP = { foldGutter: false } as const;
 
 const MIN_PANE_PCT = 25;
 const MAX_PANE_PCT = 75;
@@ -114,6 +104,8 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
   const containerRef = useRef<HTMLDivElement>(null);
   const rightColRef = useRef<HTMLDivElement>(null);
 
+  const [resetCount, setResetCount] = useState(0);
+
   const handleLangChange = (lang: Language) => {
     setLanguage(lang);
     setCode(activePresetConfig.templates[lang]);
@@ -134,9 +126,9 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
     });
   };
 
-  // Fetch the Python runtime in the background so the first Run is quick
+  // Fetch the runtimes in the background so the first Run is quick
   useEffect(() => {
-    warmUpPython();
+    warmUpRuntimes();
   }, []);
 
   const runCode = async () => {
@@ -159,7 +151,7 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
       setOutput(`${body || "(no output)"}\n\n[Status: ${meta || "Execution completed"}]`);
       setOutputTone(result.compile_output || result.stderr ? "error" : "success");
     } catch (err) {
-      setOutput(err instanceof ApiError ? err.message : "Failed to execute code. Please check connection and try again.");
+      setOutput(err instanceof Error && err.message ? err.message : "Failed to run the code. Please try again.");
       setOutputTone("error");
     } finally {
       setRunning(false);
@@ -188,7 +180,7 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
   const { theme } = useTheme();
   const editorTheme = useMemo(() => buildEditorTheme(fontSize, theme === "light"), [fontSize, theme]);
 
-  const fileName: Record<Language, string> = { Python: "main.py", JavaScript: "main.js", "C++": "main.cpp", Java: "Main.java" };
+  const fileName: Record<Language, string> = { Python: "main.py", JavaScript: "main.js" };
   const dd =
     "appearance-none h-[34px] pl-3 pr-8 border border-ob-ln2 rounded-lg bg-ob-bg1 text-ob-tx font-mono text-[12.5px] cursor-pointer outline-none hover:border-ob-ln3 focus:border-ob-ln3 transition-colors";
   const ibtn =
@@ -230,6 +222,7 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
                 onClick={() => {
                   setCode(activePresetConfig.templates[language]);
                   setInput(activePresetConfig.stdin);
+                  setResetCount((n) => n + 1);
                 }}
               >
                 Reset
@@ -246,14 +239,17 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
           </div>
 
           <div className="flex-1 min-h-[480px] overflow-hidden bg-ob-bg1">
+            {/* Remounted when the document is swapped from outside (language, template, Reset): the editor library
+                holds back outside changes for ~0.7s after the last keystroke, which would leave the old code visible. */}
             <CodeMirror
+              key={`${language}:${preset}:${resetCount}`}
               value={code}
               onChange={(value) => setCode(value)}
               theme={editorTheme}
-              extensions={[LANGUAGE_EXTENSIONS[language]]}
+              extensions={LANGUAGE_EXTENSIONS[language]}
               height="100%"
               style={{ height: "100%" }}
-              basicSetup={{ foldGutter: false }}
+              basicSetup={EDITOR_SETUP}
             />
           </div>
           <div className="flex gap-[18px] flex-wrap px-4 py-[9px] border-t border-ob-ln font-mono text-[11px] ob-tx3 shrink-0">
@@ -261,7 +257,7 @@ export default function Compiler({ onNavigate }: { onNavigate: (p: string) => vo
             <span>UTF-8</span>
             <span className="ml-auto flex items-center gap-2">
               <span className="inline-block w-[7px] h-[7px] rounded-full bg-ob-ok" aria-hidden="true" />
-              Judge0 sandbox
+              Runs in your browser
             </span>
           </div>
         </section>

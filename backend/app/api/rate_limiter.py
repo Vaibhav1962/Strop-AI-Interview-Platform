@@ -2,7 +2,8 @@
 
 import time
 from collections import defaultdict
-from fastapi import HTTPException, status
+
+from fastapi import Depends, HTTPException, status
 
 
 class SlidingWindowRateLimiter:
@@ -22,7 +23,8 @@ class SlidingWindowRateLimiter:
                 self._history.pop(k, None)
         
         if len(timestamps) >= self.max_requests:
-            retry_after = int(self.window_seconds - (now - timestamps[0])) + 1
+            oldest = timestamps[0] if timestamps else now
+            retry_after = int(self.window_seconds - (now - oldest)) + 1
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=f"Rate limit exceeded. Please wait {retry_after} seconds.",
@@ -33,9 +35,21 @@ class SlidingWindowRateLimiter:
         self._history[key] = timestamps
 
 
-# Pre-configured rate limiters
-# Code execution: 15 runs per minute per user
-execute_limiter = SlidingWindowRateLimiter(max_requests=15, window_seconds=60.0)
+def limit_user(limiter: "SlidingWindowRateLimiter"):
+    """FastAPI dependency: throttle an endpoint per signed-in user. Use as `dependencies=[Depends(limit_user(x))]`."""
+    from app.api.deps import get_current_user  # local import: deps must not depend on this module
+    from app.models.user import User
+
+    async def _check(current_user: User = Depends(get_current_user)) -> None:
+        limiter.check(str(current_user.id))
+
+    return _check
+
+
+# Pre-configured rate limiters. All are per user (or per IP for auth) and held in this process's memory:
+# if the API ever runs as several processes/instances, move them to a shared store such as Redis.
+#
+# Code is compiled and run in the candidate's browser, so there is no execution endpoint to protect.
 
 # Speech-to-text: 75 per minute per user (live snapshots re-send the growing recording every few seconds)
 stt_limiter = SlidingWindowRateLimiter(max_requests=75, window_seconds=60.0)
@@ -54,3 +68,18 @@ signup_limiter = SlidingWindowRateLimiter(max_requests=6, window_seconds=3600.0)
 
 # Job description analysis uses model calls: 6 per minute per user
 analysis_limiter = SlidingWindowRateLimiter(max_requests=6, window_seconds=60.0)
+
+# Interview orchestration. Each turn is an LLM call, so these protect the provider keys and the bill.
+# A natural conversation is ~2-6 turns a minute; 30 leaves room for retries and code submissions.
+session_create_limiter = SlidingWindowRateLimiter(max_requests=20, window_seconds=600.0)
+turn_limiter = SlidingWindowRateLimiter(max_requests=30, window_seconds=60.0)
+scratchpad_limiter = SlidingWindowRateLimiter(max_requests=120, window_seconds=60.0)
+# Post-interview evaluation is the heaviest call (a long multi-step LLM run): a handful per ten minutes.
+evaluate_limiter = SlidingWindowRateLimiter(max_requests=10, window_seconds=600.0)
+pdf_limiter = SlidingWindowRateLimiter(max_requests=10, window_seconds=60.0)
+
+# Everything that writes to the user's own data (save/delete sessions, profile): stops runaway client loops.
+write_limiter = SlidingWindowRateLimiter(max_requests=60, window_seconds=60.0)
+
+# Unauthenticated database ping, per IP.
+health_db_limiter = SlidingWindowRateLimiter(max_requests=30, window_seconds=60.0)

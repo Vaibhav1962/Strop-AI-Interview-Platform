@@ -6,12 +6,14 @@
  *    are unreachable.
  *  - Every network primitive (fetch, XMLHttpRequest, WebSocket, EventSource, importScripts) is removed after
  *    Pyodide has loaded, so submitted code cannot call out or exfiltrate anything.
- *  - The page terminates this worker if a run exceeds its time limit (infinite loops, fork-bomb style code).
+ *  - The page terminates this worker if a run exceeds its time limit (infinite loops, fork-bomb style code)
+ *    or prints more than the output cap.
  *  - Each run executes in a fresh globals dict, so runs cannot see each other's variables.
  */
 
 const PYODIDE_VERSION = "0.26.4";
 const PYODIDE_BASE = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+const MAX_OUTPUT_CHARS = 1_000_000;
 
 let pyodidePromise: Promise<any> | null = null;
 
@@ -39,6 +41,18 @@ async function getPyodide(): Promise<any> {
     pyodidePromise = (async () => {
       const mod: any = await import(/* @vite-ignore */ `${PYODIDE_BASE}pyodide.mjs`);
       const py = await mod.loadPyodide({ indexURL: PYODIDE_BASE });
+      // Runs a program and catches sys.exit() *inside* Python. If SystemExit were left to escape, Pyodide's event
+      // loop would re-raise it as an uncaught worker error and the page would think the runtime crashed.
+      py.runPython(`
+import pyodide.code
+
+async def __strop_run(source, namespace):
+    try:
+        await pyodide.code.eval_code_async(source, namespace)
+    except SystemExit as exc:
+        return 0 if exc.code is None else exc.code
+    return None
+`);
       lockDownNetwork();
       return py;
     })();
@@ -49,12 +63,41 @@ async function getPyodide(): Promise<any> {
   return pyodidePromise;
 }
 
-/** Drops Pyodide's own frames so learners only see their code in the traceback. */
+/**
+ * Keeps only the candidate's own frames in a traceback. Pyodide's internals are always dropped. When a test
+ * harness ran the code (it compiles the candidate's source as "main.py"), the harness' own frames are dropped
+ * too; for a plain run, code compiled as "<exec>" is shown as main.py.
+ */
 function cleanTraceback(message: string): string {
-  return message
-    .replace(/ {2}File "\/lib\/python[^\n]*_pyodide[^\n]*\n(?: {4}[^\n]*\n)*/g, "")
-    .replace(/File "<exec>"/g, 'File "main.py"')
-    .trim();
+  const lines = message.trim().split("\n");
+  const hasMain = lines.some((l) => /^\s+File "main\.py"/.test(l));
+  const out: string[] = [];
+  let skipping = false;
+  for (const line of lines) {
+    const frame = /^ {2}File "([^"]*)"/.exec(line);
+    if (frame) {
+      const file = frame[1];
+      skipping = file.includes("_pyodide") || file.startsWith("/lib/python") || (file === "<exec>" && hasMain);
+      if (skipping) continue;
+      out.push(file === "<exec>" ? line.replace('File "<exec>"', 'File "main.py"') : line);
+    } else if (skipping && /^ {4}/.test(line)) {
+      continue; // source line / caret belonging to a dropped frame
+    } else {
+      skipping = false;
+      out.push(line);
+    }
+  }
+  return out.join("\n").trim();
+}
+
+function isSyntaxProblem(message: string): boolean {
+  const last = message.trim().split("\n").pop() ?? "";
+  return /^(SyntaxError|IndentationError|TabError)\b/.test(last.trim());
+}
+
+/** Errors after which the interpreter itself is no longer trustworthy: tell the page to start a fresh worker. */
+function isFatalRuntimeError(message: string): boolean {
+  return /Aborted\(|out of memory|memory access out of bounds|unreachable|Maximum call stack size/i.test(message);
 }
 
 self.onmessage = async (event: MessageEvent) => {
@@ -65,8 +108,20 @@ self.onmessage = async (event: MessageEvent) => {
 
     const out: string[] = [];
     const err: string[] = [];
-    py.setStdout({ batched: (s: string) => out.push(s) });
-    py.setStderr({ batched: (s: string) => err.push(s) });
+    let written = 0;
+    let overflowed = false;
+    const sink = (target: string[]) => (s: string) => {
+      if (overflowed) return;
+      written += s.length + 1;
+      if (written > MAX_OUTPUT_CHARS) {
+        overflowed = true;
+        (self as any).postMessage({ id, type: "overflow" }); // the page stops this worker
+        return;
+      }
+      target.push(s);
+    };
+    py.setStdout({ batched: sink(out) });
+    py.setStderr({ batched: sink(err) });
 
     const lines = String(stdin ?? "").replace(/\r\n/g, "\n").split("\n");
     if (lines.length && lines[lines.length - 1] === "") lines.pop();
@@ -79,13 +134,38 @@ self.onmessage = async (event: MessageEvent) => {
     globals.set("__file__", "main.py");
     const started = performance.now();
     let status = "Accepted";
+    let fatal: string | null = null;
+    const runner = py.globals.get("__strop_run");
     try {
-      await py.runPythonAsync(code, { globals });
+      // undefined = ran to the end; otherwise the value passed to sys.exit()
+      const exit = await runner(code, globals);
+      if (exit !== undefined && exit !== null && exit !== 0) {
+        status = "Runtime Error";
+        if (typeof exit === "number") {
+          err.push(`Process exited with code ${exit}`);
+        } else {
+          err.push(String(exit), "Process exited with code 1"); // sys.exit("message") prints it and exits 1
+        }
+      }
     } catch (e: any) {
-      status = "Runtime Error";
-      err.push(cleanTraceback(String(e?.message ?? e)));
+      const message = String(e?.message ?? e);
+      if (isFatalRuntimeError(message)) {
+        fatal = message;
+      } else {
+        status = isSyntaxProblem(message) ? "Syntax Error" : "Runtime Error";
+        err.push(cleanTraceback(message));
+      }
     } finally {
-      globals.destroy();
+      runner.destroy();
+      try {
+        globals.destroy();
+      } catch {
+        /* the interpreter is already gone */
+      }
+    }
+    if (fatal) {
+      (self as any).postMessage({ id, type: "failed", message: `The Python runtime stopped (out of memory or crashed). Please run again.` });
+      return;
     }
 
     (self as any).postMessage({

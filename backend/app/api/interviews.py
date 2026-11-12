@@ -13,7 +13,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_optional_user
-from app.api.rate_limiter import analysis_limiter, doc_limiter
+from app.api.rate_limiter import analysis_limiter, doc_limiter, limit_user, write_limiter
 from app.config import get_settings
 from app.database import get_db
 from app.models.interview_session import InterviewSession
@@ -33,7 +33,12 @@ from app.schemas.interview import (
 router = APIRouter(prefix="/interviews", tags=["interviews"])
 
 
-@router.post("", response_model=InterviewSessionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=InterviewSessionResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(limit_user(write_limiter))],
+)
 async def create_interview_session(
     payload: InterviewSessionCreate,
     current_user: User = Depends(get_current_user),
@@ -165,7 +170,7 @@ async def get_user_profile(
     return profile
 
 
-@router.post("/profile", response_model=UserProfileResponse)
+@router.post("/profile", response_model=UserProfileResponse, dependencies=[Depends(limit_user(write_limiter))])
 async def save_user_profile(
     payload: UserProfilePayload,
     current_user: User = Depends(get_current_user),
@@ -218,7 +223,7 @@ async def get_interview_session(
     return session
 
 
-@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(limit_user(write_limiter))])
 async def delete_interview_session(
     session_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
@@ -243,7 +248,7 @@ async def delete_interview_session(
     await db.commit()
 
 
-@router.delete("", status_code=status.HTTP_200_OK)
+@router.delete("", status_code=status.HTTP_200_OK, dependencies=[Depends(limit_user(write_limiter))])
 async def reset_interview_sessions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

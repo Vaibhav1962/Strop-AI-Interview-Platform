@@ -177,7 +177,7 @@ class InterviewerActor:
                     async with httpx.AsyncClient(timeout=25.0) as client:
                         res = await client.post(
                             f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                            params={"key": self.gemini_api_key},
+                            headers={"x-goog-api-key": self.gemini_api_key},
                             json=body,
                         )
                     if res.status_code != 200:
