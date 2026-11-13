@@ -30,6 +30,8 @@ import {
 } from "../lib/dsaProblemBank";
 import LiquidMicWave from "../components/LiquidMicWave";
 import DsaCodingWorkspace from "../components/DsaCodingWorkspace";
+import DsaProblemBrief from "../components/DsaProblemBrief";
+import { toSpokenText } from "../lib/spokenText";
 
 type UIPhase =
   | "splash"
@@ -521,7 +523,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
           },
           onToken: (tok) => {
             streamedDialogue += tok;
-            setCurrentAlexText(streamedDialogue);
+            setCurrentAlexText(toSpokenText(streamedDialogue));
             setUiPhase("alex_speaking");
           },
           onSentence: (sentence) => {
@@ -552,7 +554,7 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
         setStage("topics");
       }
 
-      const alexTurnText = committed.assistant_response || streamedDialogue;
+      const alexTurnText = committed.assistant_response || toSpokenText(streamedDialogue);
       const alexTurn: ConversationTurn = {
         speaker: "Alex",
         text: alexTurnText,
@@ -1389,13 +1391,18 @@ export default function VoiceInterview({ onNavigate }: { onNavigate: (p: string)
 
         if (selectedTrack === "dsa") {
           if (!dsaProblemUnlocked) {
-            // Before the problem is revealed: camera beside the conversation
+            // Before the editor opens: the problem is on screen to read, with the camera and conversation beside it.
+            // The editor takes the problem's place once the approach is agreed.
             return (
-              <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden px-4 sm:px-6 py-4 sm:py-5 gap-5 w-full max-w-[1280px] mx-auto">
-                <aside className="order-2 lg:order-1 w-full lg:w-[340px] shrink-0">{renderMediaCard()}</aside>
-                <section className="order-1 lg:order-2 flex-1 min-w-0 min-h-[calc(100dvh-9rem)] lg:min-h-0 flex flex-col">
-                  {renderConversationPane({ isPrimary: true })}
-                </section>
+              <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 sm:p-6 gap-4">
+                <DsaProblemBrief
+                  problem={dsaProblem}
+                  className="w-full lg:w-[52%] min-h-[420px] lg:min-h-0 lg:h-full"
+                />
+                <div className="w-full lg:w-[48%] flex flex-col lg:h-full overflow-hidden gap-3.5 min-h-[480px]">
+                  {renderMediaCard({ compact: true })}
+                  {renderConversationPane({ isPrimary: false })}
+                </div>
               </div>
             );
           }

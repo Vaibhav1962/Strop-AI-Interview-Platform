@@ -1,5 +1,24 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
+const WARM_INTERVAL_MS = 5 * 60 * 1000;
+let lastWarmAt = 0;
+
+/**
+ * Wakes a sleeping backend. Free hosting stops an idle server and takes about a minute to start it again, so the app
+ * pings the cheap /health route as soon as someone arrives. The wait then overlaps with time the visitor spends
+ * choosing a track, instead of landing on their first real request. Fire and forget: failures are ignored.
+ */
+export function warmBackend(): void {
+  const now = Date.now();
+  if (now - lastWarmAt < WARM_INTERVAL_MS) return;
+  lastWarmAt = now;
+  try {
+    void fetch(`${API_BASE_URL}/health`, { method: "GET", cache: "no-store", keepalive: true }).catch(() => {});
+  } catch {
+    /* nothing to do: the next real request will wake it */
+  }
+}
+
 export class ApiError extends Error {
   status: number;
 

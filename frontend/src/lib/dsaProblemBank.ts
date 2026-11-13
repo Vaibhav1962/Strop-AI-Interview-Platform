@@ -53,21 +53,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "String length up to 5*10^4. Letters, digits, symbols.",
     "description": "Given a string s, find the length of the longest substring without duplicate characters.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= s.length <= 5 * 10^4",
+      "s consists of English letters, digits, symbols and spaces."
     ],
     "examples": [
       {
-        "input": "s = 'abcabcbb', expected 3",
-        "output": ""
+        "input": "s = \"abcabcbb\"",
+        "output": "3"
       },
       {
-        "input": "s = 'bbbbb', expected 1",
-        "output": ""
-      },
-      {
-        "input": "s = 'pwwkew', expected 3",
-        "output": ""
+        "input": "s = \"bbbbb\"",
+        "output": "1"
       }
     ],
     "entryPoint": "lengthOfLongestSubstring",
@@ -130,17 +126,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "s and t lengths up to 10^5, uppercase/lowercase English letters.",
     "description": "Given two strings s and t, return the minimum window substring of s such that every character in t is included in the window.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= s.length, t.length <= 10^5",
+      "s and t consist of uppercase and lowercase English letters.",
+      "Return an empty string if no window exists."
     ],
     "examples": [
       {
-        "input": "s = 'ADOBECODEBANC', t = 'ABC', expected 'BANC'",
-        "output": ""
+        "input": "s = \"ADOBECODEBANC\", t = \"ABC\"",
+        "output": "\"BANC\""
       },
       {
-        "input": "s = 'a', t = 'a', expected 'a'",
-        "output": ""
+        "input": "s = \"a\", t = \"a\"",
+        "output": "\"a\""
       }
     ],
     "entryPoint": "minWindow",
@@ -199,17 +196,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "s length up to 10^5, k >= 0, s consists of uppercase English letters.",
     "description": "Given a string s and an integer k, return the length of the longest substring containing the same letter you can get after changing at most k characters.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= s.length <= 10^5",
+      "s consists of only uppercase English letters.",
+      "0 <= k <= s.length"
     ],
     "examples": [
       {
-        "input": "s = 'ABAB', k = 2, expected 4",
-        "output": ""
+        "input": "s = \"ABAB\", k = 2",
+        "output": "4"
       },
       {
-        "input": "s = 'AABABBA', k = 1, expected 4",
-        "output": ""
+        "input": "s = \"AABABBA\", k = 1",
+        "output": "4"
       }
     ],
     "entryPoint": "characterReplacement",
@@ -268,17 +266,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "s1, s2 lengths up to 10^4, lowercase English letters.",
     "description": "Given two strings s1 and s2, return true if s2 contains a permutation of s1, or false otherwise.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= s1.length, s2.length <= 10^4",
+      "s1 and s2 consist of lowercase English letters."
     ],
     "examples": [
       {
-        "input": "s1 = 'ab', s2 = 'eidbaooo', expected true",
-        "output": ""
+        "input": "s1 = \"ab\", s2 = \"eidbaooo\"",
+        "output": "true"
       },
       {
-        "input": "s1 = 'ab', s2 = 'eidboaoo', expected false",
-        "output": ""
+        "input": "s1 = \"ab\", s2 = \"eidboaoo\"",
+        "output": "false"
       }
     ],
     "entryPoint": "checkInclusion",
@@ -337,17 +335,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "fruits length up to 10^5, fruits[i] >= 0.",
     "description": "You have two baskets and each basket can hold only one type of fruit. Return the maximum number of fruits you can pick from trees in a row.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= fruits.length <= 10^5",
+      "0 <= fruits[i] < fruits.length",
+      "You have exactly two baskets, and each basket holds a single type of fruit."
     ],
     "examples": [
       {
-        "input": "fruits = [1,2,1], expected 3",
-        "output": ""
+        "input": "fruits = [1,2,1]",
+        "output": "3"
       },
       {
-        "input": "fruits = [0,1,2,2], expected 3",
-        "output": ""
+        "input": "fruits = [0,1,2,2]",
+        "output": "3"
       }
     ],
     "entryPoint": "totalFruit",
@@ -400,13 +399,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5, k in [0, len(nums)].",
     "description": "Given a binary array nums and an integer k, return the maximum number of consecutive 1's if you can flip at most k 0's.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 10^5",
+      "nums[i] is either 0 or 1.",
+      "0 <= k <= nums.length"
     ],
     "examples": [
       {
-        "input": "nums = [1,1,1,0,0,0,1,1,1,1,0], k = 2, expected 6",
-        "output": ""
+        "input": "nums = [1,1,1,0,0,0,1,1,1,1,0], k = 2",
+        "output": "6"
+      },
+      {
+        "input": "nums = [1,0,1,1,0,1], k = 1",
+        "output": "4"
       }
     ],
     "entryPoint": "longestOnes",
@@ -476,13 +480,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 3000, nums[i] between -10^5 and 10^5.",
     "description": "Given an integer array nums, return all triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0 without duplicate triplets.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "3 <= nums.length <= 3000",
+      "-10^5 <= nums[i] <= 10^5",
+      "The answer must not contain duplicate triplets."
     ],
     "examples": [
       {
-        "input": "nums = [-1,0,1,2,-1,-4], expected [[-1,-1,2],[-1,0,1]]",
-        "output": ""
+        "input": "nums = [-1,0,1,2,-1,-4]",
+        "output": "[[-1,-1,2],[-1,0,1]]"
+      },
+      {
+        "input": "nums = [0,0,0,0]",
+        "output": "[[0,0,0]]"
       }
     ],
     "entryPoint": "threeSum",
@@ -555,17 +564,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "height length up to 10^5, height[i] >= 0.",
     "description": "Given n non-negative integers representing heights of vertical lines, find two lines that together with the x-axis form a container containing the most water.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "2 <= height.length <= 10^5",
+      "0 <= height[i] <= 10^4"
     ],
     "examples": [
       {
-        "input": "height = [1,8,6,2,5,4,8,3,7], expected 49",
-        "output": ""
+        "input": "height = [1,8,6,2,5,4,8,3,7]",
+        "output": "49"
       },
       {
-        "input": "height = [1,1], expected 1",
-        "output": ""
+        "input": "height = [1,1]",
+        "output": "1"
       }
     ],
     "entryPoint": "maxArea",
@@ -618,13 +627,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "height length up to 2*10^4, height[i] >= 0.",
     "description": "Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= height.length <= 2 * 10^4",
+      "0 <= height[i] <= 10^5"
     ],
     "examples": [
       {
-        "input": "height = [0,1,0,2,1,0,1,3,2,1,2,1], expected 6",
-        "output": ""
+        "input": "height = [0,1,0,2,1,0,1,3,2,1,2,1]",
+        "output": "6"
+      },
+      {
+        "input": "height = [4,2,0,3,2,5]",
+        "output": "9"
       }
     ],
     "entryPoint": "trap",
@@ -687,13 +700,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "numbers length up to 3*10^4, numbers sorted non-decreasing, exactly one solution.",
     "description": "Given a 1-indexed array of integers numbers that is already sorted in non-decreasing order, find two numbers such that they add up to a specific target number.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "2 <= numbers.length <= 3 * 10^4",
+      "-1000 <= numbers[i] <= 1000, sorted in non-decreasing order.",
+      "-1000 <= target <= 1000",
+      "Exactly one solution exists. Return 1-indexed positions, and do not use the same element twice."
     ],
     "examples": [
       {
-        "input": "numbers = [2,7,11,15], target = 9, expected [1,2]",
-        "output": ""
+        "input": "numbers = [2,7,11,15], target = 9",
+        "output": "[1,2]"
+      },
+      {
+        "input": "numbers = [-3,-1,0,4,9], target = 6",
+        "output": "[1,5]"
       }
     ],
     "entryPoint": "twoSum",
@@ -763,13 +782,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 300, elements are 0, 1, or 2.",
     "description": "Given an array nums with n objects colored red, white, or blue (0, 1, 2), sort them in-place so that objects of the same color are adjacent.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 300",
+      "nums[i] is 0, 1, or 2.",
+      "Sort in place without using a library sort."
     ],
     "examples": [
       {
-        "input": "nums = [2,0,2,1,1,0], expected [0,0,1,1,2,2]",
-        "output": ""
+        "input": "nums = [2,0,2,1,1,0]",
+        "output": "[0,0,1,1,2,2]"
+      },
+      {
+        "input": "nums = [1,1,0,2,2,0,1]",
+        "output": "[0,0,1,1,1,2,2]"
       }
     ],
     "entryPoint": "sortColors",
@@ -832,13 +856,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 3*10^4, nums[i] >= 1, k >= 0.",
     "description": "Given an array of integers nums and an integer k, return the number of contiguous subarrays where the product of all the elements in the subarray is strictly less than k.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 3 * 10^4",
+      "1 <= nums[i] <= 1000",
+      "0 <= k <= 10^6"
     ],
     "examples": [
       {
-        "input": "nums = [10,5,2,6], k = 100, expected 8",
-        "output": ""
+        "input": "nums = [10,5,2,6], k = 100",
+        "output": "8"
+      },
+      {
+        "input": "nums = [1,2,3], k = 0",
+        "output": "0"
       }
     ],
     "entryPoint": "numSubarrayProductLessThanK",
@@ -908,13 +937,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5, target up to 10^9, all elements positive.",
     "description": "Given an array of positive integers nums and a positive integer target, return the minimal length of a contiguous subarray of which the sum is greater than or equal to target.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= target <= 10^9",
+      "1 <= nums.length <= 10^5",
+      "1 <= nums[i] <= 10^4",
+      "Return 0 if no subarray reaches the target."
     ],
     "examples": [
       {
-        "input": "target = 7, nums = [2,3,1,2,4,3], expected 2",
-        "output": ""
+        "input": "target = 7, nums = [2,3,1,2,4,3]",
+        "output": "2"
+      },
+      {
+        "input": "target = 4, nums = [1,4,4]",
+        "output": "1"
       }
     ],
     "entryPoint": "minSubArrayLen",
@@ -984,13 +1019,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5, k in [1, len(nums)].",
     "description": "You are given an array of integers nums, there is a sliding window of size k which is moving from the very left to the right. Return the max sliding window.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 10^5",
+      "-10^4 <= nums[i] <= 10^4",
+      "1 <= k <= nums.length"
     ],
     "examples": [
       {
-        "input": "nums = [1,3,-1,-3,5,3,6,7], k = 3, expected [3,3,5,5,6,7]",
-        "output": ""
+        "input": "nums = [1,3,-1,-3,5,3,6,7], k = 3",
+        "output": "[3,3,5,5,6,7]"
+      },
+      {
+        "input": "nums = [1], k = 1",
+        "output": "[1]"
       }
     ],
     "entryPoint": "maxSlidingWindow",
@@ -1060,13 +1100,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "s, p lengths up to 3*10^4, lowercase English letters.",
     "description": "Given two strings s and p, return an array of all the start indices of p's anagrams in s.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= s.length, p.length <= 3 * 10^4",
+      "s and p consist of lowercase English letters."
     ],
     "examples": [
       {
-        "input": "s = 'cbaebabacd', p = 'abc', expected [0,6]",
-        "output": ""
+        "input": "s = \"cbaebabacd\", p = \"abc\"",
+        "output": "[0,6]"
+      },
+      {
+        "input": "s = \"abab\", p = \"ab\"",
+        "output": "[0,1,2]"
       }
     ],
     "entryPoint": "findAnagrams",
@@ -1136,17 +1180,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 2*10^4, elements between -1000 and 1000.",
     "description": "Given an array of integers nums and an integer k, return the total number of subarrays whose sum equals to k.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 2 * 10^4",
+      "-1000 <= nums[i] <= 1000",
+      "-10^7 <= k <= 10^7"
     ],
     "examples": [
       {
-        "input": "nums = [1,1,1], k = 2, expected 2",
-        "output": ""
+        "input": "nums = [1,1,1], k = 2",
+        "output": "2"
       },
       {
-        "input": "nums = [1,2,3], k = 3, expected 2",
-        "output": ""
+        "input": "nums = [1,2,3], k = 3",
+        "output": "2"
       }
     ],
     "entryPoint": "subarraySum",
@@ -1205,17 +1250,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5, answer fits in 32-bit integer.",
     "description": "Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i] without using division.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "2 <= nums.length <= 10^5",
+      "-30 <= nums[i] <= 30",
+      "Every prefix and suffix product fits in a 32-bit integer.",
+      "Do not use division."
     ],
     "examples": [
       {
-        "input": "nums = [1,2,3,4], expected [24,12,8,6]",
-        "output": ""
+        "input": "nums = [1,2,3,4]",
+        "output": "[24,12,8,6]"
       },
       {
-        "input": "nums = [-1,1,0,-3,3], expected [0,0,9,0,0]",
-        "output": ""
+        "input": "nums = [-1,1,0,-3,3]",
+        "output": "[0,0,9,0,0]"
       }
     ],
     "entryPoint": "productExceptSelf",
@@ -1268,17 +1315,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5, nums[i] between -10^9 and 10^9.",
     "description": "Given an unsorted array of integers nums, return the length of the longest consecutive elements sequence in O(n) time.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= nums.length <= 10^5",
+      "-10^9 <= nums[i] <= 10^9",
+      "The algorithm should run in O(N) time."
     ],
     "examples": [
       {
-        "input": "nums = [100,4,200,1,3,2], expected 4",
-        "output": ""
+        "input": "nums = [100,4,200,1,3,2]",
+        "output": "4"
       },
       {
-        "input": "nums = [0,3,7,2,5,8,4,6,0,1], expected 9",
-        "output": ""
+        "input": "nums = [0,3,7,2,5,8,4,6,0,1]",
+        "output": "9"
       }
     ],
     "entryPoint": "longestConsecutive",
@@ -1331,13 +1379,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "strs length up to 10^4, strings length up to 100.",
     "description": "Given an array of strings strs, group the anagrams together. You can return the answer in any order.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= strs.length <= 10^4",
+      "0 <= strs[i].length <= 100",
+      "strs[i] consists of lowercase English letters."
     ],
     "examples": [
       {
-        "input": "strs = ['eat','tea','tan','ate','nat','bat'], expected [['bat'],['nat','tan'],['ate','eat','tea']]",
-        "output": ""
+        "input": "strs = [\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]",
+        "output": "[[\"bat\"],[\"nat\",\"tan\"],[\"ate\",\"eat\",\"tea\"]]"
+      },
+      {
+        "input": "strs = [\"\"]",
+        "output": "[[\"\"]]"
       }
     ],
     "entryPoint": "groupAnagrams",
@@ -1410,17 +1463,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5, k in [1, unique elements].",
     "description": "Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 10^5",
+      "-10^4 <= nums[i] <= 10^4",
+      "k is in the range [1, the number of unique elements].",
+      "The answer is guaranteed to be unique."
     ],
     "examples": [
       {
-        "input": "nums = [1,1,1,2,2,3], k = 2, expected [1,2]",
-        "output": ""
+        "input": "nums = [1,1,1,2,2,3], k = 2",
+        "output": "[1,2]"
       },
       {
-        "input": "nums = [1], k = 1, expected [1]",
-        "output": ""
+        "input": "nums = [1], k = 1",
+        "output": "[1]"
       }
     ],
     "entryPoint": "topKFrequent",
@@ -1479,17 +1534,20 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5, k between 1 and 2^31-1.",
     "description": "Given an integer array nums and an integer k, return true if nums has a good subarray of length at least two whose sum is a multiple of k.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 10^5",
+      "0 <= nums[i] <= 10^9",
+      "0 <= sum(nums) <= 2^31 - 1",
+      "1 <= k <= 2^31 - 1",
+      "The subarray must contain at least two elements."
     ],
     "examples": [
       {
-        "input": "nums = [23,2,4,6,7], k = 6, expected true",
-        "output": ""
+        "input": "nums = [23,2,4,6,7], k = 6",
+        "output": "true"
       },
       {
-        "input": "nums = [23,2,6,4,7], k = 6, expected true",
-        "output": ""
+        "input": "nums = [23,2,6,4,7], k = 6",
+        "output": "true"
       }
     ],
     "entryPoint": "checkSubarraySum",
@@ -1548,17 +1606,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5.",
     "description": "Given a binary array nums, return the maximum length of a contiguous subarray with an equal number of 0 and 1.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 10^5",
+      "nums[i] is either 0 or 1."
     ],
     "examples": [
       {
-        "input": "nums = [0,1], expected 2",
-        "output": ""
+        "input": "nums = [0,1]",
+        "output": "2"
       },
       {
-        "input": "nums = [0,1,0], expected 2",
-        "output": ""
+        "input": "nums = [0,1,0]",
+        "output": "2"
       }
     ],
     "entryPoint": "findMaxLength",
@@ -1611,13 +1669,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "strs can contain any of the 256 ASCII characters.",
     "description": "Design an algorithm to encode a list of strings to a single string and decode it back to the original list without delimiter collision.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= strs.length <= 200",
+      "0 <= strs[i].length <= 200",
+      "strs[i] can contain any of the 256 ASCII characters.",
+      "decode(encode(strs)) must return the original list, and encode and decode must not share state."
     ],
     "examples": [
       {
-        "input": "strs = ['lint','code','love','you'], expected ['lint','code','love','you']",
-        "output": ""
+        "input": "strs = [\"lint\",\"code\",\"love\",\"you\"]",
+        "output": "[\"lint\",\"code\",\"love\",\"you\"]"
+      },
+      {
+        "input": "strs = [\"\",\"a#b\",\"10#x\"]",
+        "output": "[\"\",\"a#b\",\"10#x\"]"
       }
     ],
     "entryPoint": "encodeAndDecode",
@@ -1680,13 +1744,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "board is 9x9, cells contain '1'-'9' or '.'.",
     "description": "Determine if a 9 x 9 Sudoku board is valid. Only the filled cells need to be validated according to standard rules.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "board.length == 9 and board[i].length == 9",
+      "board[i][j] is a digit '1'-'9' or '.'.",
+      "Only the filled cells need to be validated against the three Sudoku rules (row, column, 3x3 box)."
     ],
     "examples": [
       {
-        "input": "board = [['5','3','.','.','7','.','.','.','.']], expected true",
-        "output": ""
+        "input": "board = [[\"5\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"],[\"6\",\".\",\".\",\"1\",\"9\",\"5\",\".\",\".\",\".\"],[\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\"6\",\".\"],[\"8\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"3\"],[\"4\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"1\"],[\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],[\".\",\"6\",\".\",\".\",\".\",\".\",\"2\",\"8\",\".\"],[\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"5\"],[\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]",
+        "output": "true"
+      },
+      {
+        "input": "board = [[\"8\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"],[\"6\",\".\",\".\",\"1\",\"9\",\"5\",\".\",\".\",\".\"],[\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\"6\",\".\"],[\"8\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"3\"],[\"4\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"1\"],[\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],[\".\",\"6\",\".\",\".\",\".\",\".\",\"2\",\"8\",\".\"],[\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"5\"],[\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]",
+        "output": "false"
       }
     ],
     "entryPoint": "isValidSudoku",
@@ -1739,21 +1808,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5, elements in range [-2^31, 2^31 - 1].",
     "description": "Given an unsorted integer array nums, return the smallest positive integer that is not present in nums in O(n) time and O(1) auxiliary space.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 10^5",
+      "-2^31 <= nums[i] <= 2^31 - 1",
+      "Run in O(N) time using O(1) auxiliary space."
     ],
     "examples": [
       {
-        "input": "nums = [1,2,0], expected 3",
-        "output": ""
+        "input": "nums = [1,2,0]",
+        "output": "3"
       },
       {
-        "input": "nums = [3,4,-1,1], expected 2",
-        "output": ""
-      },
-      {
-        "input": "nums = [7,8,9,11,12], expected 1",
-        "output": ""
+        "input": "nums = [3,4,-1,1]",
+        "output": "2"
       }
     ],
     "entryPoint": "firstMissingPositive",
@@ -1816,13 +1882,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "temperatures length up to 10^5, temperatures[i] between 30 and 100.",
     "description": "Given an array of integers temperatures represents the daily temperatures, return an array answer such that answer[i] is the number of days you have to wait after the ith day to get a warmer temperature.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= temperatures.length <= 10^5",
+      "30 <= temperatures[i] <= 100"
     ],
     "examples": [
       {
-        "input": "temperatures = [73,74,75,71,69,72,76,73], expected [1,1,4,2,1,1,0,0]",
-        "output": ""
+        "input": "temperatures = [73,74,75,71,69,72,76,73]",
+        "output": "[1,1,4,2,1,1,0,0]"
+      },
+      {
+        "input": "temperatures = [30,40,50,60]",
+        "output": "[1,1,1,0]"
       }
     ],
     "entryPoint": "dailyTemperatures",
@@ -1885,17 +1955,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "heights length up to 10^5, heights[i] >= 0.",
     "description": "Given an array of integers heights representing the histogram's bar height where the width of each bar is 1, return the area of the largest rectangle in the histogram.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= heights.length <= 10^5",
+      "0 <= heights[i] <= 10^4"
     ],
     "examples": [
       {
-        "input": "heights = [2,1,5,6,2,3], expected 10",
-        "output": ""
+        "input": "heights = [2,1,5,6,2,3]",
+        "output": "10"
       },
       {
-        "input": "heights = [2,4], expected 4",
-        "output": ""
+        "input": "heights = [2,4]",
+        "output": "4"
       }
     ],
     "entryPoint": "largestRectangleArea",
@@ -1948,13 +2018,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Methods push, pop, top, and getMin called up to 3*10^4 times.",
     "description": "Design a stack that supports push, pop, top, and retrieving the minimum element in constant time O(1).",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "-2^31 <= val <= 2^31 - 1",
+      "pop, top and getMin are only called on a non-empty stack.",
+      "At most 3 * 10^4 calls in total.",
+      "Every operation must run in O(1) time."
     ],
     "examples": [
       {
-        "input": "operations: push(-2), push(0), push(-3), getMin(), pop(), top(), getMin(), expected [-3, 0, -2]",
-        "output": ""
+        "input": "operations = [\"MinStack\",\"push\",\"push\",\"push\",\"getMin\",\"pop\",\"top\",\"getMin\"], arguments = [[],[-2],[0],[-3],[],[],[],[]]",
+        "output": "[null,null,null,null,-3,null,0,-2]"
+      },
+      {
+        "input": "operations = [\"MinStack\",\"push\",\"push\",\"getMin\",\"top\",\"pop\",\"getMin\"], arguments = [[],[2],[1],[],[],[],[]]",
+        "output": "[null,null,null,1,1,null,2]"
       }
     ],
     "entryPoint": "MinStack",
@@ -2020,17 +2096,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "tokens length up to 10^4, tokens are operators '+', '-', '*', '/' or integers.",
     "description": "You are given an array of strings tokens that represents an arithmetic expression in a Reverse Polish Notation. Evaluate the expression.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= tokens.length <= 10^4",
+      "Each token is an operator (+, -, *, /) or an integer in the range [-200, 200].",
+      "The expression is always valid, with no division by zero. Division truncates toward zero.",
+      "Every intermediate result fits in a 32-bit integer."
     ],
     "examples": [
       {
-        "input": "tokens = ['2','1','+','3','*'], expected 9",
-        "output": ""
+        "input": "tokens = [\"2\",\"1\",\"+\",\"3\",\"*\"]",
+        "output": "9"
       },
       {
-        "input": "tokens = ['4','13','5','/','+'], expected 6",
-        "output": ""
+        "input": "tokens = [\"4\",\"13\",\"5\",\"/\",\"+\"]",
+        "output": "6"
       }
     ],
     "entryPoint": "evalRPN",
@@ -2083,13 +2161,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums1, nums2 lengths up to 1000, distinct integers.",
     "description": "The next greater element of some element x in an array is the first greater element that is to the right of x in the same array. Find next greater for nums1 in nums2.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums1.length <= nums2.length <= 1000",
+      "0 <= nums1[i], nums2[i] <= 10^4",
+      "All integers in nums1 and nums2 are unique, and every element of nums1 appears in nums2."
     ],
     "examples": [
       {
-        "input": "nums1 = [4,1,2], nums2 = [1,3,4,2], expected [-1,3,-1]",
-        "output": ""
+        "input": "nums1 = [4,1,2], nums2 = [1,3,4,2]",
+        "output": "[-1,3,-1]"
+      },
+      {
+        "input": "nums1 = [2,4], nums2 = [1,2,3,4]",
+        "output": "[3,-1]"
       }
     ],
     "entryPoint": "nextGreaterElement",
@@ -2159,17 +2242,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^4, nums[i] between -10^9 and 10^9.",
     "description": "Given a circular integer array nums, return the next greater number for every element in nums.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 10^4",
+      "-10^9 <= nums[i] <= 10^9",
+      "The array is circular: after the last element the search wraps to the first."
     ],
     "examples": [
       {
-        "input": "nums = [1,2,1], expected [2,-1,2]",
-        "output": ""
+        "input": "nums = [1,2,1]",
+        "output": "[2,-1,2]"
       },
       {
-        "input": "nums = [1,2,3,4,3], expected [2,3,4,-1,4]",
-        "output": ""
+        "input": "nums = [1,2,3,4,3]",
+        "output": "[2,3,4,-1,4]"
       }
     ],
     "entryPoint": "nextGreaterElements",
@@ -2222,21 +2306,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "asteroids length up to 10^4, non-zero values between -1000 and 1000.",
     "description": "We are given an array asteroids of integers representing asteroids in a row. Find out the state of the asteroids after all collisions.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "2 <= asteroids.length <= 10^4",
+      "-1000 <= asteroids[i] <= 1000, and asteroids[i] != 0",
+      "Positive values move right and negative values move left, all at the same speed."
     ],
     "examples": [
       {
-        "input": "asteroids = [5,10,-5], expected [5,10]",
-        "output": ""
+        "input": "asteroids = [5,10,-5]",
+        "output": "[5,10]"
       },
       {
-        "input": "asteroids = [8,-8], expected []",
-        "output": ""
-      },
-      {
-        "input": "asteroids = [10,2,-5], expected [10]",
-        "output": ""
+        "input": "asteroids = [8,-8]",
+        "output": "[]"
       }
     ],
     "entryPoint": "asteroidCollision",
@@ -2299,21 +2380,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "num length up to 10^5, k <= len(num).",
     "description": "Given string num representing a non-negative integer and an integer k, return the smallest possible integer after removing k digits from num.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= k <= num.length <= 10^5",
+      "num consists of digits only and has no leading zeros, except for zero itself.",
+      "The result has no leading zeros. Return \"0\" if every digit is removed."
     ],
     "examples": [
       {
-        "input": "num = '1432219', k = 3, expected '1219'",
-        "output": ""
+        "input": "num = \"1432219\", k = 3",
+        "output": "\"1219\""
       },
       {
-        "input": "num = '10200', k = 1, expected '200'",
-        "output": ""
-      },
-      {
-        "input": "num = '10', k = 2, expected '0'",
-        "output": ""
+        "input": "num = \"10200\", k = 1",
+        "output": "\"200\""
       }
     ],
     "entryPoint": "removeKdigits",
@@ -2383,13 +2461,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "n up to 10^5, target up to 10^6.",
     "description": "There are n cars at given miles away from the starting mile 0, traveling to reach the destination at mile target. Return the number of car fleets that will arrive.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "n == position.length == speed.length, 1 <= n <= 10^5",
+      "0 < target <= 10^6",
+      "0 <= position[i] < target, and all positions are unique.",
+      "0 < speed[i] <= 10^6"
     ],
     "examples": [
       {
-        "input": "target = 12, position = [10,8,0,5,3], speed = [2,4,1,1,3], expected 3",
-        "output": ""
+        "input": "target = 12, position = [10,8,0,5,3], speed = [2,4,1,1,3]",
+        "output": "3"
+      },
+      {
+        "input": "target = 10, position = [3], speed = [3]",
+        "output": "1"
       }
     ],
     "entryPoint": "carFleet",
@@ -2466,13 +2550,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "heights up to 2*10^4.",
     "description": "Solve the trapping rain water problem using a monotonic decreasing stack to compute horizontal bounded water layers.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= height.length <= 2 * 10^4",
+      "0 <= height[i] <= 10^5"
     ],
     "examples": [
       {
-        "input": "height = [0,1,0,2,1,0,1,3,2,1,2,1], expected 6",
-        "output": ""
+        "input": "height = [0,1,0,2,1,0,1,3,2,1,2,1]",
+        "output": "6"
+      },
+      {
+        "input": "height = [4,2,0,3,2,5]",
+        "output": "9"
       }
     ],
     "entryPoint": "trapStack",
@@ -2535,17 +2623,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^4, unique elements sorted ascending.",
     "description": "Given an array of integers nums which is sorted in ascending order, and an integer target, write a function to search target in nums in O(log n) runtime.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 10^4",
+      "-10^4 < nums[i], target < 10^4",
+      "All integers in nums are unique and sorted in ascending order.",
+      "Run in O(log N) time."
     ],
     "examples": [
       {
-        "input": "nums = [-1,0,3,5,9,12], target = 9, expected 4",
-        "output": ""
+        "input": "nums = [-1,0,3,5,9,12], target = 9",
+        "output": "4"
       },
       {
-        "input": "nums = [-1,0,3,5,9,12], target = 2, expected -1",
-        "output": ""
+        "input": "nums = [-1,0,3,5,9,12], target = 2",
+        "output": "-1"
       }
     ],
     "entryPoint": "search",
@@ -2604,17 +2694,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 5000, unique elements rotated at unknown pivot.",
     "description": "Given the array nums after the possible rotation and an integer target, return the index of target if it is in nums, or -1 if it is not in nums in O(log n) time.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 5000",
+      "-10^4 <= nums[i], target <= 10^4",
+      "All values of nums are unique. nums is an ascending array rotated at an unknown pivot.",
+      "Run in O(log N) time."
     ],
     "examples": [
       {
-        "input": "nums = [4,5,6,7,0,1,2], target = 0, expected 4",
-        "output": ""
+        "input": "nums = [4,5,6,7,0,1,2], target = 0",
+        "output": "4"
       },
       {
-        "input": "nums = [4,5,6,7,0,1,2], target = 3, expected -1",
-        "output": ""
+        "input": "nums = [4,5,6,7,0,1,2], target = 3",
+        "output": "-1"
       }
     ],
     "entryPoint": "searchRotated",
@@ -2673,21 +2765,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 5000, unique elements.",
     "description": "Given the sorted rotated array nums of unique elements, return the minimum element of this array in O(log n) time.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 5000",
+      "-5000 <= nums[i] <= 5000",
+      "All integers are unique. nums is an ascending array rotated between 1 and n times.",
+      "Run in O(log N) time."
     ],
     "examples": [
       {
-        "input": "nums = [3,4,5,1,2], expected 1",
-        "output": ""
+        "input": "nums = [3,4,5,1,2]",
+        "output": "1"
       },
       {
-        "input": "nums = [4,5,6,7,0,1,2], expected 0",
-        "output": ""
-      },
-      {
-        "input": "nums = [11,13,15,17], expected 11",
-        "output": ""
+        "input": "nums = [4,5,6,7,0,1,2]",
+        "output": "0"
       }
     ],
     "entryPoint": "findMin",
@@ -2750,17 +2840,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "piles length up to 10^4, h between len(piles) and 10^9.",
     "description": "Koko can decide her bananas-per-hour eating speed of k. Return the minimum integer k such that she can eat all the bananas within h hours.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= piles.length <= 10^4",
+      "piles.length <= h <= 10^9",
+      "1 <= piles[i] <= 10^9"
     ],
     "examples": [
       {
-        "input": "piles = [3,6,7,11], h = 8, expected 4",
-        "output": ""
+        "input": "piles = [3,6,7,11], h = 8",
+        "output": "4"
       },
       {
-        "input": "piles = [30,11,23,4,20], h = 5, expected 30",
-        "output": ""
+        "input": "piles = [30,11,23,4,20], h = 5",
+        "output": "30"
       }
     ],
     "entryPoint": "minEatingSpeed",
@@ -2819,17 +2910,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "weights length up to 5*10^4, days <= len(weights).",
     "description": "A conveyor belt has packages that must be shipped within days days. Return the least weight capacity of the ship that will result in all packages being shipped.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= days <= weights.length <= 5 * 10^4",
+      "1 <= weights[i] <= 500",
+      "Packages must be shipped in the given order."
     ],
     "examples": [
       {
-        "input": "weights = [1,2,3,4,5,6,7,8,9,10], days = 5, expected 15",
-        "output": ""
+        "input": "weights = [1,2,3,4,5,6,7,8,9,10], days = 5",
+        "output": "15"
       },
       {
-        "input": "weights = [3,2,2,4,1,4], days = 3, expected 6",
-        "output": ""
+        "input": "weights = [3,2,2,4,1,4], days = 3",
+        "output": "6"
       }
     ],
     "entryPoint": "shipWithinDays",
@@ -2888,17 +2980,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 1000, nums[i] != nums[i+1].",
     "description": "A peak element is an element that is strictly greater than its neighbors. Given a 0-indexed integer array nums, find a peak element, and return its index in O(log n).",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 1000",
+      "-2^31 <= nums[i] <= 2^31 - 1",
+      "nums[i] != nums[i + 1] for every valid i.",
+      "Treat both ends as negative infinity. Run in O(log N) time."
     ],
     "examples": [
       {
-        "input": "nums = [1,2,3,1], expected 2",
-        "output": ""
+        "input": "nums = [1,2,3,1]",
+        "output": "2"
       },
       {
-        "input": "nums = [1,2,1,3,5,6,4], expected 5",
-        "output": ""
+        "input": "nums = [1,2,1,3,5,6,4]",
+        "output": "5"
       }
     ],
     "entryPoint": "findPeakElement",
@@ -2951,13 +3045,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "timestamp strictly increasing per key, up to 2*10^5 operations.",
     "description": "Design a time-based key-value data structure that can store multiple values for the same key at different time stamps and retrieve the key's value at a certain timestamp.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= key.length, value.length <= 100, lowercase letters and digits only.",
+      "1 <= timestamp <= 10^7",
+      "Timestamps passed to set are strictly increasing for each key.",
+      "At most 2 * 10^5 calls to set and get in total."
     ],
     "examples": [
       {
-        "input": "set('foo', 'bar', 1), get('foo', 1) -> 'bar', get('foo', 3) -> 'bar', set('foo', 'bar2', 4), get('foo', 4) -> 'bar2'",
-        "output": ""
+        "input": "operations = [\"TimeMap\",\"set\",\"get\",\"get\",\"set\",\"get\",\"get\"], arguments = [[],[\"foo\",\"bar\",1],[\"foo\",1],[\"foo\",3],[\"foo\",\"bar2\",4],[\"foo\",4],[\"foo\",5]]",
+        "output": "[null,null,\"bar\",\"bar\",null,\"bar2\",\"bar2\"]"
+      },
+      {
+        "input": "operations = [\"TimeMap\",\"set\",\"set\",\"get\",\"get\",\"get\"], arguments = [[],[\"a\",\"x\",1],[\"a\",\"y\",5],[\"a\",0],[\"a\",3],[\"a\",9]]",
+        "output": "[null,null,null,\"\",\"x\",\"y\"]"
       }
     ],
     "entryPoint": "TimeMap",
@@ -3023,17 +3123,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums1, nums2 lengths up to 1000, sorted ascending.",
     "description": "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays in O(log(min(m, n))) runtime.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= nums1.length, nums2.length <= 1000, and 1 <= nums1.length + nums2.length <= 2000",
+      "-10^6 <= nums1[i], nums2[i] <= 10^6",
+      "Both arrays are sorted in ascending order.",
+      "Run in O(log(m + n)) time."
     ],
     "examples": [
       {
-        "input": "nums1 = [1,3], nums2 = [2], expected 2.0",
-        "output": ""
+        "input": "nums1 = [1,3], nums2 = [2]",
+        "output": "2.0"
       },
       {
-        "input": "nums1 = [1,2], nums2 = [3,4], expected 2.5",
-        "output": ""
+        "input": "nums1 = [1,2], nums2 = [3,4]",
+        "output": "2.5"
       }
     ],
     "entryPoint": "findMedianSortedArrays",
@@ -3092,17 +3194,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 1000, nums[i] >= 0, k in [1, min(50, len(nums))].",
     "description": "Given an integer array nums and an integer k, split nums into k non-empty subarrays such that the largest sum of any subarray is minimized.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 1000",
+      "0 <= nums[i] <= 10^6",
+      "1 <= k <= min(50, nums.length)",
+      "Each of the k parts must be a non-empty contiguous subarray."
     ],
     "examples": [
       {
-        "input": "nums = [7,2,5,10,8], k = 2, expected 18",
-        "output": ""
+        "input": "nums = [7,2,5,10,8], k = 2",
+        "output": "18"
       },
       {
-        "input": "nums = [1,2,3,4,5], k = 2, expected 9",
-        "output": ""
+        "input": "nums = [1,2,3,4,5], k = 2",
+        "output": "9"
       }
     ],
     "entryPoint": "splitArray",
@@ -3161,13 +3265,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "m, n up to 100.",
     "description": "You are given an m x n integer matrix with elements sorted left-to-right and first integer of each row > last of previous row. Search for target in O(log(m * n)).",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= m, n <= 100, where the matrix has m rows and n columns.",
+      "-10^4 <= matrix[i][j], target <= 10^4",
+      "Each row is sorted, and the first value of each row is greater than the last value of the previous row.",
+      "Run in O(log(m * n)) time."
     ],
     "examples": [
       {
-        "input": "matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 3, expected true",
-        "output": ""
+        "input": "matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 3",
+        "output": "true"
+      },
+      {
+        "input": "matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 13",
+        "output": "false"
       }
     ],
     "entryPoint": "searchMatrix",
@@ -3237,17 +3347,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums length up to 10^5.",
     "description": "Given an array of integers nums sorted in non-decreasing order, find the starting and ending position of a given target value in O(log n).",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= nums.length <= 10^5",
+      "-10^9 <= nums[i], target <= 10^9",
+      "nums is sorted in non-decreasing order.",
+      "Run in O(log N) time. Return [-1, -1] if target is absent."
     ],
     "examples": [
       {
-        "input": "nums = [5,7,7,8,8,10], target = 8, expected [3,4]",
-        "output": ""
+        "input": "nums = [5,7,7,8,8,10], target = 8",
+        "output": "[3,4]"
       },
       {
-        "input": "nums = [5,7,7,8,8,10], target = 6, expected [-1,-1]",
-        "output": ""
+        "input": "nums = [5,7,7,8,8,10], target = 6",
+        "output": "[-1,-1]"
       }
     ],
     "entryPoint": "searchRange",
@@ -3306,17 +3418,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "x in [0, 2^31 - 1].",
     "description": "Given a non-negative integer x, return the square root of x rounded down to the nearest integer without using built-in exponent functions.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= x <= 2^31 - 1",
+      "Round down to the nearest integer.",
+      "Do not use a built-in exponent function or operator."
     ],
     "examples": [
       {
-        "input": "x = 4, expected 2",
-        "output": ""
+        "input": "x = 4",
+        "output": "2"
       },
       {
-        "input": "x = 8, expected 2",
-        "output": ""
+        "input": "x = 8",
+        "output": "2"
       }
     ],
     "entryPoint": "mySqrt",
@@ -3369,13 +3482,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "List length up to 5000.",
     "description": "Given the head of a singly linked list, reverse the list, and return the reversed list iteratively in O(N) time and O(1) space.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes <= 5000",
+      "-5000 <= Node.val <= 5000"
     ],
     "examples": [
       {
-        "input": "head = [1,2,3,4,5], expected [5,4,3,2,1]",
-        "output": ""
+        "input": "head = [1,2,3,4,5]",
+        "output": "[5,4,3,2,1]"
+      },
+      {
+        "input": "head = []",
+        "output": "[]"
       }
     ],
     "entryPoint": "reverseList",
@@ -3448,13 +3565,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "list1, list2 lengths up to 50.",
     "description": "You are given the heads of two sorted linked lists list1 and list2. Merge the two lists into one sorted list and return its head.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes in each list <= 50",
+      "-100 <= Node.val <= 100",
+      "Both lists are sorted in non-decreasing order."
     ],
     "examples": [
       {
-        "input": "list1 = [1,2,4], list2 = [1,3,4], expected [1,1,2,3,4,4]",
-        "output": ""
+        "input": "list1 = [1,2,4], list2 = [1,3,4]",
+        "output": "[1,1,2,3,4,4]"
+      },
+      {
+        "input": "list1 = [], list2 = []",
+        "output": "[]"
       }
     ],
     "entryPoint": "mergeTwoLists",
@@ -3535,13 +3657,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "k up to 10^4, total nodes up to 10^4.",
     "description": "You are given an array of k linked-lists lists, each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "k == lists.length, 0 <= k <= 10^4",
+      "0 <= lists[i].length <= 500",
+      "-10^4 <= lists[i][j] <= 10^4",
+      "Each list is sorted in ascending order, and the total number of nodes is at most 10^4."
     ],
     "examples": [
       {
-        "input": "lists = [[1,4,5],[1,3,4],[2,6]], expected [1,1,2,3,4,4,5,6]",
-        "output": ""
+        "input": "lists = [[1,4,5],[1,3,4],[2,6]]",
+        "output": "[1,1,2,3,4,4,5,6]"
+      },
+      {
+        "input": "lists = []",
+        "output": "[]"
       }
     ],
     "entryPoint": "mergeKLists",
@@ -3614,17 +3742,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "List length up to 5*10^4.",
     "description": "You are given the head of a singly linked-list. Reorder the list to: L0 -> Ln -> L1 -> Ln-1 -> L2 -> Ln-2 in-place without modifying node values.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= number of nodes <= 5 * 10^4",
+      "1 <= Node.val <= 1000",
+      "Reorder in place by relinking nodes. Do not change node values."
     ],
     "examples": [
       {
-        "input": "head = [1,2,3,4], expected [1,4,2,3]",
-        "output": ""
+        "input": "head = [1,2,3,4]",
+        "output": "[1,4,2,3]"
       },
       {
-        "input": "head = [1,2,3,4,5], expected [1,5,2,4,3]",
-        "output": ""
+        "input": "head = [1,2,3,4,5]",
+        "output": "[1,5,2,4,3]"
       }
     ],
     "entryPoint": "reorderList",
@@ -3677,17 +3806,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "List length up to 30, n <= length.",
     "description": "Given the head of a linked list, remove the nth node from the end of the list and return its head in one pass.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= sz <= 30, where sz is the number of nodes.",
+      "0 <= Node.val <= 100",
+      "1 <= n <= sz"
     ],
     "examples": [
       {
-        "input": "head = [1,2,3,4,5], n = 2, expected [1,2,3,5]",
-        "output": ""
+        "input": "head = [1,2,3,4,5], n = 2",
+        "output": "[1,2,3,5]"
       },
       {
-        "input": "head = [1], n = 1, expected []",
-        "output": ""
+        "input": "head = [1], n = 1",
+        "output": "[]"
       }
     ],
     "entryPoint": "removeNthFromEnd",
@@ -3746,13 +3876,21 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "List length up to 10^4.",
     "description": "Given the head of a linked list, return the node where the cycle begins. If there is no cycle, return null in O(1) memory.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes <= 10^4",
+      "-10^5 <= Node.val <= 10^5",
+      "pos is -1 (no cycle) or a valid index in the list. pos is not passed to your function.",
+      "Do not modify the list. Return the node where the cycle begins, or null."
     ],
     "examples": [
       {
-        "input": "head = [3,2,0,-4], pos = 1, expected tail connects to node index 1",
-        "output": ""
+        "input": "head = [3,2,0,-4], pos = 1",
+        "output": "the node with value 2 (index 1)",
+        "explanation": "The tail connects back to the node at index 1, so that is where the cycle begins."
+      },
+      {
+        "input": "head = [1,2], pos = -1",
+        "output": "null",
+        "explanation": "The list has no cycle."
       }
     ],
     "entryPoint": "detectCycle",
@@ -3784,13 +3922,16 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "n up to 1000, random points to any node or null.",
     "description": "A linked list of length n is given such that each node contains an additional random pointer. Construct a deep copy of the list in O(1) auxiliary space.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= n <= 1000",
+      "-10^4 <= Node.val <= 10^4",
+      "Node.random is null or points to a node in the list.",
+      "Return a deep copy: no new node may point to a node of the original list."
     ],
     "examples": [
       {
-        "input": "head = [[7,null],[13,0],[11,4],[10,2],[1,0]], expected cloned deep copy",
-        "output": ""
+        "input": "head = [[7,null],[13,0],[11,4],[10,2],[1,0]]",
+        "output": "[[7,null],[13,0],[11,4],[10,2],[1,0]]",
+        "explanation": "Each pair is [value, index of the random target]. The copy has the same values and the same random links, built from new nodes."
       }
     ],
     "entryPoint": "copyRandomList",
@@ -3822,13 +3963,20 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "capacity up to 3000, operations up to 2*10^5.",
     "description": "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache with O(1) get and put operations.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= capacity <= 3000",
+      "0 <= key <= 10^4",
+      "0 <= value <= 10^5",
+      "At most 2 * 10^5 calls to get and put.",
+      "get and put must each run in O(1) average time."
     ],
     "examples": [
       {
-        "input": "LRUCache(2), put(1,1), put(2,2), get(1)->1, put(3,3), get(2)->-1, put(4,4), get(1)->-1, get(3)->3, get(4)->4",
-        "output": ""
+        "input": "operations = [\"LRUCache\",\"put\",\"put\",\"get\",\"put\",\"get\",\"put\",\"get\",\"get\",\"get\"], arguments = [[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]",
+        "output": "[null,null,null,1,null,-1,null,-1,3,4]"
+      },
+      {
+        "input": "operations = [\"LRUCache\",\"put\",\"put\",\"put\",\"get\",\"get\"], arguments = [[1],[1,1],[2,2],[3,3],[1],[3]]",
+        "output": "[null,null,null,null,-1,3]"
       }
     ],
     "entryPoint": "LRUCache",
@@ -3894,13 +4042,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 1000.",
     "description": "Invert a binary tree in-place.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes <= 1000",
+      "-100 <= Node.val <= 100"
     ],
     "examples": [
       {
-        "input": "root = [4,2,7,1,3,6,9], expected [4,7,2,9,6,3,1]",
-        "output": ""
+        "input": "root = [4,2,7,1,3,6,9]",
+        "output": "[4,7,2,9,6,3,1]"
+      },
+      {
+        "input": "root = [2,1,3]",
+        "output": "[2,3,1]"
       }
     ],
     "entryPoint": "invertTree",
@@ -3972,13 +4124,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 10^4.",
     "description": "Find maximum depth of a binary tree.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes <= 10^4",
+      "-100 <= Node.val <= 100",
+      "Depth is the number of nodes on the longest root-to-leaf path."
     ],
     "examples": [
       {
-        "input": "root = [3,9,20,null,null,15,7], expected 3",
-        "output": ""
+        "input": "root = [3,9,20,null,null,15,7]",
+        "output": "3"
+      },
+      {
+        "input": "root = [1,null,2]",
+        "output": "2"
       }
     ],
     "entryPoint": "maxDepth",
@@ -4040,13 +4197,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 10^4.",
     "description": "Return the length of the longest path between any two nodes in a tree.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= number of nodes <= 10^4",
+      "-100 <= Node.val <= 100",
+      "The diameter is the number of edges on the longest path between any two nodes. It may not pass through the root."
     ],
     "examples": [
       {
-        "input": "root = [1,2,3,4,5], expected 3",
-        "output": ""
+        "input": "root = [1,2,3,4,5]",
+        "output": "3"
+      },
+      {
+        "input": "root = [1,2]",
+        "output": "1"
       }
     ],
     "entryPoint": "diameterOfBinaryTree",
@@ -4108,13 +4270,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 5000.",
     "description": "Determine if a binary tree is height-balanced.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes <= 5000",
+      "-10^4 <= Node.val <= 10^4",
+      "Balanced means that at every node the heights of the two subtrees differ by at most 1."
     ],
     "examples": [
       {
-        "input": "root = [3,9,20,null,null,15,7], expected true",
-        "output": ""
+        "input": "root = [3,9,20,null,null,15,7]",
+        "output": "true"
+      },
+      {
+        "input": "root = [1,2,2,3,3,null,null,4,4]",
+        "output": "false"
       }
     ],
     "entryPoint": "isBalanced",
@@ -4176,13 +4343,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 100.",
     "description": "Check if two binary trees are structurally identical with identical values.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes in each tree <= 100",
+      "-10^4 <= Node.val <= 10^4"
     ],
     "examples": [
       {
-        "input": "p = [1,2,3], q = [1,2,3], expected true",
-        "output": ""
+        "input": "p = [1,2,3], q = [1,2,3]",
+        "output": "true"
+      },
+      {
+        "input": "p = [1,2], q = [1,null,2]",
+        "output": "false"
       }
     ],
     "entryPoint": "isSameTree",
@@ -4251,13 +4422,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 2000.",
     "description": "Given roots of tree and subRoot, return true if subRoot is a subtree of tree.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= number of nodes in root <= 2000",
+      "1 <= number of nodes in subRoot <= 1000",
+      "-10^4 <= root.val, subRoot.val <= 10^4"
     ],
     "examples": [
       {
-        "input": "root = [3,4,5,1,2], subRoot = [4,1,2], expected true",
-        "output": ""
+        "input": "root = [3,4,5,1,2], subRoot = [4,1,2]",
+        "output": "true"
+      },
+      {
+        "input": "root = [3,4,5,1,2,null,null,null,null,0], subRoot = [4,1,2]",
+        "output": "false"
       }
     ],
     "entryPoint": "isSubtree",
@@ -4326,13 +4502,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 10^5.",
     "description": "Find LCA of two nodes p and q in a BST.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "2 <= number of nodes <= 10^5",
+      "-10^9 <= Node.val <= 10^9, and all values are unique.",
+      "p != q, and both p and q exist in the BST.",
+      "A node may be a descendant of itself."
     ],
     "examples": [
       {
-        "input": "root = [6,2,8,0,4,7,9], p = 2, q = 8, expected 6",
-        "output": ""
+        "input": "root = [6,2,8,0,4,7,9], p = 2, q = 8",
+        "output": "6"
+      },
+      {
+        "input": "root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 4",
+        "output": "2"
       }
     ],
     "entryPoint": "lowestCommonAncestor",
@@ -4408,13 +4590,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 10^5.",
     "description": "Find LCA of p and q in a general binary tree.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "2 <= number of nodes <= 10^5",
+      "-10^9 <= Node.val <= 10^9, and all values are unique.",
+      "p != q, and both p and q exist in the tree.",
+      "A node may be a descendant of itself."
     ],
     "examples": [
       {
-        "input": "root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1, expected 3",
-        "output": ""
+        "input": "root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1",
+        "output": "3"
+      },
+      {
+        "input": "root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4",
+        "output": "5"
       }
     ],
     "entryPoint": "lowestCommonAncestorBT",
@@ -4490,13 +4678,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 2000.",
     "description": "Return level order traversal of node values as 2D list.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes <= 2000",
+      "-1000 <= Node.val <= 1000"
     ],
     "examples": [
       {
-        "input": "root = [3,9,20,null,null,15,7], expected [[3],[9,20],[15,7]]",
-        "output": ""
+        "input": "root = [3,9,20,null,null,15,7]",
+        "output": "[[3],[9,20],[15,7]]"
+      },
+      {
+        "input": "root = []",
+        "output": "[]"
       }
     ],
     "entryPoint": "levelOrder",
@@ -4568,13 +4760,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 100.",
     "description": "Return the values of nodes visible from the right side.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes <= 100",
+      "-100 <= Node.val <= 100"
     ],
     "examples": [
       {
-        "input": "root = [1,2,3,null,5,null,4], expected [1,3,4]",
-        "output": ""
+        "input": "root = [1,2,3,null,5,null,4]",
+        "output": "[1,3,4]"
+      },
+      {
+        "input": "root = [1,null,3]",
+        "output": "[1,3]"
       }
     ],
     "entryPoint": "rightSideView",
@@ -4636,13 +4832,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 10^5.",
     "description": "Count nodes X where path from root to X has no value greater than X.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= number of nodes <= 10^5",
+      "-10^4 <= Node.val <= 10^4",
+      "A node is good if no node on the path from the root to it has a greater value."
     ],
     "examples": [
       {
-        "input": "root = [3,1,4,3,null,1,5], expected 4",
-        "output": ""
+        "input": "root = [3,1,4,3,null,1,5]",
+        "output": "4"
+      },
+      {
+        "input": "root = [3,3,null,4,2]",
+        "output": "3"
       }
     ],
     "entryPoint": "goodNodes",
@@ -4704,17 +4905,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 10^4.",
     "description": "Determine if a binary tree is a valid BST.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= number of nodes <= 10^4",
+      "-2^31 <= Node.val <= 2^31 - 1",
+      "Subtrees must be strictly less or strictly greater (no duplicates)."
     ],
     "examples": [
       {
-        "input": "root = [2,1,3], expected true",
-        "output": ""
+        "input": "root = [2,1,3]",
+        "output": "true"
       },
       {
-        "input": "root = [5,1,4,null,null,3,6], expected false",
-        "output": ""
+        "input": "root = [5,1,4,null,null,3,6]",
+        "output": "false"
       }
     ],
     "entryPoint": "isValidBST",
@@ -4766,13 +4968,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 10^4, k <= N.",
     "description": "Find the kth smallest value in a BST.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "n is the number of nodes, 1 <= k <= n <= 10^4",
+      "0 <= Node.val <= 10^4",
+      "k is 1-indexed."
     ],
     "examples": [
       {
-        "input": "root = [3,1,4,null,2], k = 1, expected 1",
-        "output": ""
+        "input": "root = [3,1,4,null,2], k = 1",
+        "output": "1"
+      },
+      {
+        "input": "root = [5,3,6,2,4,null,null,1], k = 3",
+        "output": "3"
       }
     ],
     "entryPoint": "kthSmallest",
@@ -4841,13 +5048,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 3000.",
     "description": "Build binary tree given preorder and inorder traversals.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= preorder.length <= 3000, and inorder.length == preorder.length",
+      "-3000 <= preorder[i], inorder[i] <= 3000",
+      "All values are unique, and both arrays describe the same tree."
     ],
     "examples": [
       {
-        "input": "preorder = [3,9,20,15,7], inorder = [9,3,15,20,7], expected [3,9,20,null,null,15,7]",
-        "output": ""
+        "input": "preorder = [3,9,20,15,7], inorder = [9,3,15,20,7]",
+        "output": "[3,9,20,null,null,15,7]"
+      },
+      {
+        "input": "preorder = [-1], inorder = [-1]",
+        "output": "[-1]"
       }
     ],
     "entryPoint": "buildTree",
@@ -4916,17 +5128,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 3*10^4.",
     "description": "Find the maximum path sum of any non-empty path in a binary tree.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= number of nodes <= 3 * 10^4",
+      "-1000 <= Node.val <= 1000",
+      "A path has at least one node and does not need to pass through the root."
     ],
     "examples": [
       {
-        "input": "root = [1,2,3], expected 6",
-        "output": ""
+        "input": "root = [1,2,3]",
+        "output": "6"
       },
       {
-        "input": "root = [-10,9,20,null,null,15,7], expected 42",
-        "output": ""
+        "input": "root = [-10,9,20,null,null,15,7]",
+        "output": "42"
       }
     ],
     "entryPoint": "maxPathSum",
@@ -4978,13 +5191,20 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 10^4.",
     "description": "Design an algorithm to serialize and deserialize a binary tree.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes <= 10^4",
+      "-1000 <= Node.val <= 1000",
+      "deserialize(serialize(root)) must rebuild an identical tree.",
+      "Do not use global or static state."
     ],
     "examples": [
       {
-        "input": "root = [1,2,3,null,null,4,5], expected roundtrip identical tree",
-        "output": ""
+        "input": "root = [1,2,3,null,null,4,5]",
+        "output": "[1,2,3,null,null,4,5]",
+        "explanation": "deserialize(serialize(root)) rebuilds the same tree."
+      },
+      {
+        "input": "root = []",
+        "output": "[]"
       }
     ],
     "entryPoint": "Codec",
@@ -5015,13 +5235,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "m, n up to 300.",
     "description": "Count islands in an m x n binary grid.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "m == grid.length, n == grid[i].length",
+      "1 <= m, n <= 300",
+      "grid[i][j] is '0' (water) or '1' (land).",
+      "Land connects horizontally or vertically only. Treat all four edges as water."
     ],
     "examples": [
       {
-        "input": "grid with 3 islands, expected 3",
-        "output": ""
+        "input": "grid = [[\"1\",\"1\",\"1\",\"1\",\"0\"],[\"1\",\"1\",\"0\",\"1\",\"0\"],[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"0\",\"0\",\"0\",\"0\",\"0\"]]",
+        "output": "1"
+      },
+      {
+        "input": "grid = [[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"0\",\"0\",\"1\",\"0\",\"0\"],[\"0\",\"0\",\"0\",\"1\",\"1\"]]",
+        "output": "3"
       }
     ],
     "entryPoint": "numIslands",
@@ -5073,13 +5299,20 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 100.",
     "description": "Return a deep copy of a connected undirected graph.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= number of nodes <= 100",
+      "1 <= Node.val <= 100, and Node.val is unique for each node.",
+      "No repeated edges and no self-loops. The graph is undirected and connected."
     ],
     "examples": [
       {
-        "input": "adjList = [[2,4],[1,3],[2,4],[1,3]], expected identical clone",
-        "output": ""
+        "input": "adjList = [[2,4],[1,3],[2,4],[1,3]]",
+        "output": "[[2,4],[1,3],[2,4],[1,3]]",
+        "explanation": "Node 1 neighbours 2 and 4, node 2 neighbours 1 and 3, and so on. Return a deep copy with the same structure."
+      },
+      {
+        "input": "adjList = [[]]",
+        "output": "[[]]",
+        "explanation": "A single node with no neighbours."
       }
     ],
     "entryPoint": "cloneGraph",
@@ -5110,13 +5343,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "m, n up to 50.",
     "description": "Find maximum area of an island in a binary grid.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "m == grid.length, n == grid[i].length",
+      "1 <= m, n <= 50",
+      "grid[i][j] is 0 or 1.",
+      "Return 0 if there is no island."
     ],
     "examples": [
       {
-        "input": "grid with max area 6, expected 6",
-        "output": ""
+        "input": "grid = [[0,0,1,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,1,1,0,1,0,0,0,0,0,0,0,0],[0,1,0,0,1,1,0,0,1,0,1,0,0],[0,1,0,0,1,1,0,0,1,1,1,0,0],[0,0,0,0,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,0,0,0,0,0,0,1,1,0,0,0,0]]",
+        "output": "6"
+      },
+      {
+        "input": "grid = [[0,0,0,0,0,0,0,0]]",
+        "output": "0"
       }
     ],
     "entryPoint": "maxAreaOfIsland",
@@ -5168,13 +5407,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "m, n up to 200.",
     "description": "Find cells where rain water can flow to both Pacific and Atlantic oceans.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "m == heights.length, n == heights[r].length",
+      "1 <= m, n <= 200",
+      "0 <= heights[r][c] <= 10^5",
+      "Water flows to a neighbouring cell (up, down, left, right) with height less than or equal to the current one."
     ],
     "examples": [
       {
-        "input": "heights matrix, expected coordinates",
-        "output": ""
+        "input": "heights = [[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]",
+        "output": "[[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]"
+      },
+      {
+        "input": "heights = [[1]]",
+        "output": "[[0,0]]"
       }
     ],
     "entryPoint": "pacificAtlantic",
@@ -5226,13 +5471,16 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "m, n up to 200.",
     "description": "Capture all regions surrounded by 'X' in-place.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "m == board.length, n == board[i].length",
+      "1 <= m, n <= 200",
+      "board[i][j] is 'X' or 'O'.",
+      "Modify the board in place. Regions touching the border are not captured."
     ],
     "examples": [
       {
-        "input": "board with surrounded regions captured",
-        "output": ""
+        "input": "board = [[\"X\",\"X\",\"X\",\"X\"],[\"X\",\"O\",\"O\",\"X\"],[\"X\",\"X\",\"O\",\"X\"],[\"X\",\"O\",\"X\",\"X\"]]",
+        "output": "[[\"X\",\"X\",\"X\",\"X\"],[\"X\",\"X\",\"X\",\"X\"],[\"X\",\"X\",\"X\",\"X\"],[\"X\",\"O\",\"X\",\"X\"]]",
+        "explanation": "The three connected O cells are surrounded by X and are captured. The O on the bottom border is not."
       }
     ],
     "entryPoint": "solve",
@@ -5263,17 +5511,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "m, n up to 10.",
     "description": "Return minimum minutes until no fresh orange remains in grid.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "m == grid.length, n == grid[i].length",
+      "1 <= m, n <= 10",
+      "grid[i][j] is 0 (empty), 1 (fresh) or 2 (rotten).",
+      "Rot spreads to the four adjacent cells each minute. Return -1 if some fresh orange can never rot."
     ],
     "examples": [
       {
-        "input": "grid, expected 4 minutes",
-        "output": ""
+        "input": "grid = [[2,1,1],[1,1,0],[0,1,1]]",
+        "output": "4"
       },
       {
-        "input": "unreachable fresh orange, expected -1",
-        "output": ""
+        "input": "grid = [[2,1,1],[0,1,1],[1,0,1]]",
+        "output": "-1"
       }
     ],
     "entryPoint": "orangesRotting",
@@ -5335,17 +5585,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Courses up to 2000, prereqs up to 5000.",
     "description": "Determine if you can finish all courses given prerequisite pairs.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= numCourses <= 2000",
+      "0 <= prerequisites.length <= 5000, and prerequisites[i].length == 2",
+      "0 <= ai, bi < numCourses. All prerequisite pairs are unique."
     ],
     "examples": [
       {
-        "input": "numCourses = 2, prereqs = [[1,0]], expected true",
-        "output": ""
+        "input": "numCourses = 2, prerequisites = [[1,0]]",
+        "output": "true"
       },
       {
-        "input": "numCourses = 2, prereqs = [[1,0],[0,1]], expected false",
-        "output": ""
+        "input": "numCourses = 2, prerequisites = [[1,0],[0,1]]",
+        "output": "false"
       }
     ],
     "entryPoint": "canFinish",
@@ -5403,13 +5654,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Courses up to 2000.",
     "description": "Return the ordering of courses you should take to finish all courses.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= numCourses <= 2000",
+      "0 <= prerequisites.length <= 5000, and prerequisites[i].length == 2",
+      "0 <= ai, bi < numCourses, ai != bi. All pairs are unique.",
+      "Return a valid order of all courses, or an empty array if that is impossible."
     ],
     "examples": [
       {
-        "input": "numCourses = 4, prereqs = [[1,0],[2,0],[3,1],[3,2]], expected [0,2,1,3]",
-        "output": ""
+        "input": "numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]",
+        "output": "[0,2,1,3]"
+      },
+      {
+        "input": "numCourses = 2, prerequisites = [[1,0]]",
+        "output": "[0,1]"
       }
     ],
     "entryPoint": "findOrder",
@@ -5489,13 +5746,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 1000.",
     "description": "Find an edge in graph that can be removed so graph is a tree.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "n == edges.length, 3 <= n <= 1000",
+      "edges[i].length == 2, and 1 <= ai < bi <= edges.length",
+      "There are no repeated edges, and the graph is a tree plus exactly one extra edge.",
+      "If several edges qualify, return the one that appears last in the input."
     ],
     "examples": [
       {
-        "input": "edges = [[1,2],[1,3],[2,3]], expected [2,3]",
-        "output": ""
+        "input": "edges = [[1,2],[1,3],[2,3]]",
+        "output": "[2,3]"
+      },
+      {
+        "input": "edges = [[1,2],[2,3],[3,4],[1,4],[1,5]]",
+        "output": "[1,4]"
       }
     ],
     "entryPoint": "findRedundantConnection",
@@ -5547,13 +5810,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "wordList up to 5000, word len up to 10.",
     "description": "Return length of shortest transformation sequence from beginWord to endWord.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= beginWord.length <= 10, and endWord.length == beginWord.length",
+      "1 <= wordList.length <= 5000, and every word has the same length.",
+      "All words consist of lowercase English letters. beginWord != endWord.",
+      "All words in wordList are unique. Return 0 if no sequence exists."
     ],
     "examples": [
       {
-        "input": "beginWord = 'hit', endWord = 'cog', wordList = ['hot','dot','dog','lot','log','cog'], expected 5",
-        "output": ""
+        "input": "beginWord = \"hit\", endWord = \"cog\", wordList = [\"hot\",\"dot\",\"dog\",\"lot\",\"log\",\"cog\"]",
+        "output": "5"
+      },
+      {
+        "input": "beginWord = \"hit\", endWord = \"cog\", wordList = [\"hot\",\"dot\",\"dog\",\"lot\",\"log\"]",
+        "output": "0"
       }
     ],
     "entryPoint": "ladderLength",
@@ -5629,13 +5898,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "Nodes up to 100, edges up to 6000.",
     "description": "Find time for all nodes to receive signal sent from node k.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= k <= n <= 100",
+      "1 <= times.length <= 6000, and times[i] = (ui, vi, wi)",
+      "1 <= ui, vi <= n, ui != vi, 0 <= wi <= 100",
+      "All (ui, vi) pairs are unique. Return -1 if some node is unreachable."
     ],
     "examples": [
       {
-        "input": "times = [[2,1,1],[2,3,1],[3,4,1]], n = 4, k = 2, expected 2",
-        "output": ""
+        "input": "times = [[2,1,1],[2,3,1],[3,4,1]], n = 4, k = 2",
+        "output": "2"
+      },
+      {
+        "input": "times = [[1,2,1]], n = 2, k = 1",
+        "output": "1"
       }
     ],
     "entryPoint": "networkDelayTime",
@@ -5711,13 +5986,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "words up to 100.",
     "description": "Given sorted dictionary of alien words, derive the order of characters in the language.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= words.length <= 100",
+      "1 <= words[i].length <= 100",
+      "words[i] consists of lowercase English letters.",
+      "words is sorted lexicographically by the alien alphabet. Return an empty string if the ordering is invalid."
     ],
     "examples": [
       {
-        "input": "words = ['wrt','wrf','erf','ett','rftt'], expected 'wertf'",
-        "output": ""
+        "input": "words = [\"wrt\",\"wrf\",\"erf\",\"ett\",\"rftt\"]",
+        "output": "\"wertf\""
+      },
+      {
+        "input": "words = [\"z\",\"x\"]",
+        "output": "\"zx\""
       }
     ],
     "entryPoint": "alienOrder",
@@ -5789,17 +6070,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "n up to 45.",
     "description": "You are climbing a staircase with n steps. You can take 1 or 2 steps. How many distinct ways to reach top?",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= n <= 45",
+      "Each move climbs 1 or 2 steps."
     ],
     "examples": [
       {
-        "input": "n = 2, expected 2",
-        "output": ""
+        "input": "n = 2",
+        "output": "2"
       },
       {
-        "input": "n = 3, expected 3",
-        "output": ""
+        "input": "n = 3",
+        "output": "3"
       }
     ],
     "entryPoint": "climbStairs",
@@ -5851,13 +6132,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "cost length up to 1000.",
     "description": "Return minimum cost to reach top of floor.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "2 <= cost.length <= 1000",
+      "0 <= cost[i] <= 999",
+      "You may start from step 0 or step 1, and must reach the top beyond the last step."
     ],
     "examples": [
       {
-        "input": "cost = [10,15,20], expected 15",
-        "output": ""
+        "input": "cost = [10,15,20]",
+        "output": "15"
+      },
+      {
+        "input": "cost = [1,100,1,1,1,100,1,1,100,1]",
+        "output": "6"
       }
     ],
     "entryPoint": "minCostClimbingStairs",
@@ -5919,17 +6205,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums up to 100.",
     "description": "Determine maximum money you can rob tonight without robbing two adjacent houses.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 100",
+      "0 <= nums[i] <= 400",
+      "You cannot rob two adjacent houses."
     ],
     "examples": [
       {
-        "input": "nums = [1,2,3,1], expected 4",
-        "output": ""
+        "input": "nums = [1,2,3,1]",
+        "output": "4"
       },
       {
-        "input": "nums = [2,7,9,3,1], expected 12",
-        "output": ""
+        "input": "nums = [2,7,9,3,1]",
+        "output": "12"
       }
     ],
     "entryPoint": "rob",
@@ -5981,17 +6268,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums up to 100.",
     "description": "Houses arranged in circle. Rob max money without alerting police.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 100",
+      "0 <= nums[i] <= 400",
+      "The houses form a circle, so the first and last house are adjacent."
     ],
     "examples": [
       {
-        "input": "nums = [2,3,2], expected 3",
-        "output": ""
+        "input": "nums = [2,3,2]",
+        "output": "3"
       },
       {
-        "input": "nums = [1,2,3,1], expected 4",
-        "output": ""
+        "input": "nums = [1,2,3,1]",
+        "output": "4"
       }
     ],
     "entryPoint": "robCircular",
@@ -6043,17 +6331,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "s length up to 1000.",
     "description": "Given string s, return longest palindromic substring.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= s.length <= 1000",
+      "s consists of digits and English letters."
     ],
     "examples": [
       {
-        "input": "s = 'babad', expected 'bab'",
-        "output": ""
+        "input": "s = \"babad\"",
+        "output": "\"bab\""
       },
       {
-        "input": "s = 'cbbd', expected 'bb'",
-        "output": ""
+        "input": "s = \"cbbd\"",
+        "output": "\"bb\""
       }
     ],
     "entryPoint": "longestPalindrome",
@@ -6105,17 +6393,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "s length up to 1000.",
     "description": "Count total palindromic substrings in string.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= s.length <= 1000",
+      "s consists of lowercase English letters.",
+      "Substrings at different positions count separately, even if they are identical."
     ],
     "examples": [
       {
-        "input": "s = 'abc', expected 3",
-        "output": ""
+        "input": "s = \"abc\"",
+        "output": "3"
       },
       {
-        "input": "s = 'aaa', expected 6",
-        "output": ""
+        "input": "s = \"aaa\"",
+        "output": "6"
       }
     ],
     "entryPoint": "countSubstrings",
@@ -6167,21 +6456,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "s length up to 100.",
     "description": "Count ways to decode encoded message of digits ('A'=1 to 'Z'=26).",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= s.length <= 100",
+      "s contains only digits and may start with zeros.",
+      "'A' -> 1, 'B' -> 2, ..., 'Z' -> 26. Return 0 if the string cannot be decoded."
     ],
     "examples": [
       {
-        "input": "s = '12', expected 2",
-        "output": ""
+        "input": "s = \"12\"",
+        "output": "2"
       },
       {
-        "input": "s = '226', expected 3",
-        "output": ""
-      },
-      {
-        "input": "s = '06', expected 0",
-        "output": ""
+        "input": "s = \"226\"",
+        "output": "3"
       }
     ],
     "entryPoint": "numDecodings",
@@ -6243,17 +6529,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "coins up to 12, amount up to 10^4.",
     "description": "Return fewest coins needed to make up amount using denominations.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= coins.length <= 12",
+      "1 <= coins[i] <= 2^31 - 1",
+      "0 <= amount <= 10^4",
+      "You have an unlimited supply of each coin. Return -1 if the amount cannot be made."
     ],
     "examples": [
       {
-        "input": "coins = [1,2,5], amount = 11, expected 3",
-        "output": ""
+        "input": "coins = [1,2,5], amount = 11",
+        "output": "3"
       },
       {
-        "input": "coins = [2], amount = 3, expected -1",
-        "output": ""
+        "input": "coins = [2], amount = 3",
+        "output": "-1"
       }
     ],
     "entryPoint": "coinChange",
@@ -6311,17 +6599,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums up to 2*10^4.",
     "description": "Find contiguous subarray with largest product.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 2 * 10^4",
+      "-10 <= nums[i] <= 10",
+      "The product of any subarray fits in a 32-bit integer."
     ],
     "examples": [
       {
-        "input": "nums = [2,3,-2,4], expected 6",
-        "output": ""
+        "input": "nums = [2,3,-2,4]",
+        "output": "6"
       },
       {
-        "input": "nums = [-2,0,-1], expected 0",
-        "output": ""
+        "input": "nums = [-2,0,-1]",
+        "output": "0"
       }
     ],
     "entryPoint": "maxProduct",
@@ -6373,13 +6662,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "s length up to 300, wordDict up to 1000.",
     "description": "Determine if string s can be segmented into words from wordDict.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= s.length <= 300",
+      "1 <= wordDict.length <= 1000, and 1 <= wordDict[i].length <= 20",
+      "s and wordDict[i] consist of lowercase English letters. All words in wordDict are unique.",
+      "A dictionary word may be reused any number of times."
     ],
     "examples": [
       {
-        "input": "s = 'leetcode', wordDict = ['leet','code'], expected true",
-        "output": ""
+        "input": "s = \"leetcode\", wordDict = [\"leet\",\"code\"]",
+        "output": "true"
+      },
+      {
+        "input": "s = \"applepenapple\", wordDict = [\"apple\",\"pen\"]",
+        "output": "true"
       }
     ],
     "entryPoint": "wordBreak",
@@ -6448,13 +6743,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums up to 2500.",
     "description": "Return length of longest strictly increasing subsequence in O(N log N).",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 2500",
+      "-10^4 <= nums[i] <= 10^4",
+      "The subsequence must be strictly increasing."
     ],
     "examples": [
       {
-        "input": "nums = [10,9,2,5,3,7,101,18], expected 4",
-        "output": ""
+        "input": "nums = [10,9,2,5,3,7,101,18]",
+        "output": "4"
+      },
+      {
+        "input": "nums = [0,1,0,3,2,3]",
+        "output": "4"
       }
     ],
     "entryPoint": "lengthOfLIS",
@@ -6517,17 +6817,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums up to 200, sum up to 20000.",
     "description": "Determine if array can be partitioned into two subsets with equal sum.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 200",
+      "1 <= nums[i] <= 100"
     ],
     "examples": [
       {
-        "input": "nums = [1,5,11,5], expected true",
-        "output": ""
+        "input": "nums = [1,5,11,5]",
+        "output": "true"
       },
       {
-        "input": "nums = [1,2,3,5], expected false",
-        "output": ""
+        "input": "nums = [1,2,3,5]",
+        "output": "false"
       }
     ],
     "entryPoint": "canPartition",
@@ -6579,17 +6879,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "m, n up to 100.",
     "description": "Robot on m x n grid can only move right or down. Find total unique paths to bottom-right.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= m, n <= 100",
+      "The robot starts at the top-left cell and may only move right or down.",
+      "The answer is at most 2 * 10^9."
     ],
     "examples": [
       {
-        "input": "m = 3, n = 7, expected 28",
-        "output": ""
+        "input": "m = 3, n = 7",
+        "output": "28"
       },
       {
-        "input": "m = 3, n = 2, expected 3",
-        "output": ""
+        "input": "m = 3, n = 2",
+        "output": "3"
       }
     ],
     "entryPoint": "uniquePaths",
@@ -6647,13 +6948,17 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "text1, text2 lengths up to 1000.",
     "description": "Given text1 and text2, return length of longest common subsequence.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= text1.length, text2.length <= 1000",
+      "text1 and text2 consist of lowercase English letters."
     ],
     "examples": [
       {
-        "input": "text1 = 'abcde', text2 = 'ace', expected 3",
-        "output": ""
+        "input": "text1 = \"abcde\", text2 = \"ace\"",
+        "output": "3"
+      },
+      {
+        "input": "text1 = \"abc\", text2 = \"abc\"",
+        "output": "3"
       }
     ],
     "entryPoint": "longestCommonSubsequence",
@@ -6722,17 +7027,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "word1, word2 lengths up to 500.",
     "description": "Return minimum operations (insert, delete, replace) to convert word1 to word2.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= word1.length, word2.length <= 500",
+      "word1 and word2 consist of lowercase English letters.",
+      "Allowed operations: insert a character, delete a character, replace a character."
     ],
     "examples": [
       {
-        "input": "word1 = 'horse', word2 = 'ros', expected 3",
-        "output": ""
+        "input": "word1 = \"horse\", word2 = \"ros\"",
+        "output": "3"
       },
       {
-        "input": "word1 = 'intention', word2 = 'execution', expected 5",
-        "output": ""
+        "input": "word1 = \"intention\", word2 = \"execution\"",
+        "output": "5"
       }
     ],
     "entryPoint": "minDistance",
@@ -6790,13 +7096,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums up to 10^5.",
     "description": "Find the kth largest element in an unsorted array.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= k <= nums.length <= 10^5",
+      "-10^4 <= nums[i] <= 10^4",
+      "The kth largest is by sorted order, not the kth distinct value."
     ],
     "examples": [
       {
-        "input": "nums = [3,2,1,5,6,4], k = 2, expected 5",
-        "output": ""
+        "input": "nums = [3,2,1,5,6,4], k = 2",
+        "output": "5"
+      },
+      {
+        "input": "nums = [3,2,3,1,2,4,5,5,6], k = 4",
+        "output": "4"
       }
     ],
     "entryPoint": "findKthLargest",
@@ -6865,13 +7176,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "tasks up to 10^4, n up to 100.",
     "description": "Find minimum CPU intervals needed to execute tasks with cooldown n.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= tasks.length <= 10^4",
+      "tasks[i] is an uppercase English letter.",
+      "0 <= n <= 100",
+      "Two identical tasks must be at least n intervals apart. A CPU may be idle."
     ],
     "examples": [
       {
-        "input": "tasks = ['A','A','A','B','B','B'], n = 2, expected 8",
-        "output": ""
+        "input": "tasks = [\"A\",\"A\",\"A\",\"B\",\"B\",\"B\"], n = 2",
+        "output": "8"
+      },
+      {
+        "input": "tasks = [\"A\",\"A\",\"A\",\"B\",\"B\",\"B\"], n = 0",
+        "output": "6"
       }
     ],
     "entryPoint": "leastInterval",
@@ -6940,13 +7257,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "intervals up to 10^4.",
     "description": "Given an array of intervals, merge all overlapping intervals.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= intervals.length <= 10^4",
+      "intervals[i].length == 2",
+      "0 <= start <= end <= 10^4"
     ],
     "examples": [
       {
-        "input": "intervals = [[1,3],[2,6],[8,10],[15,18]], expected [[1,6],[8,10],[15,18]]",
-        "output": ""
+        "input": "intervals = [[1,3],[2,6],[8,10],[15,18]]",
+        "output": "[[1,6],[8,10],[15,18]]"
+      },
+      {
+        "input": "intervals = [[1,4],[4,5]]",
+        "output": "[[1,5]]"
       }
     ],
     "entryPoint": "merge",
@@ -7018,13 +7340,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "intervals up to 10^4.",
     "description": "Insert newInterval into sorted non-overlapping intervals and merge if necessary.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "0 <= intervals.length <= 10^4",
+      "intervals[i].length == 2, and 0 <= start <= end <= 10^5",
+      "intervals is sorted by start and has no overlaps. newInterval.length == 2."
     ],
     "examples": [
       {
-        "input": "intervals = [[1,3],[6,9]], newInterval = [2,5], expected [[1,5],[6,9]]",
-        "output": ""
+        "input": "intervals = [[1,3],[6,9]], newInterval = [2,5]",
+        "output": "[[1,5],[6,9]]"
+      },
+      {
+        "input": "intervals = [], newInterval = [5,7]",
+        "output": "[[5,7]]"
       }
     ],
     "entryPoint": "insert",
@@ -7104,13 +7431,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "intervals up to 10^5.",
     "description": "Return minimum number of intervals you need to remove to make the rest non-overlapping.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= intervals.length <= 10^5",
+      "intervals[i].length == 2, and -5 * 10^4 <= start < end <= 5 * 10^4",
+      "Intervals that only touch at an endpoint do not overlap."
     ],
     "examples": [
       {
-        "input": "intervals = [[1,2],[2,3],[3,4],[1,3]], expected 1",
-        "output": ""
+        "input": "intervals = [[1,2],[2,3],[3,4],[1,3]]",
+        "output": "1"
+      },
+      {
+        "input": "intervals = [[1,2],[1,2],[1,2]]",
+        "output": "2"
       }
     ],
     "entryPoint": "eraseOverlapIntervals",
@@ -7172,13 +7504,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "intervals up to 10^4.",
     "description": "Find minimum conference rooms required given meeting time intervals.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= intervals.length <= 10^4",
+      "0 <= start < end <= 10^6",
+      "A meeting ending at time t does not conflict with one starting at t."
     ],
     "examples": [
       {
-        "input": "intervals = [[0,30],[5,10],[15,20]], expected 2",
-        "output": ""
+        "input": "intervals = [[0,30],[5,10],[15,20]]",
+        "output": "2"
+      },
+      {
+        "input": "intervals = [[7,10],[2,4]]",
+        "output": "1"
       }
     ],
     "entryPoint": "minMeetingRooms",
@@ -7240,13 +7577,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums up to 10.",
     "description": "Return all possible subsets (the power set) of unique integers nums.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 10",
+      "-10 <= nums[i] <= 10",
+      "All elements are unique. The result must not contain duplicate subsets, in any order."
     ],
     "examples": [
       {
-        "input": "nums = [1,2,3], expected 8 subsets",
-        "output": ""
+        "input": "nums = [1,2,3]",
+        "output": "[[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]"
+      },
+      {
+        "input": "nums = [0]",
+        "output": "[[],[0]]"
       }
     ],
     "entryPoint": "subsets",
@@ -7298,13 +7640,18 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "nums up to 6.",
     "description": "Given an array nums of distinct integers, return all the possible permutations.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= nums.length <= 6",
+      "-10 <= nums[i] <= 10",
+      "All integers are unique. The permutations may be returned in any order."
     ],
     "examples": [
       {
-        "input": "nums = [1,2,3], expected 6 permutations",
-        "output": ""
+        "input": "nums = [1,2,3]",
+        "output": "[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]"
+      },
+      {
+        "input": "nums = [0,1]",
+        "output": "[[0,1],[1,0]]"
       }
     ],
     "entryPoint": "permute",
@@ -7366,13 +7713,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "candidates up to 30, target up to 40.",
     "description": "Return list of all unique combinations of candidates where sum equals target.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "1 <= candidates.length <= 30",
+      "2 <= candidates[i] <= 40, and all candidates are distinct.",
+      "1 <= target <= 40",
+      "A candidate may be used any number of times. Combinations must be unique."
     ],
     "examples": [
       {
-        "input": "candidates = [2,3,6,7], target = 7, expected [[2,2,3],[7]]",
-        "output": ""
+        "input": "candidates = [2,3,6,7], target = 7",
+        "output": "[[2,2,3],[7]]"
+      },
+      {
+        "input": "candidates = [2], target = 1",
+        "output": "[]"
       }
     ],
     "entryPoint": "combinationSum",
@@ -7441,13 +7794,19 @@ export const DSA_PROBLEMS: DsaProblem[] = [
     "tagline": "m, n up to 6, word up to 15.",
     "description": "Given m x n board and word, return true if word exists in grid.",
     "constraints": [
-      "Optimal Big-O time and space complexity required.",
-      "Handle empty, single element, and boundary conditions."
+      "m == board.length, n == board[i].length",
+      "1 <= m, n <= 6, and 1 <= word.length <= 15",
+      "board and word consist of uppercase and lowercase English letters.",
+      "Adjacent means horizontally or vertically. A cell may be used at most once per path."
     ],
     "examples": [
       {
-        "input": "board with word 'ABCCED', expected true",
-        "output": ""
+        "input": "board = [[\"A\",\"B\",\"C\",\"E\"],[\"S\",\"F\",\"C\",\"S\"],[\"A\",\"D\",\"E\",\"E\"]], word = \"ABCCED\"",
+        "output": "true"
+      },
+      {
+        "input": "board = [[\"A\",\"B\",\"C\",\"E\"],[\"S\",\"F\",\"C\",\"S\"],[\"A\",\"D\",\"E\",\"E\"]], word = \"SEE\"",
+        "output": "true"
       }
     ],
     "entryPoint": "exist",

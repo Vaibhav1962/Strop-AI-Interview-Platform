@@ -1,3 +1,4 @@
+import { toSpokenText } from "../lib/spokenText";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { getToken, API_BASE_URL } from "../lib/api";
 
@@ -392,7 +393,8 @@ export function useElevenLabsTTS() {
 
   const queueSentence = useCallback(
     (sentence: string, turnId?: string | number, sessionId?: string) => {
-      const clean = sentence.trim();
+      // Say "1, 2 and 3" rather than reading out "[1, 2, 3]".
+      const clean = toSpokenText(sentence.trim());
       if (!clean) return;
 
       // Discard sentences belonging to older turns

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { warmBackend } from "../lib/api";
 import {
   INTERVIEW_TYPES,
   type InterviewTypeId,
@@ -28,6 +29,11 @@ const SAMPLE: Record<string, string> = {
 
 export default function InterviewSetup({ onNavigate }: { onNavigate: (p: string) => void }) {
   const [selectedType, setInterviewType] = useState<InterviewTypeId>(() => getSelectedInterviewType());
+
+  // Wake the backend while the candidate is choosing, so starting the interview is not slow.
+  useEffect(() => {
+    warmBackend();
+  }, []);
   const userResume = getUserResume();
   const hasRealResume = Boolean(userResume?.name || userResume?.filename);
   const active = getInterviewTypeInfo(selectedType);

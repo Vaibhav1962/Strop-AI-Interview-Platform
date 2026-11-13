@@ -17,6 +17,7 @@ import httpx
 from app.groq_keys import groq_keys, cooling_down, start_cooldown, ordered_keys, record_usage, estimate_tokens
 
 from app.orchestrator.incremental_extractor import IncrementalDialogueExtractor
+from app.orchestrator.spoken_text import to_spoken_text
 from app.orchestrator.supervisor import SupervisorDirective
 from app.schemas.orchestrator import TurnDeltaMetadata
 
@@ -390,6 +391,37 @@ class InterviewerActor:
             return f'You said "{quote}...". Can you go one level deeper on that, with a concrete example?'
         return ""
 
+    @staticmethod
+    def dsa_problem_spec(dsa_info: dict[str, Any], current_question: dict[str, Any] | None) -> str:
+        """The problem as the candidate sees it, plus a private reference Alex uses to check their claims."""
+        if not dsa_info:
+            return ""
+        lines = ["", "PROBLEM SPEC (the same text is on the candidate's screen; answer clarifying questions from it):"]
+        lines.append(f"  Title: {dsa_info.get('title', '')}")
+        if dsa_info.get("description"):
+            lines.append(f"  Statement: {dsa_info['description']}")
+        for c in (dsa_info.get("constraints") or [])[:8]:
+            lines.append(f"  Constraint: {c}")
+        for ex in (dsa_info.get("examples") or [])[:3]:
+            if isinstance(ex, dict):
+                lines.append(f"  Example: input {ex.get('input', '')} gives {ex.get('output', '')}")
+            else:
+                lines.append(f"  Example: {ex}")
+        ref = []
+        if dsa_info.get("optimal_time_complexity"):
+            ref.append(f"best time {dsa_info['optimal_time_complexity']}")
+        if dsa_info.get("optimal_space_complexity"):
+            ref.append(f"best auxiliary space {dsa_info['optimal_space_complexity']}")
+        signals = (current_question or {}).get("expected_signals") or []
+        if signals:
+            ref.append("key ideas: " + "; ".join(str(x) for x in signals[:5]))
+        if ref:
+            lines.append(
+                "PRIVATE REFERENCE (never state or hint at this directly; use it only to judge the candidate's claims and to catch mistakes): "
+                + " | ".join(ref)
+            )
+        return "\n".join(lines) + "\n"
+
     def build_system_prompt(
         self,
         directive: SupervisorDirective,
@@ -478,23 +510,12 @@ class InterviewerActor:
                         f"- Milestone: Optimal Approach Formulated ({opt_approach}). Acknowledge their optimal solution and cross-question one specific detail of it: a hidden cost, a failing input, or a concrete alternative. DO NOT ask for brute force!\n"
                     )
                 else:
-                    brief_parts = [f"'{prob_title}'"]
-                    if dsa_info.get("description"):
-                        brief_parts.append(f"Statement: {dsa_info['description']}")
-                    if dsa_info.get("constraints"):
-                        brief_parts.append("Constraints: " + "; ".join(str(c) for c in dsa_info["constraints"][:4]))
-                    exs = dsa_info.get("examples") or []
-                    if exs and isinstance(exs[0], dict):
-                        brief_parts.append(f"Example: input {exs[0].get('input', '')} gives {exs[0].get('output', '')}")
-                    problem_brief = " | ".join(brief_parts)
                     problem_intro_directive = (
-                        "- Milestone: Problem Understanding. The candidate has NOT been shown the problem, so YOU must state it. "
-                        f"Problem to state: {problem_brief}. "
-                        "If you have not yet stated it in this conversation: acknowledge their background in one short clause, then present the problem aloud in plain spoken English "
-                        "(what the input is, what to return, one example, and the constraints), and ask them to restate it in their own words and name the edge cases they would check. "
-                        "This one turn may run up to 6 sentences. "
-                        "If you HAVE already stated it, do not repeat it: answer their clarifying questions using the constraints above. "
-                        "NEVER ask the candidate to supply the constraints or input sizes: those are yours to give. DO NOT ask them to write code yet!\n"
+                        "- Milestone: Problem Understanding. The full problem (statement, examples and constraints) is ALREADY on the candidate's screen, and the PROBLEM SPEC below is the same text. Do not read it out.\n"
+                        "  * If you have not introduced the problem yet: in one short clause acknowledge their background, name the problem, and say in ONE plain sentence what it asks for (what goes in, what comes out). Tell them the statement, an example and the constraints are on their screen. Ask them to read it, then explain it back in their own words and ask you anything unclear. At most 3 sentences. Do NOT read the example, the constraints or any array aloud.\n"
+                        "  * If you have already introduced it: answer their clarifying questions directly and definitively from the PROBLEM SPEC. If the spec is silent, decide using the constraints and the examples, and say your answer plainly.\n"
+                        "  * Once they have shown they understand the task, ask them to walk you through how they would solve it and its time and space cost.\n"
+                        "  * NEVER ask the candidate to supply the constraints, input sizes or value ranges: those are yours to give. NEVER ask them to guess what the problem is. DO NOT ask them to write code yet: the editor opens only after you have agreed on an approach.\n"
                     )
             elif current_m_id == "brute_force_and_intuition":
                 if has_optimal:
@@ -521,14 +542,20 @@ class InterviewerActor:
                     f"- REGRESSION PROHIBITION: DO NOT ask for the brute-force baseline or previous suboptimal ideas. Acknowledge their optimal design and probe invariant mechanics or edge cases.\n"
                 )
 
+            problem_spec_block = self.dsa_problem_spec(dsa_info, working_memory.get("current_question"))
+
             track_invariants = (
                 f"INTERVIEW BOUNDARIES FOR DSA:\n"
                 f"{problem_intro_directive}"
                 f"{regression_guard}"
+                f"{problem_spec_block}"
                 "- Conduct an actual algorithmic interview. Focus STRICTLY on: problem clarification, optimal approach validation, data structure selection (hash maps, heaps, two pointers, trees, graphs, DP), edge-case identification, clean code implementation, and exact Big-O time and space complexity.\n"
                 "- STRICT PROHIBITION: DO NOT ask about distributed systems, microservices, databases, financial ledgers, or cloud infrastructure. This is a pure coding and algorithms assessment.\n"
                 "- If the candidate mentions this is a DSA interview or expresses confusion, warmly assure them: 'Yes, absolutely! This is our DSA & Problem Solving interview.' and continue with the algorithmic problem.\n"
                 "- When the candidate explains an approach, probe their algorithmic logic and Big-O trade-offs.\n"
+                "- VERIFY, DO NOT ECHO: judge every claim the candidate makes (constraints, approach, complexity, invariant) against the PROBLEM SPEC and PRIVATE REFERENCE. Never restate their guess as established fact.\n"
+                "- When the candidate walks through a dry run, recompute each step yourself from their code and the input before judging it. If a step is wrong or skipped, say exactly which step and ask them to recheck it. Never call a walkthrough correct that you have not verified.\n"
+                "- Ask about integer overflow only when the values in the constraints could actually overflow in the language they are using. Python integers never overflow, so for Python ask about something else.\n"
                 "- When the candidate writes/submits code in the workspace, inspect their syntax, boundary conditions (empty, null, single element, overflow), and dry-run execution."
             )
             facts_header = "CANDIDATE'S STATED ALGORITHMIC INTUITION & LOGIC:"
@@ -704,6 +731,7 @@ BEHAVIORAL RULES:
    - NEVER claim or treat this interview as a different track.
    - If the candidate explicitly mentions this is a {track} interview, immediately confirm and keep the conversation focused on {track}.
    - Never steer into distributed systems or cloud architecture unless the current track is 'System Design'.
+6. SPOKEN DELIVERY: Your words are read aloud by a speech synthesizer, so talk like a person. Never recite brackets, indices, code or full arrays. Refer to data by name ("the input array", "nums") or point to the example on their screen. If one small illustration helps, say at most three values in words ("an array of one, minus one, one"). Do not pad with phrases like "the entire array".
 
 OUTPUT FORMAT:
 You MUST respond with a single valid JSON object with EXACTLY this structure:
@@ -907,6 +935,7 @@ Do NOT output any markdown ticks (```json) or conversational preface outside thi
             for part in re.findall(r"\S+\s*", fallback):
                 yield {"type": "token", "token": part}
             assistant_response = fallback
+        assistant_response = to_spoken_text(assistant_response)
         delta_metadata = parsed.get("delta_metadata", {})
 
         # The wrap-up turn must actually hand the floor back: guarantee the closing question is asked and spoken.

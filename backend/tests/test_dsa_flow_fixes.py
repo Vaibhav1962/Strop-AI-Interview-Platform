@@ -80,7 +80,7 @@ def test_challenges_stop_after_two_in_a_row():
     assert SupervisorEngine.evaluate_state(session).action == "CHALLENGE_FLAW"
 
 
-def test_actor_prompt_states_the_problem_itself():
+def test_actor_prompt_introduces_the_on_screen_problem_and_carries_the_spec():
     actor = InterviewerActor(api_key="test-key")
     session = create_mock_dsa_session()
     wm = dict(session.working_memory)
@@ -92,8 +92,12 @@ def test_actor_prompt_states_the_problem_itself():
     }
     directive = SupervisorEngine.evaluate_state(session)
     prompt = actor.build_system_prompt(directive, wm)
-    assert "YOU must state it" in prompt
+    # The problem is on the candidate's screen, so Alex introduces it briefly and answers questions from the spec.
+    assert "ALREADY on the candidate's screen" in prompt
+    assert "PROBLEM SPEC" in prompt
     assert "longest substring without duplicate characters" in prompt
+    assert "Constraint: 0 <= s.length <= 5 * 10^4" in prompt
+    assert "Example: input s = 'abcabcbb' gives 3" in prompt
     assert "NEVER ask the candidate to supply the constraints" in prompt
 
 

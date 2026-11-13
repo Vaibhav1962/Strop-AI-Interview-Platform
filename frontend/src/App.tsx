@@ -2,7 +2,7 @@ import { Suspense, lazy, useState, useEffect, useRef } from "react";
 import Navigation, { type Page, ProfileMenu } from "./components/Navigation";
 import AppBackground from "./components/AppBackground";
 import { ToastContainer, useToast } from "./components/ui";
-import { type AuthUser, clearSession, getStoredUser, getToken } from "./lib/api";
+import { type AuthUser, clearSession, getStoredUser, getToken, warmBackend } from "./lib/api";
 import { syncUserProfileFromBackend } from "./lib/userDocuments";
 import ThemeToggle from "./components/ThemeToggle";
 
@@ -122,6 +122,11 @@ export default function App() {
       window.removeEventListener("interviewiq-auth", handleAuth);
       window.removeEventListener("hashchange", handleHash);
     };
+  }, []);
+
+  // Free hosting sleeps when idle: start waking the backend the moment anyone opens the site.
+  useEffect(() => {
+    warmBackend();
   }, []);
 
   useEffect(() => {
